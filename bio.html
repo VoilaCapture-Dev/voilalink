@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alex Rivera — VoilaLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset ────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Theme: Midnight (default) ────────────────────────── */
+    :root {
+      --bg:           #0a0a0f;
+      --surface:      #13131a;
+      --card:         #1a1a24;
+      --card-hover:   #20202e;
+      --border:       rgba(255,255,255,0.08);
+      --text-primary: #f0f0f5;
+      --text-muted:   #8888a8;
+      --accent:       #818cf8;
+      --accent-2:     #a78bfa;
+      --accent-glow:  rgba(129,140,248,0.15);
+    }
+
+    /* ── Body ─────────────────────────────────────────────── */
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px 80px;
+    }
+
+    /* ── Avatar ───────────────────────────────────────────── */
+    .avatar-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .avatar {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 32px; font-weight: 800;
+      color: #fff;
+      border: 3px solid var(--border);
+    }
+    .avatar-badge {
+      position: absolute; bottom: 2px; right: 2px;
+      width: 22px; height: 22px;
+      background: #22c55e;
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+    }
+
+    /* ── Profile ──────────────────────────────────────────── */
+    .name {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px; font-weight: 800;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .handle {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .bio {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 320px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* ── Social pills ─────────────────────────────────────── */
+    .socials {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .social-pill {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 11px; color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .social-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .social-pill svg { width: 13px; height: 13px; }
+
+    /* ── Links ────────────────────────────────────────────── */
+    .links { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+
+    .link-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.18s;
+      position: relative;
+      overflow: hidden;
+    }
+    .link-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--accent-glow), transparent);
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+    .link-card:hover {
+      background: var(--card-hover);
+      border-color: rgba(129,140,248,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(129,140,248,0.12);
+    }
+    .link-card:hover::before { opacity: 1; }
+
+    .link-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .link-text { flex: 1; }
+    .link-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .link-desc { font-size: 11px; color: var(--text-muted); }
+    .link-arrow {
+      color: var(--text-muted);
+      font-size: 16px;
+      transition: transform 0.15s;
+    }
+    .link-card:hover .link-arrow { transform: translateX(3px); color: var(--accent); }
+
+    /* ── Featured / wide card ─────────────────────────────── */
+    .link-card.featured {
+      flex-direction: column; align-items: flex-start;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(129,140,248,0.08), rgba(167,139,250,0.05));
+      border-color: rgba(129,140,248,0.2);
+    }
+    .link-card.featured .link-top {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+    }
+    .featured-badge {
+      font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); background: var(--accent-glow);
+      border: 1px solid rgba(129,140,248,0.25);
+      padding: 3px 8px; border-radius: 999px;
+      margin-left: auto;
+    }
+    .link-card.featured .link-preview {
+      width: 100%; height: 80px;
+      background: var(--surface);
+      border-radius: 8px;
+      margin-top: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* ── Section label ────────────────────────────────────── */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      width: 100%; max-width: 480px;
+      margin: 8px 0 4px;
+      padding: 0 4px;
+    }
+
+    /* ── Footer ───────────────────────────────────────────── */
+    .footer {
+      margin-top: 48px;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-muted);
+      text-decoration: none;
+    }
+    .footer-brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .footer-dot {
+      width: 18px; height: 18px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Avatar -->
+  <div class="avatar-wrap">
+    <div class="avatar">AR</div>
+    <div class="avatar-badge"></div>
+  </div>
+
+  <!-- Profile -->
+  <div class="name">Alex Rivera</div>
+  <div class="handle">@alexrivera</div>
+  <div class="bio">UI/UX Designer · Content Creator · Building in public 🚀<br>London, UK</div>
+
+  <!-- Social pills -->
+  <div class="socials">
+    <a class="social-pill" href="#">
+      <!-- LinkedIn -->
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      LinkedIn
+    </a>
+    <a class="social-pill" href="#">
+      <!-- Instagram -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      Instagram
+    </a>
+    <a class="social-pill" href="#">
+      <!-- Twitter/X -->
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      Twitter
+    </a>
+    <a class="social-pill" href="#">
+      <!-- YouTube -->
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#0a0a0f"/></svg>
+      YouTube
+    </a>
+  </div>
+
+  <!-- Links -->
+  <div class="links">
+
+    <!-- Featured link -->
+    <a class="link-card featured" href="#">
+      <div class="link-top">
+        <div class="link-icon" style="background:linear-gradient(135deg,#818cf8,#a78bfa);">🚀</div>
+        <div class="link-text">
+          <div class="link-title">My Design Course</div>
+          <div class="link-desc">Learn UI/UX from scratch — 4,200 students</div>
+        </div>
+        <div class="featured-badge">✦ Featured</div>
+      </div>
+      <div class="link-preview">▶ Preview intro video</div>
+    </a>
+
+    <div class="section-label">Work with me</div>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(56,189,248,0.12);">💼</div>
+      <div class="link-text">
+        <div class="link-title">Hire Me — Freelance Design</div>
+        <div class="link-desc">Available for projects from June 2026</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(167,139,250,0.12);">🎨</div>
+      <div class="link-text">
+        <div class="link-title">Figma Templates Shop</div>
+        <div class="link-desc">Premium UI kits · instant download</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+    <div class="section-label">Content</div>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(239,68,68,0.12);">▶</div>
+      <div class="link-text">
+        <div class="link-title">Latest YouTube Video</div>
+        <div class="link-desc">How I redesigned Spotify in 2 hours</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(251,191,36,0.12);">✍️</div>
+      <div class="link-text">
+        <div class="link-title">Newsletter — Design Weekly</div>
+        <div class="link-desc">12,000 subscribers · every Tuesday</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(34,197,94,0.12);">🎙️</div>
+      <div class="link-text">
+        <div class="link-title">The Design Podcast</div>
+        <div class="link-desc">Spotify · Apple Podcasts · 80 episodes</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+    <div class="section-label">Connect</div>
+
+    <a class="link-card" href="#">
+      <div class="link-icon" style="background:rgba(129,140,248,0.12);">💬</div>
+      <div class="link-text">
+        <div class="link-title">Book a 1:1 Call</div>
+        <div class="link-desc">30 min strategy session · Calendly</div>
+      </div>
+      <div class="link-arrow">→</div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <a class="footer" href="#">
+    <div class="footer-dot">✦</div>
+    Made with <span class="footer-brand">VoilaLink</span>
+    &nbsp;· Create your free page
+  </a>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/bio.js"></script>
+</body>
+</html>

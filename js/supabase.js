@@ -1,0 +1,107 @@
+// ============================================================
+//  VoilaLink — Supabase client
+// ============================================================
+'use strict';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── Auth helpers ─────────────────────────────────────────────
+
+async function getUser() {
+  const { data: { user } } = await db.auth.getUser();
+  return user;
+}
+
+async function getProfile(userId) {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function getProfileByUsername(username) {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ── Link helpers ─────────────────────────────────────────────
+
+async function getLinks(userId) {
+  const { data, error } = await db
+    .from('links')
+    .select('*')
+    .eq('user_id', userId)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+async function getPublicLinks(userId) {
+  const { data, error } = await db
+    .from('links')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('enabled', true)
+    .order('position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+async function addLink(link) {
+  const { data, error } = await db
+    .from('links')
+    .insert(link)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function updateLink(id, updates) {
+  const { data, error } = await db
+    .from('links')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function deleteLink(id) {
+  const { error } = await db.from('links').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function trackClick(linkId) {
+  await db.from('link_clicks').insert({ link_id: linkId });
+}
+
+async function getLinkClicks(userId) {
+  const { data, error } = await db
+    .from('link_clicks')
+    .select('link_id, clicked_at, links!inner(user_id, title, emoji)')
+    .eq('links.user_id', userId);
+  if (error) throw error;
+  return data;
+}
+
+// ── Username availability ────────────────────────────────────
+
+async function isUsernameAvailable(username) {
+  const { data } = await db
+    .from('profiles')
+    .select('username')
+    .eq('username', username)
+    .single();
+  return !data; // true = available
+}
