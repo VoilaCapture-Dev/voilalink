@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const links   = await getPublicLinks(profile.id);
     renderBio(profile, links);
     applyTheme(profile.theme || 'midnight');
-  } catch {
+  } catch (e) {
+    console.error('Bio page error:', e);
     showError('Page not found.');
   }
 });
