@@ -4,9 +4,10 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Get username from URL: bio.html?u=alexrivera
+  // Get username from ?u=param or from clean URL path /username
   const params   = new URLSearchParams(window.location.search);
-  const username = params.get('u');
+  const username = params.get('u') ||
+    window.location.pathname.replace(/^\//, '').replace(/\.html$/, '') || null;
 
   if (!username) {
     showError('No username specified.');
