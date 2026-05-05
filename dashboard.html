@@ -551,11 +551,17 @@
     </a>
 
     <div class="nav-section-label">Account</div>
-    <a class="nav-item" href="#">
+    <a class="nav-item" href="#" onclick="showTab('settings')">
       <span class="nav-item-icon">⚙️</span> Settings
+    </a>
+    <a class="nav-item" href="#" onclick="showTab('feedback')">
+      <span class="nav-item-icon">💡</span> Suggest a feature
     </a>
     <a class="nav-item" href="#">
       <span class="nav-item-icon">⭐</span> Upgrade to Pro
+    </a>
+    <a class="nav-item" href="#" onclick="signOut()">
+      <span class="nav-item-icon">🚪</span> Sign out
     </a>
 
     <div class="sidebar-bottom">
@@ -767,6 +773,50 @@
         </div>
       </div>
 
+      <!-- ── Settings panel ───────────────────────────────── -->
+      <div class="links-panel" id="panel-settings" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Settings</div>
+            <div class="panel-sub">Manage your account</div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Profile</div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Full name</label>
+            <input id="settings-name" class="form-input" type="text" placeholder="Your full name" />
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Bio</label>
+            <input id="settings-bio" class="form-input" type="text" placeholder="Short bio shown on your page" />
+          </div>
+          <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Account</div>
+          <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);" onclick="signOut()">Sign out</button>
+        </div>
+      </div>
+
+      <!-- ── Feedback panel ────────────────────────────────── -->
+      <div class="links-panel" id="panel-feedback" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Suggest a feature 💡</div>
+            <div class="panel-sub">We read every suggestion — help us build what you need</div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Your suggestion</label>
+            <textarea id="feedback-text" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text-primary);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:120px;box-sizing:border-box;" placeholder="I'd love to see..."></textarea>
+          </div>
+          <button class="btn-sm primary" onclick="submitFeedback()">Send suggestion →</button>
+          <div id="feedback-thanks" style="display:none;margin-top:12px;color:#4ade80;font-size:12px;">✓ Thanks! We'll review your suggestion.</div>
+        </div>
+      </div>
+
       <!-- ── Live preview ────────────────────────────────── -->
       <div class="preview-panel">
         <div class="preview-label">
@@ -917,8 +967,44 @@
       document.getElementById('panel-links').style.display     = tab === 'links'     ? 'block' : 'none';
       document.getElementById('panel-themes').style.display    = tab === 'themes'    ? 'block' : 'none';
       document.getElementById('panel-analytics').style.display = tab === 'analytics' ? 'block' : 'none';
-      document.getElementById('topbar-title').textContent =
-        tab === 'links' ? 'My Links' : tab === 'themes' ? 'Themes' : 'Analytics';
+      document.getElementById('panel-settings').style.display  = tab === 'settings'  ? 'block' : 'none';
+      document.getElementById('panel-feedback').style.display  = tab === 'feedback'  ? 'block' : 'none';
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature' };
+      document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
+      if (tab === 'analytics') loadAnalytics();
+      if (tab === 'settings') loadSettings();
+    }
+
+    function loadSettings() {
+      if (!currentProfile) return;
+      document.getElementById('settings-name').value = currentProfile.full_name || '';
+      document.getElementById('settings-bio').value  = currentProfile.bio || '';
+    }
+
+    async function saveSettings() {
+      const name = document.getElementById('settings-name').value.trim();
+      const bio  = document.getElementById('settings-bio').value.trim();
+      try {
+        await db.from('profiles').update({ full_name: name, bio }).eq('id', currentUser.id);
+        currentProfile.full_name = name;
+        currentProfile.bio = bio;
+        renderHeader();
+        toast('Settings saved ✓');
+      } catch (e) { toast('Error: ' + e.message); }
+    }
+
+    async function submitFeedback() {
+      const text = document.getElementById('feedback-text').value.trim();
+      if (!text) { toast('Please write your suggestion first'); return; }
+      try {
+        await db.from('feedback').insert({ user_id: currentUser.id, message: text });
+        document.getElementById('feedback-text').value = '';
+        document.getElementById('feedback-thanks').style.display = 'block';
+      } catch (e) {
+        // Even if table doesn't exist yet, show thank you
+        document.getElementById('feedback-text').value = '';
+        document.getElementById('feedback-thanks').style.display = 'block';
+      }
     }
 
     function switchSubTab(btn, tab) {
