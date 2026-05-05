@@ -86,7 +86,7 @@ function renderHeader() {
   document.getElementById('topbar-url-text').textContent = url;
   document.querySelector('.user-name').textContent  = currentProfile.full_name || currentProfile.username;
   document.querySelector('.user-avatar').textContent = (currentProfile.full_name || 'U')[0].toUpperCase();
-  document.getElementById('preview-page-link').href = 'bio.html?u=' + currentProfile.username;
+  document.getElementById('preview-page-link').href = '/' + currentProfile.username;
 }
 
 function copyUrl() {

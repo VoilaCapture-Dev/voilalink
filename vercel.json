@@ -1,6 +1,11 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/$1" }
+    { "source": "/dashboard.html", "destination": "/dashboard.html" },
+    { "source": "/login.html",     "destination": "/login.html" },
+    { "source": "/bio.html",       "destination": "/bio.html" },
+    { "source": "/index.html",     "destination": "/index.html" },
+    { "source": "/js/:path*",      "destination": "/js/:path*" },
+    { "source": "/:username",      "destination": "/bio.html?u=:username" }
   ],
   "headers": [
     {
