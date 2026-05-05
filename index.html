@@ -811,5 +811,21 @@
     <div class="footer-copy">© 2026 VoilaLink · Part of the Voila Suite</div>
   </footer>
 
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script>
+  // If user is already logged in, redirect to dashboard
+  const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  _sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = 'dashboard.html';
+  });
+  // Also handle OAuth callback on homepage
+  _sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      window.location.href = 'dashboard.html';
+    }
+  });
+</script>
 </body>
 </html>
