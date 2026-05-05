@@ -16,12 +16,69 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     currentProfile = await getProfile(user.id);
   } catch {
-    window.location.href = 'login.html'; return;
+    // No profile yet — new Google/OAuth user, show username setup
+    showUsernameSetup(user);
+    return;
   }
 
   renderHeader();
   await loadLinks();
 });
+
+// ── Username setup for OAuth users ───────────────────────────
+function showUsernameSetup(user) {
+  document.body.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#08080f;font-family:'Inter',sans-serif;">
+      <div style="background:#13131a;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px;width:100%;max-width:420px;text-align:center;">
+        <div style="font-size:32px;margin-bottom:16px;">👋</div>
+        <h2 style="color:#f0f0f5;font-family:'Syne',sans-serif;font-size:22px;margin-bottom:8px;">One last step!</h2>
+        <p style="color:#7878a0;font-size:13px;margin-bottom:28px;">Choose your VoilaLink username — this will be your public URL.</p>
+        <input id="setup-name" type="text" placeholder="Your full name" style="width:100%;background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;color:#f0f0f5;font-size:14px;margin-bottom:12px;box-sizing:border-box;" />
+        <input id="setup-username" type="text" placeholder="username" style="width:100%;background:#0a0a0f;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;color:#f0f0f5;font-size:14px;margin-bottom:6px;box-sizing:border-box;" oninput="checkSetupUsername(this)" />
+        <div id="setup-hint" style="font-size:11px;color:#7878a0;margin-bottom:20px;text-align:left;">voilalink.com/yourname</div>
+        <button onclick="createProfile()" style="width:100%;background:linear-gradient(135deg,#818cf8,#a78bfa);border:none;border-radius:10px;padding:14px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Create my page →</button>
+        <div id="setup-error" style="color:#ef4444;font-size:12px;margin-top:12px;display:none;"></div>
+      </div>
+    </div>`;
+}
+
+async function checkSetupUsername(input) {
+  const val = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  input.value = val;
+  const hint = document.getElementById('setup-hint');
+  if (!val) { hint.textContent = 'voilalink.com/yourname'; hint.style.color = '#7878a0'; return; }
+  if (val.length < 3) { hint.textContent = '⚠ At least 3 characters'; hint.style.color = '#f59e0b'; return; }
+  hint.textContent = 'Checking…'; hint.style.color = '#7878a0';
+  try {
+    const available = await isUsernameAvailable(val);
+    hint.textContent = available ? '✓ voilalink.com/' + val + ' is available!' : '✗ @' + val + ' is taken';
+    hint.style.color = available ? '#4ade80' : '#ef4444';
+  } catch { hint.textContent = 'Could not check'; }
+}
+
+async function createProfile() {
+  const name     = document.getElementById('setup-name').value.trim();
+  const username = document.getElementById('setup-username').value.trim();
+  const errEl    = document.getElementById('setup-error');
+  errEl.style.display = 'none';
+
+  if (!name)           { errEl.textContent = 'Please enter your name'; errEl.style.display = 'block'; return; }
+  if (!username || username.length < 3) { errEl.textContent = 'Username must be at least 3 characters'; errEl.style.display = 'block'; return; }
+
+  try {
+    const available = await isUsernameAvailable(username);
+    if (!available) { errEl.textContent = 'That username is taken'; errEl.style.display = 'block'; return; }
+
+    const { error } = await db.from('profiles').insert({
+      id: currentUser.id, username, full_name: name, theme: 'midnight'
+    });
+    if (error) throw error;
+    window.location.reload();
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
 
 // ── Header ───────────────────────────────────────────────────
 function renderHeader() {
