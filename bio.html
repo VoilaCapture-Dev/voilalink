@@ -221,14 +221,14 @@
 
   <!-- Avatar -->
   <div class="avatar-wrap">
-    <div class="avatar">AR</div>
+    <div class="avatar" id="bio-avatar">?</div>
     <div class="avatar-badge"></div>
   </div>
 
   <!-- Profile -->
-  <div class="name">Alex Rivera</div>
-  <div class="handle">@alexrivera</div>
-  <div class="bio">UI/UX Designer · Content Creator · Building in public 🚀<br>London, UK</div>
+  <div class="name" id="bio-name"></div>
+  <div class="handle" id="bio-handle"></div>
+  <div class="bio" id="bio-bio"></div>
 
   <!-- Social pills -->
   <div class="socials">
@@ -254,83 +254,8 @@
     </a>
   </div>
 
-  <!-- Links -->
-  <div class="links">
-
-    <!-- Featured link -->
-    <a class="link-card featured" href="#">
-      <div class="link-top">
-        <div class="link-icon" style="background:linear-gradient(135deg,#818cf8,#a78bfa);">🚀</div>
-        <div class="link-text">
-          <div class="link-title">My Design Course</div>
-          <div class="link-desc">Learn UI/UX from scratch — 4,200 students</div>
-        </div>
-        <div class="featured-badge">✦ Featured</div>
-      </div>
-      <div class="link-preview">▶ Preview intro video</div>
-    </a>
-
-    <div class="section-label">Work with me</div>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(56,189,248,0.12);">💼</div>
-      <div class="link-text">
-        <div class="link-title">Hire Me — Freelance Design</div>
-        <div class="link-desc">Available for projects from June 2026</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(167,139,250,0.12);">🎨</div>
-      <div class="link-text">
-        <div class="link-title">Figma Templates Shop</div>
-        <div class="link-desc">Premium UI kits · instant download</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-    <div class="section-label">Content</div>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(239,68,68,0.12);">▶</div>
-      <div class="link-text">
-        <div class="link-title">Latest YouTube Video</div>
-        <div class="link-desc">How I redesigned Spotify in 2 hours</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(251,191,36,0.12);">✍️</div>
-      <div class="link-text">
-        <div class="link-title">Newsletter — Design Weekly</div>
-        <div class="link-desc">12,000 subscribers · every Tuesday</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(34,197,94,0.12);">🎙️</div>
-      <div class="link-text">
-        <div class="link-title">The Design Podcast</div>
-        <div class="link-desc">Spotify · Apple Podcasts · 80 episodes</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-    <div class="section-label">Connect</div>
-
-    <a class="link-card" href="#">
-      <div class="link-icon" style="background:rgba(129,140,248,0.12);">💬</div>
-      <div class="link-text">
-        <div class="link-title">Book a 1:1 Call</div>
-        <div class="link-desc">30 min strategy session · Calendly</div>
-      </div>
-      <div class="link-arrow">→</div>
-    </a>
-
-  </div>
+  <!-- Links loaded by bio.js -->
+  <div class="links" id="bio-links"></div>
 
   <!-- Footer -->
   <a class="footer" href="#">
