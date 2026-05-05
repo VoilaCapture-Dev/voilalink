@@ -94,17 +94,7 @@ function copyUrl() {
     .then(() => toast('Link copied ✓'));
 }
 
-// ── Navigation ───────────────────────────────────────────────
-function showTab(tab) {
-  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  document.getElementById('panel-links').style.display     = tab === 'links'     ? 'block' : 'none';
-  document.getElementById('panel-themes').style.display    = tab === 'themes'    ? 'block' : 'none';
-  document.getElementById('panel-analytics').style.display = tab === 'analytics' ? 'block' : 'none';
-  document.getElementById('topbar-title').textContent =
-    tab === 'links' ? 'My Links' : tab === 'themes' ? 'Themes' : 'Analytics';
-  if (tab === 'analytics') loadAnalytics();
-}
+// showTab is defined in dashboard.html inline script
 
 // ── Load links ───────────────────────────────────────────────
 async function loadLinks() {
