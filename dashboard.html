@@ -801,7 +801,7 @@
   <!-- ── Add link modal ───────────────────────────────────── -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div class="modal-title">Add a link</div>
+      <div class="modal-title" id="modal-title">Add a link</div>
       <div class="modal-sub">Paste any URL or pick a platform below</div>
       <button class="modal-close" onclick="closeModal()">×</button>
 
@@ -896,7 +896,7 @@
 
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn-sm primary" onclick="addLink()">Add link →</button>
+        <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>
       </div>
     </div>
   </div>
