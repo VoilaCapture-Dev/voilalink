@@ -577,7 +577,7 @@
       <div class="topbar-left">
         <div class="topbar-title" id="topbar-title">My Links</div>
         <div class="topbar-url">
-          voilalink.com/yourname
+          <span id="topbar-url-text">voilalink.com/yourname</span>
           <button class="copy-btn" onclick="copyUrl()">⎘ Copy</button>
         </div>
       </div>
@@ -606,119 +606,8 @@
           Add a new link
         </button>
 
-        <!-- Section: Featured -->
-        <div class="section-divider">
-          <div class="section-divider-label">Featured</div>
-          <div class="section-divider-line"></div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:linear-gradient(135deg,rgba(129,140,248,0.2),rgba(167,139,250,0.2));">
-            🚀<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">My Design Course</div>
-            <div class="link-url-text">gumroad.com/l/design-course</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
-
-        <!-- Section: Social -->
-        <div class="section-divider">
-          <div class="section-divider-label">Social</div>
-          <div class="section-divider-line"></div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:rgba(56,189,248,0.12);">
-            in<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">LinkedIn</div>
-            <div class="link-url-text">linkedin.com/in/yourname</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:rgba(251,113,133,0.12);">
-            📸<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">Instagram</div>
-            <div class="link-url-text">instagram.com/yourname</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle off" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:rgba(34,197,94,0.12);">
-            💬<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">WhatsApp</div>
-            <div class="link-url-text">wa.me/+447911123456</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
-
-        <!-- Section: Custom -->
-        <div class="section-divider">
-          <div class="section-divider-label">Custom Links</div>
-          <div class="section-divider-line"></div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:rgba(251,191,36,0.12);">
-            🌐<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">Google Translate</div>
-            <div class="link-url-text">translate.google.com</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
-
-        <div class="link-item">
-          <div class="drag-handle"><span></span><span></span><span></span></div>
-          <div class="link-icon-box" style="background:rgba(129,140,248,0.12);">
-            📝<div class="edit-hint">✏️</div>
-          </div>
-          <div class="link-info">
-            <div class="link-title-text">My Notion Page</div>
-            <div class="link-url-text">notion.so/myworkspace</div>
-          </div>
-          <div class="link-actions">
-            <button class="link-toggle" onclick="this.classList.toggle('off')"></button>
-            <button class="link-edit-btn" onclick="openModal()">✏️</button>
-            <button class="link-delete-btn">🗑</button>
-          </div>
-        </div>
+        <!-- Links loaded by dashboard.js -->
+        <div id="links-container"></div>
 
         <!-- Free plan limit notice -->
         <div style="margin-top:16px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
@@ -886,52 +775,24 @@
         </div>
 
         <div class="phone-frame">
-          <div class="phone-avatar">YO</div>
-          <div class="phone-name">Your Name</div>
-          <div class="phone-handle">@yourname</div>
-
-          <div class="phone-link">
-            <div class="phone-link-icon" style="background:rgba(129,140,248,0.15);">🚀</div>
-            <div>
-              <div class="phone-link-title">My Design Course</div>
-            </div>
-            <div class="phone-link-arrow">→</div>
-          </div>
-          <div class="phone-link">
-            <div class="phone-link-icon" style="background:rgba(56,189,248,0.15);">in</div>
-            <div>
-              <div class="phone-link-title">LinkedIn</div>
-            </div>
-            <div class="phone-link-arrow">→</div>
-          </div>
-          <div class="phone-link">
-            <div class="phone-link-icon" style="background:rgba(34,197,94,0.15);">💬</div>
-            <div>
-              <div class="phone-link-title">WhatsApp</div>
-            </div>
-            <div class="phone-link-arrow">→</div>
-          </div>
-          <div class="phone-link">
-            <div class="phone-link-icon" style="background:rgba(251,191,36,0.15);">🌐</div>
-            <div>
-              <div class="phone-link-title">Google Translate</div>
-            </div>
-            <div class="phone-link-arrow">→</div>
-          </div>
+          <div class="phone-avatar" id="preview-avatar">YO</div>
+          <div class="phone-name" id="preview-name">Your Name</div>
+          <div class="phone-handle" id="preview-handle">@yourname</div>
+          <div id="preview-links"></div>
         </div>
 
         <div class="stats-strip">
           <div class="stat-mini">
-            <div class="stat-mini-num">248</div>
+            <div class="stat-mini-num" id="stat-total-clicks">0</div>
             <div class="stat-mini-label">Total clicks</div>
           </div>
           <div class="stat-mini">
-            <div class="stat-mini-num">6</div>
+            <div class="stat-mini-num" id="stat-links">0</div>
             <div class="stat-mini-label">Active links</div>
           </div>
         </div>
 
-        <a class="view-page-btn" href="bio.html" target="_blank">View my page →</a>
+        <a class="view-page-btn" id="preview-page-link" href="bio.html" target="_blank">View my page →</a>
       </div>
 
     </div>
@@ -1083,39 +944,7 @@
       if (e.target === this) closeModal();
     });
 
-    // ── Presets ────────────────────────────────────────────
-    const presets = {
-      linkedin:  { url: 'https://linkedin.com/in/', title: 'LinkedIn', emoji: 'in' },
-      instagram: { url: 'https://instagram.com/', title: 'Instagram', emoji: '📸' },
-      whatsapp:  { url: 'https://wa.me/', title: 'WhatsApp', emoji: '💬' },
-      youtube:   { url: 'https://youtube.com/@', title: 'YouTube', emoji: '▶' },
-      tiktok:    { url: 'https://tiktok.com/@', title: 'TikTok', emoji: '🎵' },
-      telegram:  { url: 'https://t.me/', title: 'Telegram', emoji: '✈️' },
-      twitter:   { url: 'https://twitter.com/', title: 'Twitter / X', emoji: '𝕏' },
-      email:     { url: 'mailto:', title: 'Email me', emoji: '✉️' },
-    };
-    function fillPreset(key) {
-      const p = presets[key];
-      document.getElementById('input-url').value   = p.url;
-      document.getElementById('input-title').value = p.title;
-      document.getElementById('input-emoji').value = p.emoji;
-    }
-
-    // ── Emoji picker ───────────────────────────────────────
-    function pickEmoji(el, emoji) {
-      document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('input-emoji').value = emoji;
-    }
-
-    // ── Add link ───────────────────────────────────────────
-    function addLink() {
-      const url   = document.getElementById('input-url').value.trim();
-      const title = document.getElementById('input-title').value.trim();
-      if (!url || !title) { toast('Please fill in URL and title'); return; }
-      closeModal();
-      toast('Link added ✓');
-    }
+    // fillPreset, pickEmoji, addLink handled by dashboard.js
 
     // ── Copy URL ───────────────────────────────────────────
     function copyUrl() {
