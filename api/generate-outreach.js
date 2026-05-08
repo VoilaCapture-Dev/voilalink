@@ -64,7 +64,7 @@ Write ONLY the message. No subject line. No "Here is the message:" intro. Just t
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Claude API error:', errorText);
-      return res.status(500).json({ error: 'Failed to generate message' });
+      return res.status(500).json({ error: 'Claude error: ' + errorText });
     }
 
     const data = await response.json();
@@ -74,6 +74,6 @@ Write ONLY the message. No subject line. No "Here is the message:" intro. Just t
 
   } catch (err) {
     console.error('Server error:', err);
-    return res.status(500).json({ error: 'Server error: ' + err.message });
+    return res.status(500).json({ error: 'Server error: ' + err.message + ' | key exists: ' + !!apiKey });
   }
 }
