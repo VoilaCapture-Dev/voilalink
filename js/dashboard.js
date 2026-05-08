@@ -309,10 +309,8 @@ async function selectTheme(card) {
   const { error } = await db.from('profiles').update({ theme }).eq('id', currentUser.id);
   if (error) { toast('Error saving theme'); return; }
   if (currentProfile) currentProfile.theme = theme;
-  toast('Theme saved! Opening your page…');
-  setTimeout(() => {
-    window.open('/' + currentProfile.username, '_blank');
-  }, 700);
+  toast('Theme saved ✓');
+  window.open('/' + currentProfile.username, 'voilalink_preview');
 }
 
 // ── Onboarding ────────────────────────────────────────────────
