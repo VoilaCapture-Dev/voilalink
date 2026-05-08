@@ -84,8 +84,14 @@ async function createProfile() {
 function renderHeader() {
   const url = 'voilalink.com/' + currentProfile.username;
   document.getElementById('topbar-url-text').textContent = url;
-  document.querySelector('.user-name').textContent  = currentProfile.full_name || currentProfile.username;
-  document.querySelector('.user-avatar').textContent = (currentProfile.full_name || 'U')[0].toUpperCase();
+  document.querySelector('.user-name').textContent = currentProfile.full_name || currentProfile.username;
+  const avatarEl = document.querySelector('.user-avatar');
+  if (currentProfile.avatar_url) {
+    avatarEl.textContent = '';
+    avatarEl.style.cssText += ';background-image:url(' + currentProfile.avatar_url + ');background-size:cover;background-position:center;';
+  } else {
+    avatarEl.textContent = (currentProfile.full_name || 'U')[0].toUpperCase();
+  }
   document.getElementById('preview-page-link').href = '/' + currentProfile.username;
 }
 
@@ -144,6 +150,24 @@ function renderLinks() {
       </div>`;
     container.appendChild(el);
   });
+
+  // Drag & drop reorder
+  if (typeof Sortable !== 'undefined') {
+    Sortable.create(container, {
+      handle: '.drag-handle',
+      animation: 150,
+      onEnd: async () => {
+        const ids = Array.from(container.querySelectorAll('.link-item')).map(el => el.dataset.id);
+        allLinks.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+        allLinks.forEach((link, idx) => { link.position = idx; });
+        await Promise.all(allLinks.map((link, idx) =>
+          db.from('links').update({ position: idx }).eq('id', link.id)
+        ));
+        renderPreview();
+        toast('Order saved ✓');
+      }
+    });
+  }
 }
 
 function renderPreview() {
@@ -217,6 +241,7 @@ const presets = {
   teams:     { url: 'https://teams.microsoft.com/',  title: 'MS Teams',    emoji: '🟦' },
   googlechat:{ url: 'https://chat.google.com/',      title: 'Google Chat', emoji: '💬' },
   email:     { url: 'mailto:',                       title: 'Email me',    emoji: '✉️' },
+  phone:     { url: 'tel:',                          title: 'Call me',     emoji: '📞' },
 };
 
 let editingId = null;
@@ -299,6 +324,50 @@ async function saveLink() {
     btn.textContent = editingId ? 'Save changes →' : 'Add link →';
     btn.disabled = false;
   }
+}
+
+// ── QR Code ───────────────────────────────────────────────────
+function showQR() {
+  const modal = document.getElementById('qr-modal');
+  const container = document.getElementById('qr-container');
+  const url = 'https://voilalink.com/' + currentProfile.username;
+  document.getElementById('qr-url-label').textContent = 'voilalink.com/' + currentProfile.username;
+  container.innerHTML = '';
+  modal.classList.add('open');
+  QRCode.toCanvas(url, { width: 220, margin: 1, color: { dark: '#000', light: '#fff' } }, (err, canvas) => {
+    if (!err) container.appendChild(canvas);
+  });
+}
+function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
+function downloadQR() {
+  const canvas = document.querySelector('#qr-container canvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.download = 'voilalink-' + currentProfile.username + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+// ── Avatar upload ─────────────────────────────────────────────
+async function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Image must be under 2MB'); return; }
+  toast('Uploading…');
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const path = currentUser.id + '/avatar.' + ext;
+  const { error: upErr } = await db.storage.from('avatars').upload(path, file, { upsert: true });
+  if (upErr) { toast('Upload failed: ' + upErr.message); return; }
+  const { data } = db.storage.from('avatars').getPublicUrl(path);
+  const url = data.publicUrl + '?t=' + Date.now();
+  const { error } = await db.from('profiles').update({ avatar_url: url }).eq('id', currentUser.id);
+  if (error) { toast('Save failed: ' + error.message); return; }
+  currentProfile.avatar_url = url;
+  // Update avatar preview in settings
+  const av = document.getElementById('settings-avatar');
+  if (av) av.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+  renderHeader();
+  toast('Photo updated ✓');
 }
 
 // ── Themes ───────────────────────────────────────────────────

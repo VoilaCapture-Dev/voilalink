@@ -28,7 +28,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ── Render bio ───────────────────────────────────────────────
 function renderBio(profile, links) {
   // Avatar / name
-  document.getElementById('bio-avatar').textContent   = (profile.full_name || profile.username)[0].toUpperCase();
+  const avatarEl = document.getElementById('bio-avatar');
+  if (profile.avatar_url) {
+    avatarEl.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = profile.avatar_url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;';
+    avatarEl.appendChild(img);
+  } else {
+    avatarEl.textContent = (profile.full_name || profile.username)[0].toUpperCase();
+  }
   document.getElementById('bio-name').textContent     = profile.full_name || profile.username;
   document.getElementById('bio-handle').textContent   = '@' + profile.username;
   document.getElementById('bio-bio').textContent      = profile.bio || '';

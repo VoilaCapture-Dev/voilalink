@@ -596,7 +596,8 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <a class="btn-sm ghost" href="bio.html" target="_blank">👁 Preview page</a>
+        <button class="btn-sm ghost" onclick="showQR()">⬛ QR Code</button>
+        <a class="btn-sm ghost" href="bio.html" target="_blank">👁 Preview</a>
         <button class="btn-sm primary" onclick="openModal()">+ Add link</button>
       </div>
     </div>
@@ -856,6 +857,18 @@
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Profile</div>
+          <!-- Avatar upload -->
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);">
+            <div id="settings-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">?</div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Profile photo</div>
+              <label for="avatar-input" style="cursor:pointer;">
+                <span class="btn-sm ghost" style="cursor:pointer;pointer-events:none;">Upload photo</span>
+              </label>
+              <input id="avatar-input" type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+              <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">JPG or PNG · Max 2MB</div>
+            </div>
+          </div>
           <div style="margin-bottom:12px;">
             <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Full name</label>
             <input id="settings-name" class="form-input" type="text" placeholder="Your full name" />
@@ -943,6 +956,20 @@
         <a class="view-page-btn" id="preview-page-link" href="bio.html" target="_blank">View my page →</a>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ── QR Code modal ────────────────────────────────────── -->
+  <div class="modal-overlay" id="qr-modal">
+    <div class="modal" style="max-width:300px;text-align:center;">
+      <div class="modal-title">Your QR Code</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;">Scan to visit your VoilaLink page</div>
+      <div id="qr-container" style="display:flex;justify-content:center;align-items:center;padding:20px;background:#fff;border-radius:16px;margin-bottom:12px;min-height:200px;"></div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;" id="qr-url-label">voilalink.com/...</div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeQR()">Close</button>
+        <button class="btn-sm primary" onclick="downloadQR()">⬇ Download PNG</button>
+      </div>
     </div>
   </div>
 
@@ -1057,6 +1084,8 @@
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/dashboard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     // ── Tab navigation ─────────────────────────────────────
     function showTab(tab) {
@@ -1076,6 +1105,15 @@
 
     function loadSettings() {
       if (!currentProfile) return;
+      // Avatar preview
+      const av = document.getElementById('settings-avatar');
+      if (av) {
+        if (currentProfile.avatar_url) {
+          av.innerHTML = `<img src="${currentProfile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+        } else {
+          av.textContent = (currentProfile.full_name || currentProfile.username || 'U')[0].toUpperCase();
+        }
+      }
       document.getElementById('settings-name').value      = currentProfile.full_name    || '';
       document.getElementById('settings-bio').value       = currentProfile.bio          || '';
       document.getElementById('settings-twitter').value   = currentProfile.twitter_url  || '';
