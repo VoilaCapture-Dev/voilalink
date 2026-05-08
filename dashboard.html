@@ -637,42 +637,42 @@
         </div>
 
         <div class="themes-grid">
-          <div class="theme-card selected" style="background:#08080f;color:#f0f0f5;" onclick="selectTheme(this)">
+          <div class="theme-card selected" data-theme="midnight" style="background:#08080f;color:#f0f0f5;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#818cf8,#a78bfa);"></div>
             <div class="theme-bar" style="background:#818cf8;"></div>
             <div class="theme-bar-sm" style="background:#818cf8;"></div>
             <div class="theme-name">Midnight</div>
           </div>
-          <div class="theme-card" style="background:#0f172a;color:#e2e8f0;" onclick="selectTheme(this)">
+          <div class="theme-card" data-theme="ocean" style="background:#0f172a;color:#e2e8f0;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#38bdf8,#818cf8);"></div>
             <div class="theme-bar" style="background:#38bdf8;"></div>
             <div class="theme-bar-sm" style="background:#38bdf8;"></div>
             <div class="theme-name">Ocean</div>
           </div>
-          <div class="theme-card" style="background:#0a0f0a;color:#f0f5f0;" onclick="selectTheme(this)">
+          <div class="theme-card" data-theme="lime" style="background:#0a0f0a;color:#f0f5f0;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#c8f135,#4ade80);"></div>
             <div class="theme-bar" style="background:#c8f135;"></div>
             <div class="theme-bar-sm" style="background:#c8f135;"></div>
             <div class="theme-name">Lime</div>
           </div>
-          <div class="theme-card" style="background:#fff;color:#111;" onclick="selectTheme(this)">
+          <div class="theme-card" data-theme="light" style="background:#fff;color:#111;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#6366f1,#a78bfa);"></div>
             <div class="theme-bar" style="background:#6366f1;"></div>
             <div class="theme-bar-sm" style="background:#6366f1;"></div>
             <div class="theme-name" style="color:#333;">Light</div>
           </div>
-          <div class="theme-card" style="background:#1a0a2e;color:#f0e6ff;" onclick="selectTheme(this)">
+          <div class="theme-card" data-theme="galaxy" style="background:#1a0a2e;color:#f0e6ff;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#d946ef,#a78bfa);"></div>
             <div class="theme-bar" style="background:#d946ef;"></div>
             <div class="theme-bar-sm" style="background:#d946ef;"></div>
             <div class="theme-name">Galaxy</div>
           </div>
-          <div class="theme-card" style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);" onclick="selectTheme(this)">
+          <div class="theme-card" data-theme="sunset" style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
             <div style="font-size:9px;color:#f59e0b;letter-spacing:0.05em;">⭐ PRO</div>
             <div class="theme-dot" style="background:linear-gradient(135deg,#f59e0b,#ef4444);"></div>
@@ -1061,10 +1061,15 @@
     }
 
     // ── Theme selector ─────────────────────────────────────
-    function selectTheme(card) {
+    async function selectTheme(card) {
       document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
-      toast('Theme applied ✓');
+      const theme = card.dataset.theme;
+      try {
+        await db.from('profiles').update({ theme }).eq('id', currentUser.id);
+        if (currentProfile) currentProfile.theme = theme;
+        toast('Theme saved ✓');
+      } catch (e) { toast('Error saving theme'); }
     }
 
     // ── Modal ──────────────────────────────────────────────
