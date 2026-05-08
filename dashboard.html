@@ -634,6 +634,10 @@
       <span id="msg-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;font-family:'DM Mono',monospace;">0</span>
     </a>
 
+    <a class="nav-item" href="#" onclick="showTab('outreach')" id="nav-outreach">
+      <span class="nav-item-icon">🤖</span> AI Outreach
+    </a>
+
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
       <span class="nav-item-icon">⚙️</span> Settings
@@ -1006,6 +1010,77 @@
         </div>
       </div>
 
+      <!-- ── Outreach panel ────────────────────────────────── -->
+      <div class="links-panel" id="panel-outreach" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🤖 AI Outreach</div>
+            <div class="panel-sub">Generate personalised creator outreach messages instantly</div>
+          </div>
+        </div>
+
+        <!-- Input form -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;">Creator details</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Creator name *</label>
+              <input id="out-name" class="form-input" type="text" placeholder="e.g. Sarah Johnson" />
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Platform</label>
+              <select id="out-platform" class="form-input" style="cursor:pointer;">
+                <option value="TikTok">TikTok</option>
+                <option value="Instagram">Instagram</option>
+                <option value="YouTube">YouTube</option>
+                <option value="Twitter / X">Twitter / X</option>
+                <option value="LinkedIn">LinkedIn</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Their niche / content type</label>
+            <input id="out-niche" class="form-input" type="text" placeholder="e.g. productivity, side hustles, travel, fitness" />
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Profile URL</label>
+            <input id="out-url" class="form-input" type="url" placeholder="https://tiktok.com/@username" />
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Extra notes (optional)</label>
+            <input id="out-notes" class="form-input" type="text" placeholder="e.g. they recently posted about productivity tools, 50K followers" />
+          </div>
+
+          <button id="out-generate-btn" class="btn-sm primary" onclick="generateOutreach()" style="width:100%;padding:12px;font-size:13px;">
+            ✨ Generate message
+          </button>
+        </div>
+
+        <!-- Output -->
+        <div id="out-result" style="display:none;background:var(--card);border:1px solid var(--border-accent);border-radius:14px;padding:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:600;color:var(--accent);">✦ Generated message</div>
+            <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
+          </div>
+          <div id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;"></div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;">
+            <button onclick="generateOutreach()" class="btn-sm ghost" style="font-size:11px;">↺ Regenerate</button>
+            <button onclick="logOutreach()" class="btn-sm primary" style="font-size:11px;">✓ Mark as sent</button>
+          </div>
+        </div>
+
+        <!-- Sent log -->
+        <div style="margin-top:16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Sent log</div>
+          <div id="out-log"></div>
+        </div>
+
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -1225,13 +1300,15 @@
       document.getElementById('panel-feedback').style.display  = tab === 'feedback'  ? 'block' : 'none';
       document.getElementById('panel-upgrade').style.display   = tab === 'upgrade'   ? 'block' : 'none';
       document.getElementById('panel-messages').style.display  = tab === 'messages'  ? 'flex'  : 'none';
-      // Hide preview panel when in messages (needs full width)
-      document.querySelector('.preview-panel').style.display   = tab === 'messages'  ? 'none'  : '';
-      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages' };
+      document.getElementById('panel-outreach').style.display  = tab === 'outreach'  ? 'block' : 'none';
+      // Hide preview panel when in messages or outreach (needs full width)
+      document.querySelector('.preview-panel').style.display   = (tab === 'messages' || tab === 'outreach') ? 'none' : '';
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') loadAnalytics();
       if (tab === 'settings')  loadSettings();
       if (tab === 'messages')  loadMessages();
+      if (tab === 'outreach')  loadOutreachLog();
     }
 
     function loadSettings() {

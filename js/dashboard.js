@@ -454,6 +454,108 @@ async function loadAnalytics() {
   } catch (e) { toast('Error loading analytics: ' + e.message); }
 }
 
+// ── AI Outreach ───────────────────────────────────────────────
+let lastOutreachMessage = '';
+
+async function generateOutreach() {
+  const name     = document.getElementById('out-name').value.trim();
+  const platform = document.getElementById('out-platform').value;
+  const niche    = document.getElementById('out-niche').value.trim();
+  const url      = document.getElementById('out-url').value.trim();
+  const notes    = document.getElementById('out-notes').value.trim();
+
+  if (!name) { toast('Please enter the creator name'); document.getElementById('out-name').focus(); return; }
+
+  const btn = document.getElementById('out-generate-btn');
+  btn.textContent = '✨ Generating…'; btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/generate-outreach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ creatorName: name, platform, niche, profileUrl: url, notes })
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) { toast('Error: ' + (data.error || 'Unknown error')); return; }
+
+    lastOutreachMessage = data.message;
+    document.getElementById('out-message').textContent = data.message;
+    document.getElementById('out-result').style.display = 'block';
+    document.getElementById('out-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch (e) {
+    toast('Error: ' + e.message);
+  } finally {
+    btn.textContent = '✨ Generate message'; btn.disabled = false;
+  }
+}
+
+function copyOutreach() {
+  if (!lastOutreachMessage) return;
+  navigator.clipboard.writeText(lastOutreachMessage).then(() => toast('Message copied ✓'));
+}
+
+function logOutreach() {
+  const name     = document.getElementById('out-name').value.trim();
+  const platform = document.getElementById('out-platform').value;
+  if (!name || !lastOutreachMessage) return;
+
+  const log = JSON.parse(localStorage.getItem('vl_outreach_log') || '[]');
+  log.unshift({ name, platform, message: lastOutreachMessage, date: new Date().toISOString() });
+  localStorage.setItem('vl_outreach_log', JSON.stringify(log.slice(0, 50))); // keep last 50
+  toast('Logged as sent ✓');
+  loadOutreachLog();
+
+  // Clear form
+  document.getElementById('out-name').value  = '';
+  document.getElementById('out-niche').value = '';
+  document.getElementById('out-url').value   = '';
+  document.getElementById('out-notes').value = '';
+  document.getElementById('out-result').style.display = 'none';
+  lastOutreachMessage = '';
+}
+
+function loadOutreachLog() {
+  const log       = JSON.parse(localStorage.getItem('vl_outreach_log') || '[]');
+  const container = document.getElementById('out-log');
+  if (!container) return;
+
+  if (log.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:12px;">No messages sent yet. Generate your first outreach above.</div>`;
+    return;
+  }
+
+  container.innerHTML = log.map((entry, i) => `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;">${entry.name[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;">${escHtml(entry.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${escHtml(entry.platform)} · ${timeAgo(entry.date)}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="previewLog(${i})" class="btn-sm ghost" style="font-size:10px;padding:4px 10px;">View</button>
+        <button onclick="deleteLog(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;" title="Delete">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function previewLog(i) {
+  const log = JSON.parse(localStorage.getItem('vl_outreach_log') || '[]');
+  if (!log[i]) return;
+  lastOutreachMessage = log[i].message;
+  document.getElementById('out-message').textContent = log[i].message;
+  document.getElementById('out-result').style.display = 'block';
+  document.getElementById('out-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteLog(i) {
+  const log = JSON.parse(localStorage.getItem('vl_outreach_log') || '[]');
+  log.splice(i, 1);
+  localStorage.setItem('vl_outreach_log', JSON.stringify(log));
+  loadOutreachLog();
+}
+
 // ── Messages / Inbox ─────────────────────────────────────────
 let conversations      = [];
 let activeConvId       = null;
