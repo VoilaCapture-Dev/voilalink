@@ -55,7 +55,7 @@ Write ONLY the message. No subject line. No "Here is the message:" intro. Just t
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-opus-4-7',
         max_tokens: 512,
         messages: [{ role: 'user', content: prompt }]
       })
