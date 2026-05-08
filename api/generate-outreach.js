@@ -2,7 +2,7 @@
 //  VoilaLink — AI Outreach Generator (Vercel Serverless)
 // ============================================================
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -55,7 +55,7 @@ Write ONLY the message. No subject line. No "Here is the message:" intro. Just t
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-20240307',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 512,
         messages: [{ role: 'user', content: prompt }]
       })
