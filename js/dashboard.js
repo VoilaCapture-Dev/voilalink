@@ -300,12 +300,17 @@ async function saveLink() {
 }
 
 // ── Themes ───────────────────────────────────────────────────
-function selectTheme(card) {
+async function selectTheme(card) {
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
   const theme = card.dataset.theme;
-  db.from('profiles').update({ theme }).eq('id', currentUser.id)
-    .then(() => toast('Theme saved ✓'));
+  try {
+    await db.from('profiles').update({ theme }).eq('id', currentUser.id);
+    if (currentProfile) currentProfile.theme = theme;
+    toast('Theme saved ✓');
+    const reminder = document.getElementById('theme-refresh-reminder');
+    if (reminder) reminder.style.display = 'flex';
+  } catch (e) { toast('Error saving theme'); }
 }
 
 // ── Analytics ────────────────────────────────────────────────
