@@ -454,6 +454,162 @@ async function loadAnalytics() {
   } catch (e) { toast('Error loading analytics: ' + e.message); }
 }
 
+// ── Messages / Inbox ─────────────────────────────────────────
+let conversations      = [];
+let activeConvId       = null;
+let inboxRealtime      = null;
+let activeConvRealtime = null;
+
+async function loadMessages() {
+  try {
+    conversations = await getConversations(currentUser.id);
+    renderConversations();
+    updateMsgBadge();
+    subscribeToInbox();
+  } catch (e) { toast('Error loading messages: ' + e.message); }
+}
+
+function updateMsgBadge() {
+  const unread = conversations.filter(c => c.has_unread).length;
+  const badge  = document.getElementById('msg-badge');
+  if (!badge) return;
+  badge.textContent    = unread;
+  badge.style.display  = unread > 0 ? 'inline' : 'none';
+}
+
+function renderConversations() {
+  const container = document.getElementById('conversations-list');
+  if (!container) return;
+  if (conversations.length === 0) {
+    container.innerHTML = `
+      <div style="padding:40px 20px;text-align:center;color:var(--text-muted);">
+        <div style="font-size:36px;margin-bottom:12px;">💬</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">No messages yet</div>
+        <div style="font-size:12px;line-height:1.6;">When visitors chat on your bio page, conversations will appear here.</div>
+      </div>`;
+    return;
+  }
+  container.innerHTML = conversations.map(c => `
+    <div class="conv-item ${c.id === activeConvId ? 'active' : ''} ${c.has_unread ? 'unread' : ''}"
+      onclick="openConversation('${c.id}', '${escHtml(c.visitor_name)}')">
+      <div class="conv-avatar">${c.visitor_name[0].toUpperCase()}</div>
+      <div class="conv-info">
+        <div class="conv-name">${escHtml(c.visitor_name)}</div>
+        <div class="conv-time">${timeAgo(c.last_message_at)}</div>
+      </div>
+      ${c.has_unread ? '<div class="conv-dot"></div>' : ''}
+    </div>`).join('');
+}
+
+async function openConversation(convId, visitorName) {
+  // Unsubscribe from previous active conversation
+  if (activeConvRealtime) { db.removeChannel(activeConvRealtime); activeConvRealtime = null; }
+
+  activeConvId = convId;
+  renderConversations();
+
+  // Mark as read
+  const conv = conversations.find(c => c.id === convId);
+  if (conv && conv.has_unread) {
+    await markConversationRead(convId);
+    conv.has_unread = false;
+    updateMsgBadge();
+    renderConversations();
+  }
+
+  // Show chat panel
+  document.getElementById('messages-empty').style.display      = 'none';
+  const chatEl = document.getElementById('messages-chat');
+  chatEl.style.display = 'flex';
+
+  document.getElementById('messages-chat-name').textContent   = visitorName;
+  document.getElementById('messages-chat-avatar').textContent = visitorName[0].toUpperCase();
+  document.getElementById('reply-input').value = '';
+
+  // Load messages
+  try {
+    const msgs      = await getMessages(convId);
+    const container = document.getElementById('messages-chat-body');
+    container.innerHTML = '';
+    msgs.forEach(m => appendInboxMessage(m, false));
+    container.scrollTop = container.scrollHeight;
+  } catch (e) { toast('Error loading messages: ' + e.message); }
+
+  // Subscribe to new messages in this conversation
+  activeConvRealtime = db.channel('conv-' + convId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'messages',
+      filter: `conversation_id=eq.${convId}`
+    }, (payload) => {
+      if (payload.new.sender === 'visitor') {
+        appendInboxMessage(payload.new);
+      }
+    })
+    .subscribe();
+}
+
+function appendInboxMessage(msg, scroll = true) {
+  const container = document.getElementById('messages-chat-body');
+  const isOwner   = msg.sender === 'owner';
+  const time      = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const el        = document.createElement('div');
+  el.style.cssText = `display:flex;flex-direction:column;align-items:${isOwner ? 'flex-end' : 'flex-start'};`;
+  el.innerHTML = `
+    <div style="max-width:75%;padding:8px 13px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;
+      ${isOwner
+        ? 'background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-bottom-right-radius:4px;'
+        : 'background:var(--card);color:var(--text-primary);border:1px solid var(--border);border-bottom-left-radius:4px;'}">
+      ${escHtml(msg.content)}
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${isOwner ? 'You' : 'Visitor'} · ${time}</div>`;
+  container.appendChild(el);
+  if (scroll) container.scrollTop = container.scrollHeight;
+}
+
+async function sendReply() {
+  const input = document.getElementById('reply-input');
+  const msg   = input.value.trim();
+  if (!msg || !activeConvId) return;
+  input.value = '';
+  try {
+    const m = await sendMessage(activeConvId, 'owner', msg);
+    appendInboxMessage(m);
+  } catch (e) { toast('Error sending: ' + e.message); }
+}
+
+function subscribeToInbox() {
+  if (inboxRealtime) return;
+  // Listen for conversation updates (triggered when visitor sends a message)
+  inboxRealtime = db.channel('inbox-convs-' + currentUser.id)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'conversations',
+      filter: `profile_id=eq.${currentUser.id}`
+    }, async () => {
+      conversations = await getConversations(currentUser.id);
+      renderConversations();
+      updateMsgBadge();
+    })
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'conversations',
+      filter: `profile_id=eq.${currentUser.id}`
+    }, async () => {
+      conversations = await getConversations(currentUser.id);
+      renderConversations();
+      updateMsgBadge();
+    })
+    .subscribe();
+}
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min  = Math.floor(diff / 60000);
+  if (min < 1)  return 'just now';
+  if (min < 60) return min + 'm ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24)  return hr + 'h ago';
+  return Math.floor(hr / 24) + 'd ago';
+}
+
 // ── Sign out ─────────────────────────────────────────────────
 async function signOut() {
   await db.auth.signOut();

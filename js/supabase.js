@@ -105,3 +105,56 @@ async function isUsernameAvailable(username) {
     .single();
   return !data; // true = available
 }
+
+// ── Chat helpers ─────────────────────────────────────────────
+
+async function createConversation(profileId, visitorName, visitorEmail) {
+  const { data, error } = await db
+    .from('conversations')
+    .insert({ profile_id: profileId, visitor_name: visitorName, visitor_email: visitorEmail || null })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function sendMessage(conversationId, sender, content) {
+  const { data, error } = await db
+    .from('messages')
+    .insert({ conversation_id: conversationId, sender, content })
+    .select()
+    .single();
+  if (error) throw error;
+  // Update conversation timestamp + unread flag
+  await db.from('conversations').update({
+    last_message_at: new Date().toISOString(),
+    has_unread: sender === 'visitor'
+  }).eq('id', conversationId);
+  return data;
+}
+
+async function getConversations(profileId) {
+  const { data, error } = await db
+    .from('conversations')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('last_message_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+async function getMessages(conversationId) {
+  const { data, error } = await db
+    .from('messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+async function markConversationRead(conversationId) {
+  await db.from('conversations')
+    .update({ has_unread: false })
+    .eq('id', conversationId);
+}

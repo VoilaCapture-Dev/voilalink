@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const links   = await getPublicLinks(profile.id);
     renderBio(profile, links);
     applyTheme(profile.theme || 'midnight');
+    initChat(profile);
   } catch (e) {
     console.error('Bio page error:', e);
     showError('Page not found.');
@@ -143,4 +144,117 @@ function escHtml(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Chat widget ───────────────────────────────────────────────
+let chatConversationId = sessionStorage.getItem('vl_conv_id') || null;
+let chatProfileId      = null;
+let chatOpen           = false;
+let chatRealtime       = null;
+let activeConvRealtime = null;
+
+function initChat(profile) {
+  chatProfileId = profile.id;
+
+  // Set header name & avatar
+  const nameEl   = document.getElementById('chat-header-name');
+  const avatarEl = document.getElementById('chat-header-avatar');
+  if (nameEl)   nameEl.textContent = profile.full_name || profile.username;
+  if (avatarEl) {
+    if (profile.avatar_url) {
+      avatarEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avatarEl.textContent = (profile.full_name || profile.username)[0].toUpperCase();
+    }
+  }
+
+  // Returning visitor: restore conversation
+  if (chatConversationId) {
+    showChatMessages();
+    loadChatHistory();
+    subscribeToChatReplies();
+  }
+}
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chat-window').classList.toggle('open', chatOpen);
+  if (chatOpen && chatConversationId) {
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  }
+}
+
+async function startChat() {
+  const name = document.getElementById('chat-visitor-name').value.trim();
+  const msg  = document.getElementById('chat-first-message').value.trim();
+  if (!name) { document.getElementById('chat-visitor-name').focus(); return; }
+  if (!msg)  { document.getElementById('chat-first-message').focus(); return; }
+
+  const btn = document.getElementById('chat-start-btn');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+
+  try {
+    const conv = await createConversation(chatProfileId, name, null);
+    chatConversationId = conv.id;
+    sessionStorage.setItem('vl_conv_id', conv.id);
+    await sendMessage(conv.id, 'visitor', msg);
+    showChatMessages();
+    appendChatMessage({ sender: 'visitor', content: msg, created_at: new Date().toISOString() });
+    subscribeToChatReplies();
+  } catch (e) {
+    console.error('Chat error:', e);
+    btn.textContent = 'Try again'; btn.disabled = false;
+  }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-msg-input');
+  const msg   = input.value.trim();
+  if (!msg || !chatConversationId) return;
+  input.value = '';
+  try {
+    const m = await sendMessage(chatConversationId, 'visitor', msg);
+    appendChatMessage(m);
+  } catch (e) { console.error('Send error:', e); }
+}
+
+function showChatMessages() {
+  document.getElementById('chat-intro').style.display     = 'none';
+  document.getElementById('chat-messages').style.display  = 'flex';
+  document.getElementById('chat-input-row').style.display = 'flex';
+}
+
+async function loadChatHistory() {
+  try {
+    const messages  = await getMessages(chatConversationId);
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    messages.forEach(m => appendChatMessage(m, false));
+    container.scrollTop = container.scrollHeight;
+  } catch (e) { console.error('Load history error:', e); }
+}
+
+function appendChatMessage(msg, scroll = true) {
+  const container = document.getElementById('chat-messages');
+  const el   = document.createElement('div');
+  const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  el.className = 'msg-bubble ' + msg.sender;
+  el.innerHTML = escHtml(msg.content) + `<div class="msg-time">${time}</div>`;
+  container.appendChild(el);
+  if (scroll) container.scrollTop = container.scrollHeight;
+}
+
+function subscribeToChatReplies() {
+  if (chatRealtime) return;
+  chatRealtime = db.channel('chat-' + chatConversationId)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'messages',
+      filter: `conversation_id=eq.${chatConversationId}`
+    }, (payload) => {
+      if (payload.new.sender === 'owner') {
+        appendChatMessage(payload.new);
+      }
+    })
+    .subscribe();
 }
