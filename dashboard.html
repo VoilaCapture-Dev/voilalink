@@ -214,6 +214,18 @@
     .link-item.dragging {
       opacity: 0.5; cursor: grabbing;
     }
+    .avatar-cam-hint {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .user-avatar:hover .avatar-cam-hint,
+    .phone-avatar:hover .avatar-cam-hint { opacity: 1; }
+
     .drag-handle {
       color: var(--text-muted); font-size: 14px;
       cursor: grab; padding: 2px;
@@ -574,7 +586,9 @@
 
     <div class="sidebar-bottom">
       <div class="user-pill">
-        <div class="user-avatar">YO</div>
+        <div class="user-avatar" onclick="document.getElementById('avatar-input-global').click()" title="Change photo" style="cursor:pointer;position:relative;">
+          <div class="avatar-cam-hint">📷</div>
+        </div>
         <div>
           <div class="user-name">Your Name</div>
           <div class="user-plan">Free plan</div>
@@ -936,7 +950,9 @@
         </div>
 
         <div class="phone-frame">
-          <div class="phone-avatar" id="preview-avatar">YO</div>
+          <div class="phone-avatar" id="preview-avatar" onclick="document.getElementById('avatar-input-global').click()" title="Change photo" style="cursor:pointer;position:relative;">
+            <div class="avatar-cam-hint">📷</div>
+          </div>
           <div class="phone-name" id="preview-name">Your Name</div>
           <div class="phone-handle" id="preview-handle">@yourname</div>
           <div id="preview-links"></div>
@@ -958,6 +974,9 @@
 
     </div>
   </div>
+
+  <!-- Global avatar file input -->
+  <input id="avatar-input-global" type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
 
   <!-- ── QR Code modal ────────────────────────────────────── -->
   <div class="modal-overlay" id="qr-modal">
