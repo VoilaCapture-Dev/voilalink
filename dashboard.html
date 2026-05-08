@@ -637,6 +637,9 @@
     <a class="nav-item" href="#" onclick="showTab('outreach')" id="nav-outreach">
       <span class="nav-item-icon">🤖</span> AI Outreach
     </a>
+    <a class="nav-item" href="#" onclick="showTab('research')" id="nav-research">
+      <span class="nav-item-icon">🔍</span> Research
+    </a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
@@ -1010,6 +1013,78 @@
         </div>
       </div>
 
+      <!-- ── Research panel ────────────────────────────────── -->
+      <div class="links-panel" id="panel-research" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🔍 Creator Research</div>
+            <div class="panel-sub">Find creators in any niche to reach out to</div>
+          </div>
+        </div>
+
+        <!-- Search form -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;">Search criteria</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Niche *</label>
+              <input id="res-niche" class="form-input" type="text" placeholder="e.g. productivity, fitness, travel" />
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Platform</label>
+              <select id="res-platform" class="form-input" style="cursor:pointer;">
+                <option value="TikTok">TikTok</option>
+                <option value="Instagram">Instagram</option>
+                <option value="YouTube">YouTube</option>
+                <option value="Twitter / X">Twitter / X</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Min followers</label>
+              <select id="res-min" class="form-input" style="cursor:pointer;">
+                <option value="10K">10K+</option>
+                <option value="50K">50K+</option>
+                <option value="100K">100K+</option>
+                <option value="500K">500K+</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Max followers</label>
+              <select id="res-max" class="form-input" style="cursor:pointer;">
+                <option value="100K">100K</option>
+                <option value="500K">500K</option>
+                <option value="1M">1M</option>
+                <option value="5M">5M+</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Results</label>
+              <select id="res-count" class="form-input" style="cursor:pointer;">
+                <option value="5">5 creators</option>
+                <option value="10" selected>10 creators</option>
+                <option value="15">15 creators</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="res-search-btn" class="btn-sm primary" onclick="researchCreators()" style="width:100%;padding:12px;font-size:13px;">
+            🔍 Find creators
+          </button>
+        </div>
+
+        <!-- Disclaimer -->
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:11px;color:#f59e0b;line-height:1.6;">
+          ⚠️ Results are based on Claude's training data. Always verify follower counts and profile URLs before reaching out. Click any creator to pre-fill the outreach tool.
+        </div>
+
+        <!-- Results -->
+        <div id="res-results"></div>
+      </div>
+
       <!-- ── Outreach panel ────────────────────────────────── -->
       <div class="links-panel" id="panel-outreach" style="display:none;">
         <div class="panel-header">
@@ -1301,9 +1376,10 @@
       document.getElementById('panel-upgrade').style.display   = tab === 'upgrade'   ? 'block' : 'none';
       document.getElementById('panel-messages').style.display  = tab === 'messages'  ? 'flex'  : 'none';
       document.getElementById('panel-outreach').style.display  = tab === 'outreach'  ? 'block' : 'none';
-      // Hide preview panel when in messages or outreach (needs full width)
-      document.querySelector('.preview-panel').style.display   = (tab === 'messages' || tab === 'outreach') ? 'none' : '';
-      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach' };
+      document.getElementById('panel-research').style.display  = tab === 'research'  ? 'block' : 'none';
+      // Hide preview panel when full-width tabs active
+      document.querySelector('.preview-panel').style.display   = (tab === 'messages' || tab === 'outreach' || tab === 'research') ? 'none' : '';
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') loadAnalytics();
       if (tab === 'settings')  loadSettings();

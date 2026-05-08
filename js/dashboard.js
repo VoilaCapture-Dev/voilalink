@@ -454,6 +454,99 @@ async function loadAnalytics() {
   } catch (e) { toast('Error loading analytics: ' + e.message); }
 }
 
+// ── Creator Research ──────────────────────────────────────────
+async function researchCreators() {
+  const niche    = document.getElementById('res-niche').value.trim();
+  const platform = document.getElementById('res-platform').value;
+  const minF     = document.getElementById('res-min').value;
+  const maxF     = document.getElementById('res-max').value;
+  const count    = document.getElementById('res-count').value;
+
+  if (!niche) { toast('Please enter a niche'); document.getElementById('res-niche').focus(); return; }
+
+  const btn     = document.getElementById('res-search-btn');
+  const results = document.getElementById('res-results');
+  btn.textContent = '🔍 Searching…'; btn.disabled = true;
+  results.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted);">
+    <div style="font-size:32px;margin-bottom:12px;">🤖</div>
+    <div style="font-size:13px;">Claude is researching ${platform} creators in the ${niche} niche…</div>
+  </div>`;
+
+  try {
+    const res  = await fetch('/api/research-creators', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ niche, platform, minFollowers: minF, maxFollowers: maxF, count: parseInt(count) })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) { toast('Error: ' + (data.error || 'Unknown')); results.innerHTML = ''; return; }
+
+    renderResearchResults(data.creators, platform);
+  } catch (e) {
+    toast('Error: ' + e.message); results.innerHTML = '';
+  } finally {
+    btn.textContent = '🔍 Find creators'; btn.disabled = false;
+  }
+}
+
+function renderResearchResults(creators, platform) {
+  const container = document.getElementById('res-results');
+  if (!creators || creators.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No results found. Try a different niche or platform.</div>`;
+    return;
+  }
+
+  const confidenceColour = { high: '#4ade80', medium: '#f59e0b', low: '#ef4444' };
+
+  container.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">${creators.length} creators found</div>
+    ${creators.map((c, i) => `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;flex-shrink:0;">${(c.name||'?')[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+              <div style="font-size:14px;font-weight:700;">${escHtml(c.name || '')}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);">${escHtml(c.handle || '')}</div>
+              <div style="font-size:10px;padding:2px 8px;border-radius:99px;background:rgba(129,140,248,0.1);color:var(--text-muted);">${escHtml(c.estimated_followers || '')}</div>
+              <div style="font-size:10px;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,0.2);color:${confidenceColour[c.confidence]||'#7878a0'};">${c.confidence || 'unknown'} confidence</div>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">${escHtml(c.why_good_fit || '')}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+              ${(c.niche_tags||[]).map(t => `<span style="font-size:10px;padding:2px 8px;background:var(--card-hover);border:1px solid var(--border);border-radius:99px;color:var(--text-muted);">${escHtml(t)}</span>`).join('')}
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="useCreatorForOutreach('${escHtml(c.name||'')}','${escHtml(platform)}','${escHtml((c.niche_tags||[]).join(', '))}','${escHtml(c.profile_url||'')}','${escHtml(c.estimated_followers||'')} followers')" class="btn-sm primary" style="font-size:11px;padding:5px 12px;">✍️ Write outreach</button>
+              ${c.profile_url ? `<a href="${escHtml(c.profile_url)}" target="_blank" rel="noopener noreferrer" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">↗ View profile</a>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}`;
+}
+
+function useCreatorForOutreach(name, platform, niche, profileUrl, notes) {
+  // Switch to outreach tab
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('nav-outreach').classList.add('active');
+  document.getElementById('panel-research').style.display = 'none';
+  document.getElementById('panel-outreach').style.display = 'block';
+  document.querySelector('.preview-panel').style.display  = 'none';
+  document.getElementById('topbar-title').textContent = 'AI Outreach';
+  loadOutreachLog();
+
+  // Pre-fill the outreach form
+  document.getElementById('out-name').value  = name;
+  document.getElementById('out-niche').value = niche;
+  document.getElementById('out-url').value   = profileUrl;
+  document.getElementById('out-notes').value = notes;
+
+  // Set platform dropdown
+  const sel = document.getElementById('out-platform');
+  for (let opt of sel.options) { if (opt.value === platform) { sel.value = platform; break; } }
+
+  toast('Creator loaded — click Generate message ✓');
+}
+
 // ── AI Outreach ───────────────────────────────────────────────
 let lastOutreachMessage = '';
 
