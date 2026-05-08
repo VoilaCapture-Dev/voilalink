@@ -103,6 +103,7 @@ async function loadLinks() {
     renderLinks();
     renderPreview();
     updateStats();
+    renderOnboarding();
   } catch (e) {
     toast('Error loading links: ' + e.message);
   }
@@ -113,10 +114,11 @@ function renderLinks() {
   container.innerHTML = '';
   if (allLinks.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:40px;color:var(--text-muted);">
-        <div style="font-size:32px;margin-bottom:12px;">🔗</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px;">No links yet</div>
-        <div style="font-size:12px;">Click "Add link" to get started</div>
+      <div style="text-align:center;padding:48px 24px;">
+        <div style="font-size:48px;margin-bottom:16px;">🔗</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text-primary);">Add your first link</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;line-height:1.6;">Share any URL — your website, social profile,<br>portfolio, shop, or anything else.</div>
+        <button class="btn-sm primary" onclick="openModal()" style="padding:12px 28px;font-size:13px;">+ Add a link</button>
       </div>`;
     return;
   }
@@ -304,16 +306,45 @@ async function selectTheme(card) {
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
   const theme = card.dataset.theme;
-  try {
-    await db.from('profiles').update({ theme }).eq('id', currentUser.id);
-    if (currentProfile) currentProfile.theme = theme;
-    toast('Theme saved ✓');
-    const reminder = document.getElementById('theme-refresh-reminder');
-    if (reminder) {
-      reminder.style.display = 'flex';
-      reminder.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  } catch (e) { toast('Error saving theme'); }
+  const { error } = await db.from('profiles').update({ theme }).eq('id', currentUser.id);
+  if (error) { toast('Error saving theme'); return; }
+  if (currentProfile) currentProfile.theme = theme;
+  toast('Theme saved ✓ — open your bio page to see it');
+}
+
+// ── Onboarding ────────────────────────────────────────────────
+function renderOnboarding() {
+  const banner = document.getElementById('onboarding-banner');
+  if (!banner) return;
+  if (localStorage.getItem('vl_onboarding_dismissed')) { banner.style.display = 'none'; return; }
+
+  const hasLinks = allLinks.length > 0;
+  const hasBio   = !!(currentProfile && currentProfile.bio);
+  if (hasLinks && hasBio) { banner.style.display = 'none'; return; }
+
+  banner.style.display = 'block';
+
+  const steps = [
+    { done: true,     text: 'Create your VoilaLink account',   btn: '' },
+    { done: hasLinks, text: 'Add your first link',             btn: `<button class="btn-sm primary" onclick="openModal()" style="font-size:10px;padding:4px 10px;">Add link →</button>` },
+    { done: hasBio,   text: 'Write a short bio',               btn: `<span style="font-size:11px;color:var(--accent);cursor:pointer;" onclick="document.querySelector('[onclick*=settings]').click()">Go to Settings →</span>` },
+  ];
+
+  document.getElementById('onboarding-checklist').innerHTML = steps.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i < steps.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+      <div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+        ${s.done ? 'background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.4);' : 'background:var(--card);color:var(--text-muted);border:1px solid var(--border);'}">
+        ${s.done ? '✓' : '·'}
+      </div>
+      <div style="flex:1;font-size:12px;${s.done ? 'color:var(--text-muted);text-decoration:line-through;' : 'font-weight:500;'}">${s.text}</div>
+      ${!s.done ? s.btn : ''}
+    </div>`).join('');
+}
+
+function dismissOnboarding() {
+  localStorage.setItem('vl_onboarding_dismissed', '1');
+  const banner = document.getElementById('onboarding-banner');
+  if (banner) banner.style.display = 'none';
 }
 
 // ── Analytics ────────────────────────────────────────────────
