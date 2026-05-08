@@ -611,7 +611,7 @@
       </div>
       <div class="topbar-actions">
         <button class="btn-sm ghost" onclick="showQR()">⬛ QR Code</button>
-        <a class="btn-sm ghost" href="bio.html" target="_blank">👁 Preview</a>
+        <a class="btn-sm ghost" id="topbar-preview-link" href="#" onclick="window.open('/'+(currentProfile&&currentProfile.username),'_blank');return false;">👁 Preview</a>
         <button class="btn-sm primary" onclick="openModal()">+ Add link</button>
       </div>
     </div>
@@ -969,7 +969,7 @@
           </div>
         </div>
 
-        <a class="view-page-btn" id="preview-page-link" href="bio.html" target="_blank">View my page →</a>
+        <a class="view-page-btn" id="preview-page-link" href="#" target="_blank">View my page →</a>
       </div>
 
     </div>
