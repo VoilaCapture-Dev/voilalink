@@ -334,17 +334,24 @@ function showQR() {
   document.getElementById('qr-url-label').textContent = 'voilalink.com/' + currentProfile.username;
   container.innerHTML = '';
   modal.classList.add('open');
-  QRCode.toCanvas(url, { width: 220, margin: 1, color: { dark: '#000', light: '#fff' } }, (err, canvas) => {
-    if (!err) container.appendChild(canvas);
+  new QRCode(container, {
+    text: url,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
   });
 }
 function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
 function downloadQR() {
   const canvas = document.querySelector('#qr-container canvas');
-  if (!canvas) return;
+  const img    = document.querySelector('#qr-container img');
+  const src    = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+  if (!src) return;
   const a = document.createElement('a');
   a.download = 'voilalink-' + currentProfile.username + '.png';
-  a.href = canvas.toDataURL('image/png');
+  a.href = src;
   a.click();
 }
 
