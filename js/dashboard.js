@@ -309,7 +309,10 @@ async function selectTheme(card) {
     if (currentProfile) currentProfile.theme = theme;
     toast('Theme saved ✓');
     const reminder = document.getElementById('theme-refresh-reminder');
-    if (reminder) reminder.style.display = 'flex';
+    if (reminder) {
+      reminder.style.display = 'flex';
+      reminder.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   } catch (e) { toast('Error saving theme'); }
 }
 
