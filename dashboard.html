@@ -557,7 +557,7 @@
     <a class="nav-item" href="#" onclick="showTab('feedback')">
       <span class="nav-item-icon">💡</span> Suggest a feature
     </a>
-    <a class="nav-item" href="#">
+    <a class="nav-item" href="#" onclick="showTab('upgrade')">
       <span class="nav-item-icon">⭐</span> Upgrade to Pro
     </a>
     <a class="nav-item" href="#" onclick="signOut()">
@@ -773,6 +773,53 @@
         </div>
       </div>
 
+      <!-- ── Upgrade panel ────────────────────────────────── -->
+      <div class="links-panel" id="panel-upgrade" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Upgrade to Pro ⭐</div>
+            <div class="panel-sub">Unlock everything VoilaLink has to offer</div>
+          </div>
+        </div>
+
+        <!-- Pro features list -->
+        <div style="background:var(--card);border:1px solid var(--border-accent);border-radius:16px;padding:20px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--accent);">✦ What's included in Pro</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div>✅ Unlimited links (Free = 5 max)</div>
+            <div>✅ All themes including Galaxy & Sunset</div>
+            <div>✅ Full click analytics & visitor data</div>
+            <div>✅ Priority support</div>
+            <div>✅ Early access to new features</div>
+          </div>
+        </div>
+
+        <!-- Monthly plan -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;">Monthly</div>
+              <div style="font-size:11px;color:var(--text-muted);">Cancel anytime · 7 day free trial</div>
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);">£3.99<span style="font-size:11px;font-weight:400;color:var(--text-muted);">/mo</span></div>
+          </div>
+          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Start free trial →</a>
+        </div>
+
+        <!-- Annual plan -->
+        <div style="background:var(--card);border:1px solid var(--border-accent);border-radius:16px;padding:20px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;">SAVE 33%</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;">Annual</div>
+              <div style="font-size:11px;color:var(--text-muted);">Best value · 7 day free trial</div>
+            </div>
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);">£31.99<span style="font-size:11px;font-weight:400;color:var(--text-muted);">/yr</span></div>
+          </div>
+          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/74128f87-4d03-4ab7-9ece-bd332362a157" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Start free trial →</a>
+        </div>
+      </div>
+
       <!-- ── Settings panel ───────────────────────────────── -->
       <div class="links-panel" id="panel-settings" style="display:none;">
         <div class="panel-header">
@@ -969,7 +1016,8 @@
       document.getElementById('panel-analytics').style.display = tab === 'analytics' ? 'block' : 'none';
       document.getElementById('panel-settings').style.display  = tab === 'settings'  ? 'block' : 'none';
       document.getElementById('panel-feedback').style.display  = tab === 'feedback'  ? 'block' : 'none';
-      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature' };
+      document.getElementById('panel-upgrade').style.display   = tab === 'upgrade'   ? 'block' : 'none';
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') loadAnalytics();
       if (tab === 'settings') loadSettings();
