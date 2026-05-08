@@ -156,6 +156,8 @@ function renderLinks() {
     Sortable.create(container, {
       handle: '.drag-handle',
       animation: 150,
+      forceFallback: true,
+      fallbackClass: 'sortable-drag',
       onEnd: async () => {
         const ids = Array.from(container.querySelectorAll('.link-item')).map(el => el.dataset.id);
         allLinks.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
