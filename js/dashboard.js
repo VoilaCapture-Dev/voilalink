@@ -459,17 +459,41 @@ function dismissOnboarding() {
 async function loadAnalytics() {
   try {
     const clicks = await getLinkClicks(currentUser.id);
-    document.getElementById('stat-total-clicks').textContent = clicks.length;
+
+    // Top stats
+    const total = clicks.length;
     const counts = {};
     clicks.forEach(c => { counts[c.link_id] = (counts[c.link_id] || 0) + 1; });
+    const linksClicked = Object.keys(counts).length;
+    const topLinkId = Object.entries(counts).sort((a,b) => b[1]-a[1])[0]?.[0];
+    const topLink = allLinks.find(l => l.id === topLinkId);
+
+    document.getElementById('stat-total-clicks').textContent = total;
+    document.getElementById('stat-total-main').textContent   = total;
+    document.getElementById('stat-links-clicked').textContent = linksClicked;
+    document.getElementById('stat-top-link').textContent     = topLink ? (topLink.emoji + ' ' + topLink.title) : '—';
+
+    // Per link bars
     const max = Math.max(...Object.values(counts), 1);
     const container = document.getElementById('analytics-links');
+    if (!container) return;
+
+    if (allLinks.length === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No links yet — add some links to start tracking clicks.</div>';
+      return;
+    }
+
+    if (total === 0) {
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No clicks yet — share your page to start seeing data!</div>';
+      return;
+    }
+
     container.innerHTML = '';
     allLinks.forEach(link => {
       const n   = counts[link.id] || 0;
       const pct = Math.round((n / max) * 100);
       container.innerHTML += `
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
             <span style="font-size:16px;">${link.emoji || '🔗'}</span>
             <div style="flex:1;font-weight:600;font-size:12px;">${escHtml(link.title)}</div>

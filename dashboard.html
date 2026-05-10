@@ -816,63 +816,25 @@
         <!-- Total stats -->
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
           <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">248</div>
+            <div id="stat-total-main" style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">0</div>
             <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Total clicks</div>
           </div>
           <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--accent-lime);">184</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Unique visitors</div>
+            <div id="stat-links-clicked" style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--accent-lime);">0</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Links clicked</div>
           </div>
           <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--accent-sky);">74%</div>
-            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Click-through</div>
+            <div id="stat-top-link" style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent-sky);">—</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Top link</div>
           </div>
         </div>
 
         <!-- Per link stats -->
         <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">Clicks per link</div>
 
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-              <span style="font-size:16px;">🚀</span>
-              <div style="flex:1;font-weight:600;font-size:12px;">My Design Course</div>
-              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent);">98</div>
-            </div>
-            <div style="background:var(--bg);border-radius:4px;height:6px;">
-              <div style="width:98%;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:4px;"></div>
-            </div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-              <span style="font-size:16px;">in</span>
-              <div style="flex:1;font-weight:600;font-size:12px;">LinkedIn</div>
-              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent-sky);">64</div>
-            </div>
-            <div style="background:var(--bg);border-radius:4px;height:6px;">
-              <div style="width:65%;height:100%;background:var(--accent-sky);border-radius:4px;"></div>
-            </div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-              <span style="font-size:16px;">💬</span>
-              <div style="flex:1;font-weight:600;font-size:12px;">WhatsApp</div>
-              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--accent-lime);">42</div>
-            </div>
-            <div style="background:var(--bg);border-radius:4px;height:6px;">
-              <div style="width:43%;height:100%;background:var(--accent-lime);border-radius:4px;"></div>
-            </div>
-          </div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-              <span style="font-size:16px;">🌐</span>
-              <div style="flex:1;font-weight:600;font-size:12px;">Google Translate</div>
-              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--text-muted);">28</div>
-            </div>
-            <div style="background:var(--bg);border-radius:4px;height:6px;">
-              <div style="width:28%;height:100%;background:var(--text-muted);border-radius:4px;"></div>
-            </div>
-          </div>
+        <div id="analytics-links" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Loading analytics…</div>
+        </div>
         </div>
 
         <div style="margin-top:20px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">

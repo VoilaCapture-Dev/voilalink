@@ -149,12 +149,18 @@ function escHtml(str) {
 // ── Chat widget ───────────────────────────────────────────────
 let chatConversationId = sessionStorage.getItem('vl_conv_id') || null;
 let chatProfileId      = null;
+let chatProfileEmail   = null;
+let chatProfileName    = null;
+let chatPageUrl        = null;
 let chatOpen           = false;
 let chatRealtime       = null;
 let activeConvRealtime = null;
 
 function initChat(profile) {
-  chatProfileId = profile.id;
+  chatProfileId    = profile.id;
+  chatProfileEmail = profile.email || null;
+  chatProfileName  = profile.full_name || profile.username;
+  chatPageUrl      = window.location.href;
 
   // Set header name & avatar
   const nameEl   = document.getElementById('chat-header-name');
@@ -202,6 +208,21 @@ async function startChat() {
     showChatMessages();
     appendChatMessage({ sender: 'visitor', content: msg, created_at: new Date().toISOString() });
     subscribeToChatReplies();
+
+    // Send email notification to page owner (fire and forget)
+    if (chatProfileEmail) {
+      fetch('/api/notify-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerEmail:  chatProfileEmail,
+          ownerName:   chatProfileName,
+          visitorName: name,
+          message:     msg,
+          pageUrl:     chatPageUrl
+        })
+      }).catch(() => {}); // silently ignore if email fails
+    }
   } catch (e) {
     console.error('Chat error:', e);
     btn.textContent = 'Try again'; btn.disabled = false;
