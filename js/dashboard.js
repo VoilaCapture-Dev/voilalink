@@ -244,6 +244,9 @@ const presets = {
   googlechat:{ url: 'https://chat.google.com/',      title: 'Google Chat', emoji: '💬' },
   email:     { url: 'mailto:',                       title: 'Email me',    emoji: '✉️' },
   phone:     { url: 'tel:',                          title: 'Call me',     emoji: '📞' },
+  website:   { url: 'https://',                      title: 'My Website',  emoji: '🌐' },
+  shop:      { url: 'https://',                      title: 'My Shop',     emoji: '🛒' },
+  blog:      { url: 'https://',                      title: 'My Blog',     emoji: '✍️' },
 };
 
 let editingId = null;
