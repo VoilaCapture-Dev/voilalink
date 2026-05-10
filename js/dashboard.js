@@ -73,6 +73,17 @@ async function createProfile() {
       id: currentUser.id, username, full_name: name, theme: 'midnight'
     });
     if (error) throw error;
+
+    // Insert 5 default links for new users
+    const defaultLinks = [
+      { user_id: currentUser.id, title: 'Facebook',  emoji: '📘', url: 'https://facebook.com/',  position: 0, enabled: true },
+      { user_id: currentUser.id, title: 'Instagram', emoji: '📸', url: 'https://instagram.com/', position: 1, enabled: true },
+      { user_id: currentUser.id, title: 'TikTok',    emoji: '🎵', url: 'https://tiktok.com/@',   position: 2, enabled: true },
+      { user_id: currentUser.id, title: 'YouTube',   emoji: '▶️', url: 'https://youtube.com/@',  position: 3, enabled: true },
+      { user_id: currentUser.id, title: 'WhatsApp',  emoji: '💬', url: 'https://wa.me/',         position: 4, enabled: true },
+    ];
+    await db.from('links').insert(defaultLinks);
+
     window.location.reload();
   } catch (e) {
     errEl.textContent = 'Error: ' + e.message;
