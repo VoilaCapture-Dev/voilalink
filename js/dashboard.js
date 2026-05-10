@@ -252,6 +252,13 @@ const presets = {
 let editingId = null;
 
 function openModal() {
+  // Enforce 5-link limit for free plan users
+  const isPro = currentProfile && currentProfile.is_pro;
+  if (!isPro && allLinks.length >= 5) {
+    toast('⭐ Free plan is limited to 5 links. Upgrade to Pro for unlimited links!');
+    document.querySelector('[onclick*="upgrade"]') && showTab('upgrade');
+    return;
+  }
   editingId = null;
   document.getElementById('modal-title').textContent  = 'Add a link';
   document.getElementById('modal-submit').textContent = 'Add link →';
@@ -301,6 +308,14 @@ async function saveLink() {
   const btn   = document.getElementById('modal-submit');
 
   if (!url || !title) { toast('Please fill in URL and title'); return; }
+
+  // Double-check free plan limit
+  const isPro = currentProfile && currentProfile.is_pro;
+  if (!editingId && !isPro && allLinks.length >= 5) {
+    toast('⭐ Free plan is limited to 5 links. Upgrade to Pro!');
+    closeModal();
+    return;
+  }
 
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
