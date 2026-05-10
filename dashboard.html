@@ -1039,7 +1039,8 @@
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
           <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">🔔 Desktop Notifications</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Get notified when visitors message you — even when on another tab.</div>
-          <button class="btn-sm ghost" onclick="requestNotificationPermission();toast('Notifications enabled ✓')" style="font-size:11px;">Enable notifications</button>
+          <button id="notif-btn" class="btn-sm ghost" onclick="handleNotificationToggle()" style="font-size:11px;">Enable notifications</button>
+          <span id="notif-status" style="font-size:11px;margin-left:10px;display:none;color:#4ade80;">✓ Notifications enabled</span>
         </div>
 
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
@@ -1478,6 +1479,11 @@
       }
       const ctx = document.getElementById('settings-auto-reply-context');
       if (ctx) ctx.value = currentProfile.auto_reply_context || '';
+
+      // Check notification permission state
+      if ('Notification' in window) {
+        updateNotifUI(Notification.permission === 'granted');
+      }
     }
 
     async function saveSettings() {
@@ -1514,6 +1520,40 @@
       db.from('profiles').update({ auto_reply_enabled: checkbox.checked }).eq('id', currentUser.id);
       currentProfile.auto_reply_enabled = checkbox.checked;
       toast(checkbox.checked ? 'Auto-reply enabled ✓' : 'Auto-reply disabled');
+    }
+
+    function handleNotificationToggle() {
+      if (!('Notification' in window)) {
+        toast('Your browser does not support notifications');
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        updateNotifUI(true);
+        toast('Notifications already enabled ✓');
+        return;
+      }
+      Notification.requestPermission().then(permission => {
+        updateNotifUI(permission === 'granted');
+        toast(permission === 'granted' ? 'Notifications enabled ✓' : 'Notifications blocked — check browser settings');
+      });
+    }
+
+    function updateNotifUI(enabled) {
+      const btn    = document.getElementById('notif-btn');
+      const status = document.getElementById('notif-status');
+      if (!btn) return;
+      if (enabled) {
+        btn.textContent = '✓ Enabled';
+        btn.style.background = 'rgba(74,222,128,0.1)';
+        btn.style.borderColor = '#4ade80';
+        btn.style.color = '#4ade80';
+        if (status) status.style.display = 'none';
+      } else {
+        btn.textContent = 'Enable notifications';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }
     }
 
     async function saveAutoReply() {
