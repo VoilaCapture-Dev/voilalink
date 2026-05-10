@@ -147,20 +147,24 @@ function escHtml(str) {
 }
 
 // ── Chat widget ───────────────────────────────────────────────
-let chatConversationId = sessionStorage.getItem('vl_conv_id') || null;
-let chatProfileId      = null;
-let chatProfileEmail   = null;
-let chatProfileName    = null;
-let chatPageUrl        = null;
-let chatOpen           = false;
-let chatRealtime       = null;
-let activeConvRealtime = null;
+let chatConversationId   = sessionStorage.getItem('vl_conv_id') || null;
+let chatProfileId        = null;
+let chatProfileEmail     = null;
+let chatProfileName      = null;
+let chatPageUrl          = null;
+let chatAutoReplyEnabled = false;
+let chatAutoReplyContext = null;
+let chatOpen             = false;
+let chatRealtime         = null;
+let activeConvRealtime   = null;
 
 function initChat(profile) {
-  chatProfileId    = profile.id;
-  chatProfileEmail = profile.email || null;
-  chatProfileName  = profile.full_name || profile.username;
-  chatPageUrl      = window.location.href;
+  chatProfileId        = profile.id;
+  chatProfileEmail     = profile.email || null;
+  chatProfileName      = profile.full_name || profile.username;
+  chatPageUrl          = window.location.href;
+  chatAutoReplyEnabled = profile.auto_reply_enabled || false;
+  chatAutoReplyContext = profile.auto_reply_context || null;
 
   // Set header name & avatar
   const nameEl   = document.getElementById('chat-header-name');
@@ -221,7 +225,27 @@ async function startChat() {
           message:     msg,
           pageUrl:     chatPageUrl
         })
-      }).catch(() => {}); // silently ignore if email fails
+      }).catch(() => {});
+    }
+
+    // AI auto-reply if enabled (fire and forget)
+    if (chatAutoReplyEnabled) {
+      setTimeout(() => {
+        fetch('/api/auto-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId: conv.id,
+            visitorName:    name,
+            visitorMessage: msg,
+            ownerContext:   chatAutoReplyContext
+          })
+        }).then(r => r.json()).then(data => {
+          if (data.reply) {
+            appendChatMessage({ sender: 'owner', content: data.reply, created_at: new Date().toISOString() });
+          }
+        }).catch(() => {});
+      }, 2000); // 2 second delay so it feels natural
     }
   } catch (e) {
     console.error('Chat error:', e);

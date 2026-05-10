@@ -608,6 +608,66 @@
       font-family: 'DM Mono', monospace; color: var(--accent);
     }
     .toast.show { opacity: 1; }
+
+    /* ── Mobile Responsive ───────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        margin-left: 0;
+      }
+      .topbar {
+        padding: 12px 16px;
+      }
+      .topbar-title { font-size: 15px; }
+      .topbar-url { display: none; }
+      .links-panel {
+        padding: 16px;
+        max-width: 100%;
+        border-right: none;
+      }
+      .preview-panel {
+        display: none !important;
+      }
+      .content {
+        flex-direction: column;
+      }
+      .messages-panel {
+        height: calc(100vh - 120px);
+        flex-direction: column;
+      }
+      .conv-list {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      /* Mobile bottom nav */
+      .mobile-nav {
+        display: flex !important;
+      }
+    }
+
+    /* Mobile bottom navigation bar */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 0 12px;
+      z-index: 100;
+      justify-content: space-around;
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      color: var(--text-muted); font-size: 9px; cursor: pointer;
+      padding: 6px 12px; border-radius: 8px;
+      transition: all 0.15s; text-decoration: none;
+    }
+    .mobile-nav-item.active { color: var(--accent); }
+    .mobile-nav-item span:first-child { font-size: 20px; }
   </style>
 </head>
 <body>
@@ -951,6 +1011,37 @@
           </div>
           <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
         </div>
+
+        <!-- AI Auto-Reply -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">🤖 AI Auto-Reply</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Automatically reply to visitors when you're away</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
+              <input type="checkbox" id="settings-auto-reply" style="opacity:0;width:0;height:0;" onchange="toggleAutoReply(this)">
+              <span id="auto-reply-slider" style="position:absolute;inset:0;background:#333;border-radius:22px;transition:0.3s;">
+                <span style="position:absolute;content:'';height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;display:block;" id="auto-reply-knob"></span>
+              </span>
+            </label>
+          </div>
+          <div id="auto-reply-form" style="display:none;">
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Context for AI (what do you do? what should it say?)</label>
+              <textarea id="settings-auto-reply-context" class="form-input" rows="3" placeholder="e.g. I'm a hairdresser. Tell visitors I'm available Mon-Sat 9am-6pm and to leave their number." style="resize:vertical;min-height:80px;"></textarea>
+            </div>
+            <button class="btn-sm primary" onclick="saveAutoReply()" style="font-size:11px;">Save auto-reply</button>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">🔔 Desktop Notifications</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Get notified when visitors message you — even when on another tab.</div>
+          <button class="btn-sm ghost" onclick="requestNotificationPermission();toast('Notifications enabled ✓')" style="font-size:11px;">Enable notifications</button>
+        </div>
+
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Account</div>
           <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);" onclick="signOut()">Sign out</button>
@@ -1377,6 +1468,16 @@
       document.getElementById('settings-youtube').value   = currentProfile.youtube_url  || '';
       document.getElementById('settings-tiktok').value    = currentProfile.tiktok_url   || '';
       document.getElementById('settings-github').value    = currentProfile.github_url   || '';
+
+      // Load auto-reply settings
+      const autoReplyEnabled = currentProfile.auto_reply_enabled || false;
+      const checkbox = document.getElementById('settings-auto-reply');
+      if (checkbox) {
+        checkbox.checked = autoReplyEnabled;
+        updateAutoReplyUI(autoReplyEnabled);
+      }
+      const ctx = document.getElementById('settings-auto-reply-context');
+      if (ctx) ctx.value = currentProfile.auto_reply_context || '';
     }
 
     async function saveSettings() {
@@ -1396,6 +1497,31 @@
         Object.assign(currentProfile, { full_name: name, bio, twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url });
         renderHeader();
         toast('Settings saved ✓');
+      } catch (e) { toast('Error: ' + e.message); }
+    }
+
+    function updateAutoReplyUI(enabled) {
+      const slider = document.getElementById('auto-reply-slider');
+      const knob   = document.getElementById('auto-reply-knob');
+      const form   = document.getElementById('auto-reply-form');
+      if (slider) slider.style.background = enabled ? '#818cf8' : '#333';
+      if (knob)   knob.style.transform    = enabled ? 'translateX(18px)' : 'translateX(0)';
+      if (form)   form.style.display      = enabled ? 'block' : 'none';
+    }
+
+    function toggleAutoReply(checkbox) {
+      updateAutoReplyUI(checkbox.checked);
+      db.from('profiles').update({ auto_reply_enabled: checkbox.checked }).eq('id', currentUser.id);
+      currentProfile.auto_reply_enabled = checkbox.checked;
+      toast(checkbox.checked ? 'Auto-reply enabled ✓' : 'Auto-reply disabled');
+    }
+
+    async function saveAutoReply() {
+      const context = document.getElementById('settings-auto-reply-context').value.trim();
+      try {
+        await db.from('profiles').update({ auto_reply_context: context }).eq('id', currentUser.id);
+        currentProfile.auto_reply_context = context;
+        toast('Auto-reply context saved ✓');
       } catch (e) { toast('Error: ' + e.message); }
     }
 
@@ -1445,6 +1571,32 @@
       t.classList.add('show');
       clearTimeout(toast._t);
       toast._t = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+  </script>
+
+  <!-- Mobile bottom navigation -->
+  <nav class="mobile-nav">
+    <a class="mobile-nav-item active" href="#" onclick="showTab('links');setMobileActive(this)">
+      <span>🔗</span><span>Links</span>
+    </a>
+    <a class="mobile-nav-item" href="#" onclick="showTab('messages');setMobileActive(this)">
+      <span>💬</span><span>Messages</span>
+    </a>
+    <a class="mobile-nav-item" href="#" onclick="showTab('analytics');setMobileActive(this)">
+      <span>📊</span><span>Analytics</span>
+    </a>
+    <a class="mobile-nav-item" href="#" onclick="showTab('outreach');setMobileActive(this)">
+      <span>🤖</span><span>Outreach</span>
+    </a>
+    <a class="mobile-nav-item" href="#" onclick="showTab('settings');setMobileActive(this)">
+      <span>⚙️</span><span>Settings</span>
+    </a>
+  </nav>
+
+  <script>
+    function setMobileActive(el) {
+      document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
     }
   </script>
 

@@ -825,25 +825,64 @@ async function sendReply() {
   } catch (e) { toast('Error sending: ' + e.message); }
 }
 
+// ── Desktop Notifications ─────────────────────────────────────
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function showDesktopNotification(visitorName, message) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  if (document.hasFocus()) return; // Don't show if user is already on the page
+
+  const notif = new Notification('💬 New message on VoilaLink', {
+    body: `${visitorName}: ${message}`,
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    tag: 'voilalink-message', // Replace previous notification
+  });
+
+  notif.onclick = () => {
+    window.focus();
+    showTab('messages');
+    notif.close();
+  };
+
+  setTimeout(() => notif.close(), 6000);
+}
+
 function subscribeToInbox() {
   if (inboxRealtime) return;
+  // Request notification permission on first subscribe
+  requestNotificationPermission();
+
   // Listen for conversation updates (triggered when visitor sends a message)
   inboxRealtime = db.channel('inbox-convs-' + currentUser.id)
     .on('postgres_changes', {
       event: 'UPDATE', schema: 'public', table: 'conversations',
       filter: `profile_id=eq.${currentUser.id}`
-    }, async () => {
+    }, async (payload) => {
+      const prev = conversations.find(c => c.id === payload.new.id);
+      const wasUnread = prev ? prev.has_unread : false;
       conversations = await getConversations(currentUser.id);
       renderConversations();
       updateMsgBadge();
+      // Show desktop notification if newly unread
+      const updated = conversations.find(c => c.id === payload.new.id);
+      if (updated && updated.has_unread && !wasUnread) {
+        showDesktopNotification(updated.visitor_name, 'sent you a message');
+      }
     })
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'conversations',
       filter: `profile_id=eq.${currentUser.id}`
-    }, async () => {
+    }, async (payload) => {
       conversations = await getConversations(currentUser.id);
       renderConversations();
       updateMsgBadge();
+      showDesktopNotification(payload.new.visitor_name || 'Someone', 'started a conversation');
     })
     .subscribe();
 }
