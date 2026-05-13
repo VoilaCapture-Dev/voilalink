@@ -48,7 +48,7 @@ Write ONLY the message. No quotes, no intro.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-opus-4-7',
         max_tokens: 256,
         messages: [{ role: 'user', content: prompt }]
       })
