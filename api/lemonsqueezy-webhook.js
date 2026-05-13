@@ -1,17 +1,17 @@
 // ============================================================
 //  VoilaLink — LemonSqueezy Webhook (Vercel Serverless)
 //  Listens for successful payments and upgrades user to Pro
+//  Uses fetch only — no npm dependencies needed
 // ============================================================
 
 const crypto = require('crypto');
-const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const secret    = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
-  const supabaseUrl  = process.env.SUPABASE_URL;
-  const supabaseKey  = process.env.SUPABASE_SERVICE_KEY;
+  const secret      = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!secret || !supabaseUrl || !supabaseKey) {
     return res.status(500).json({ error: 'Server not configured' });
@@ -38,24 +38,36 @@ module.exports = async function handler(req, res) {
   if (!customerEmail) return res.status(200).json({ received: true });
 
   try {
-    const db = createClient(supabaseUrl, supabaseKey);
+    // Find user by email using Supabase Auth Admin API
+    const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(customerEmail)}`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      }
+    });
+    const userData = await userRes.json();
+    const user = userData?.users?.[0];
 
-    // Find user by email and set is_pro = true
-    const { data: { users }, error: userError } = await db.auth.admin.listUsers();
-    if (userError) throw userError;
-
-    const user = users.find(u => u.email === customerEmail);
     if (!user) {
       console.log('No user found for email:', customerEmail);
       return res.status(200).json({ received: true });
     }
 
-    const { error } = await db
-      .from('profiles')
-      .update({ is_pro: true })
-      .eq('id', user.id);
+    // Set is_pro = true on their profile
+    const updateRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      },
+      body: JSON.stringify({ is_pro: true })
+    });
 
-    if (error) throw error;
+    if (!updateRes.ok) {
+      const errText = await updateRes.text();
+      throw new Error('DB update error: ' + errText);
+    }
 
     console.log('Upgraded to Pro:', customerEmail);
     return res.status(200).json({ success: true });
