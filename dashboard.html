@@ -842,7 +842,7 @@
             <div style="font-size:12px;font-weight:600;margin-bottom:2px;">5 link limit on Free plan</div>
             <div style="font-size:11px;color:var(--text-muted);">Upgrade to Pro for unlimited links — £3.99/mo</div>
           </div>
-          <button class="btn-sm primary" style="white-space:nowrap;">Upgrade</button>
+          <button class="btn-sm primary" style="white-space:nowrap;" onclick="showTab('upgrade')">Upgrade</button>
         </div>
 
       </div>
@@ -957,7 +957,7 @@
             <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Analytics requires Pro</div>
             <div style="font-size:11px;color:var(--text-muted);">See full click history and visitor locations — £3.99/mo</div>
           </div>
-          <button class="btn-sm primary" style="white-space:nowrap;">Upgrade</button>
+          <button class="btn-sm primary" style="white-space:nowrap;" onclick="showTab('upgrade')">Upgrade</button>
         </div>
       </div>
 
@@ -977,6 +977,7 @@
             <div>✅ Unlimited links (Free = 5 max)</div>
             <div>✅ All themes including Galaxy & Sunset</div>
             <div>✅ Full click analytics & visitor data</div>
+            <div>✅ 🤖 AI Auto-Reply — replies visitors when you're away</div>
             <div>✅ Priority support</div>
             <div>✅ Early access to new features</div>
           </div>
@@ -991,7 +992,7 @@
             </div>
             <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);">£3.99<span style="font-size:11px;font-weight:400;color:var(--text-muted);">/mo</span></div>
           </div>
-          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Start free trial →</a>
+          <a id="checkout-monthly" href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Get started →</a>
         </div>
 
         <!-- Annual plan -->
@@ -1004,7 +1005,7 @@
             </div>
             <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent);">£31.99<span style="font-size:11px;font-weight:400;color:var(--text-muted);">/yr</span></div>
           </div>
-          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/74128f87-4d03-4ab7-9ece-bd332362a157" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Start free trial →</a>
+          <a id="checkout-annual" href="https://voilacapture.lemonsqueezy.com/checkout/buy/74128f87-4d03-4ab7-9ece-bd332362a157" target="_blank" class="btn-sm primary" style="display:block;text-align:center;text-decoration:none;padding:12px;">Get started →</a>
         </div>
       </div>
 
@@ -1629,6 +1630,15 @@
         } else {
           proLock.style.display = 'none';
         }
+      }
+
+      // Pre-fill email in checkout links
+      if (currentUser && currentUser.email) {
+        const email = encodeURIComponent(currentUser.email);
+        var mLink = document.getElementById('checkout-monthly');
+        var aLink = document.getElementById('checkout-annual');
+        if (mLink) mLink.href = 'https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb?checkout[email]=' + email;
+        if (aLink) aLink.href = 'https://voilacapture.lemonsqueezy.com/checkout/buy/74128f87-4d03-4ab7-9ece-bd332362a157?checkout[email]=' + email;
       }
 
       updateAllAutoReplyUI(arEnabled || false);
