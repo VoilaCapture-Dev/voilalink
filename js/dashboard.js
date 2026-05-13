@@ -864,8 +864,8 @@ function showDesktopNotification(visitorName, message) {
 
   const notif = new Notification('💬 New message on VoilaLink', {
     body: `${visitorName}: ${message}`,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     tag: 'voilalink-message', // Replace previous notification
   });
 
