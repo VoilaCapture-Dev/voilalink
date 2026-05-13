@@ -472,6 +472,10 @@
 
       <!-- Sign up -->
       <div id="signup-view" style="display:none;">
+        <!-- Referral invite banner (shown when ?ref= is present) -->
+        <div id="referral-banner" style="display:none;background:linear-gradient(135deg,rgba(129,140,248,0.15),rgba(167,139,250,0.1));border:1px solid rgba(129,140,248,0.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--text-primary);">
+          🎉 You were invited by <strong id="referral-inviter"></strong>! Create your free page below.
+        </div>
         <div class="free-badge">✦ Free forever · No credit card needed</div>
         <div class="auth-title">Create your page ✦</div>
         <div class="auth-sub">Set up your VoilaLink in under 2 minutes</div>
@@ -538,6 +542,23 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script>
+    // ── Capture referral code from URL ───────────────────────
+    (function captureRef() {
+      const p    = new URLSearchParams(window.location.search);
+      const ref  = p.get('ref');
+      const mode = p.get('mode');
+      if (ref) {
+        localStorage.setItem('vl_ref', ref);
+        const banner   = document.getElementById('referral-banner');
+        const inviter  = document.getElementById('referral-inviter');
+        if (banner && inviter) {
+          inviter.textContent = '@' + ref;
+          banner.style.display = 'block';
+        }
+      }
+      if (mode === 'signup') setMode('signup');
+    })();
+
     function setMode(mode) {
       const isSignup = mode === 'signup';
       document.getElementById('signin-view').style.display = isSignup ? 'none' : 'block';

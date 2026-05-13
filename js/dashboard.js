@@ -122,6 +122,7 @@ async function loadLinks() {
     updateStats();
     renderOnboarding();
     if (typeof initQuickControls === 'function') initQuickControls();
+    loadReferralWidget();
   } catch (e) {
     toast('Error loading links: ' + e.message);
   }
@@ -919,6 +920,48 @@ function timeAgo(dateStr) {
   const hr = Math.floor(min / 60);
   if (hr < 24)  return hr + 'h ago';
   return Math.floor(hr / 24) + 'd ago';
+}
+
+// ── Referral widget ───────────────────────────────────────────
+async function loadReferralWidget() {
+  if (!currentProfile) return;
+  const username = currentProfile.username;
+  const refLink  = 'voilalink.com/login.html?ref=' + username + '&mode=signup';
+
+  const display = document.getElementById('ref-link-display');
+  if (display) display.textContent = refLink;
+
+  // Load referral count from Supabase
+  try {
+    const { count } = await db
+      .from('referrals')
+      .select('*', { count: 'exact', head: true })
+      .eq('referrer_id', currentProfile.id);
+
+    const n   = count || 0;
+    const pct = Math.min((n % 5) / 5 * 100, 100);
+
+    const countEl = document.getElementById('ref-count-display');
+    const barEl   = document.getElementById('ref-progress-bar');
+    if (countEl) countEl.textContent = (n % 5) + '/5';
+    if (barEl)   barEl.style.width   = pct + '%';
+
+    // If pro, show congratulations
+    if (currentProfile.is_pro && currentProfile.pro_until) {
+      const until = new Date(currentProfile.pro_until).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      const widget = document.getElementById('referral-widget');
+      if (widget) {
+        const subEl = widget.querySelector('[style*="Invite 5"]');
+        if (subEl) subEl.textContent = '🎉 Pro active until ' + until + '!';
+      }
+    }
+  } catch (e) { /* silent fail */ }
+}
+
+function copyReferralLink() {
+  if (!currentProfile) return;
+  const link = 'https://voilalink.com/login.html?ref=' + currentProfile.username + '&mode=signup';
+  navigator.clipboard.writeText(link).then(() => toast('Referral link copied ✓'));
 }
 
 // ── Sign out ─────────────────────────────────────────────────

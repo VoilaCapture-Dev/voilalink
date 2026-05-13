@@ -70,6 +70,12 @@ function renderBio(profile, links) {
       <div class="link-arrow">→</div>`;
     container.appendChild(a);
   });
+
+  // Update footer link to include referral code
+  const footerLink = document.getElementById('referral-footer');
+  if (footerLink) {
+    footerLink.href = 'https://voilalink.com/login.html?ref=' + encodeURIComponent(profile.username) + '&mode=signup';
+  }
 }
 
 // ── Social pills ─────────────────────────────────────────────

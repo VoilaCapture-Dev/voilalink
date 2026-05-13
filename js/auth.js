@@ -127,6 +127,17 @@ async function signUp() {
     });
     if (profileError) throw profileError;
 
+    // Track referral if user came via a referral link
+    const ref = localStorage.getItem('vl_ref');
+    if (ref && ref !== username) {
+      localStorage.removeItem('vl_ref');
+      fetch('/api/track-referral', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ referrerUsername: ref, referredUserId: data.user.id })
+      }).catch(() => {}); // fire-and-forget
+    }
+
     window.location.href = 'dashboard.html';
   } catch (e) {
     showError(e.message);
