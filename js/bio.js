@@ -160,6 +160,7 @@ let chatProfileName      = null;
 let chatPageUrl          = null;
 let chatAutoReplyEnabled = false;
 let chatAutoReplyContext = null;
+let chatProfileIsPro     = false;
 let chatOpen             = false;
 let chatRealtime         = null;
 let activeConvRealtime   = null;
@@ -171,6 +172,7 @@ function initChat(profile) {
   chatPageUrl          = window.location.href;
   chatAutoReplyEnabled = profile.auto_reply_enabled || false;
   chatAutoReplyContext = profile.auto_reply_context || null;
+  chatProfileIsPro     = profile.is_pro || false;
 
   // Set header name & avatar
   const nameEl   = document.getElementById('chat-header-name');
@@ -234,8 +236,8 @@ async function startChat() {
       }).catch(() => {});
     }
 
-    // AI auto-reply if enabled (fire and forget)
-    if (chatAutoReplyEnabled) {
+    // AI auto-reply if enabled and owner is Pro (fire and forget)
+    if (chatAutoReplyEnabled && chatProfileIsPro) {
       setTimeout(() => {
         fetch('/api/auto-reply', {
           method: 'POST',

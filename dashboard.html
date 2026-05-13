@@ -783,13 +783,13 @@
             <button id="quick-notif-btn" onclick="handleNotificationToggle()" class="btn-sm ghost" style="font-size:10px;padding:5px 10px;white-space:nowrap;flex-shrink:0;">Enable</button>
           </div>
           <!-- Auto-Reply card -->
-          <div style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+          <div id="quick-autoreply-card" style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
             <span style="font-size:18px;flex-shrink:0;">🤖</span>
             <div style="flex:1;min-width:0;">
               <div style="font-size:12px;font-weight:600;">AI Auto-Reply</div>
               <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">Reply visitors when you're away</div>
             </div>
-            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;flex-shrink:0;">
+            <label id="quick-autoreply-toggle" style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;flex-shrink:0;">
               <input type="checkbox" id="quick-auto-reply-cb" style="opacity:0;width:0;height:0;" onchange="toggleAutoReplyQuick(this)">
               <span id="quick-auto-reply-slider" style="position:absolute;inset:0;background:#333;border-radius:22px;transition:0.3s;">
                 <span id="quick-auto-reply-knob" style="position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;display:block;"></span>
@@ -1067,18 +1067,25 @@
         </div>
 
         <!-- AI Auto-Reply -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+        <div id="auto-reply-section" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div>
               <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">🤖 AI Auto-Reply</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Automatically reply to visitors when you're away</div>
             </div>
-            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
+            <label id="auto-reply-toggle-label" style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
               <input type="checkbox" id="settings-auto-reply" style="opacity:0;width:0;height:0;" onchange="toggleAutoReply(this)">
               <span id="auto-reply-slider" style="position:absolute;inset:0;background:#333;border-radius:22px;transition:0.3s;">
                 <span style="position:absolute;content:'';height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;display:block;" id="auto-reply-knob"></span>
               </span>
             </label>
+          </div>
+          <!-- Pro lock overlay (shown for free users) -->
+          <div id="auto-reply-pro-lock" style="display:none;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.3);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">⭐</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Pro Feature</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">AI Auto-Reply is available on the Pro plan</div>
+            <button class="btn-sm primary" onclick="showTab('upgrade')" style="font-size:11px;">Upgrade to Pro →</button>
           </div>
           <div id="auto-reply-form" style="display:none;">
             <div style="margin-bottom:12px;">
@@ -1601,7 +1608,29 @@
 
     // Called on page load to sync quick controls with current profile state
     function initQuickControls() {
+      const isPro = currentProfile && currentProfile.is_pro;
       const arEnabled = currentProfile && currentProfile.auto_reply_enabled;
+
+      // Show/hide Pro lock on quick controls strip
+      var quickToggle = document.getElementById('quick-autoreply-toggle');
+      if (quickToggle) {
+        if (!isPro) {
+          quickToggle.outerHTML = '<button onclick="showTab(\'upgrade\')" style="font-size:10px;padding:4px 8px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;">⭐ Pro</button>';
+        }
+      }
+
+      // Show/hide Pro lock in settings panel
+      var proLock = document.getElementById('auto-reply-pro-lock');
+      var toggleLabel = document.getElementById('auto-reply-toggle-label');
+      if (proLock && toggleLabel) {
+        if (!isPro) {
+          toggleLabel.style.display = 'none';
+          proLock.style.display = 'block';
+        } else {
+          proLock.style.display = 'none';
+        }
+      }
+
       updateAllAutoReplyUI(arEnabled || false);
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
