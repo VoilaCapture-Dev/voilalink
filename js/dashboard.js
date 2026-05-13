@@ -121,14 +121,35 @@ async function loadLinks() {
     renderPreview();
     updateStats();
     renderOnboarding();
+    if (typeof initQuickControls === 'function') initQuickControls();
   } catch (e) {
     toast('Error loading links: ' + e.message);
   }
 }
 
+// ── Social URL detection ──────────────────────────────────────
+const SOCIAL_KEYS = [
+  'facebook','instagram','tiktok','youtube','youtu.be','twitter',
+  'x.com/','linkedin','telegram','t.me/','reddit','discord',
+  'pinterest','threads.net','snapchat','wechat','signal.me',
+  'messenger','m.me/','viber','line.me','wa.me','whatsapp',
+  'teams.microsoft','chat.google'
+];
+function isSocialUrl(url) {
+  const u = (url || '').toLowerCase();
+  return SOCIAL_KEYS.some(k => u.includes(k));
+}
+
 function renderLinks() {
   const container = document.getElementById('links-container');
+  // Reset container filter classes and tab buttons
+  container.classList.remove('show-social', 'show-custom');
   container.innerHTML = '';
+  document.querySelectorAll('.tab-switch-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === 0);
+  });
+  const tabEmpty = document.getElementById('tab-empty-state');
+  if (tabEmpty) tabEmpty.style.display = 'none';
   if (allLinks.length === 0) {
     container.innerHTML = `
       <div style="text-align:center;padding:48px 24px;">
@@ -141,8 +162,10 @@ function renderLinks() {
   }
   allLinks.forEach(link => {
     const el = document.createElement('div');
-    el.className = 'link-item';
-    el.dataset.id = link.id;
+    const socialClass = isSocialUrl(link.url) ? 'social-link' : 'custom-link';
+    el.className = 'link-item ' + socialClass;
+    el.dataset.id  = link.id;
+    el.dataset.url = link.url || '';
     el.innerHTML = `
       <div class="drag-handle"><span></span><span></span><span></span></div>
       <div class="link-icon-box" style="background:rgba(129,140,248,0.12);">
@@ -835,6 +858,7 @@ function requestNotificationPermission() {
 function showDesktopNotification(visitorName, message) {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
+  if (localStorage.getItem('vl_notif_muted') === '1') return; // muted by user
   if (document.hasFocus()) return; // Don't show if user is already on the page
 
   const notif = new Notification('💬 New message on VoilaLink', {

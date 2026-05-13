@@ -518,6 +518,10 @@
     }
     .theme-card.selected .theme-selected-tick { display: flex; }
 
+    /* ── Tab filter (CSS-driven) ──────────────────────────── */
+    #links-container.show-social .link-item.custom-link { display: none !important; }
+    #links-container.show-custom  .link-item.social-link { display: none !important; }
+
     /* ── Tab switcher ─────────────────────────────────────── */
     .tab-switcher {
       display: flex; gap: 4px;
@@ -765,6 +769,33 @@
           <div id="onboarding-checklist" style="display:flex;flex-direction:column;gap:0;"></div>
         </div>
 
+        <!-- Quick Controls Strip -->
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <!-- Notifications card -->
+          <div style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;flex-shrink:0;">🔔</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:600;">Notifications</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">Alert when visitors message you</div>
+            </div>
+            <button id="quick-notif-btn" onclick="handleNotificationToggle()" class="btn-sm ghost" style="font-size:10px;padding:5px 10px;white-space:nowrap;flex-shrink:0;">Enable</button>
+          </div>
+          <!-- Auto-Reply card -->
+          <div style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;flex-shrink:0;">🤖</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:600;">AI Auto-Reply</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">Reply visitors when you're away</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;flex-shrink:0;">
+              <input type="checkbox" id="quick-auto-reply-cb" style="opacity:0;width:0;height:0;" onchange="toggleAutoReplyQuick(this)">
+              <span id="quick-auto-reply-slider" style="position:absolute;inset:0;background:#333;border-radius:22px;transition:0.3s;">
+                <span id="quick-auto-reply-knob" style="position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;display:block;"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+
         <!-- Tab switcher -->
         <div class="tab-switcher">
           <button class="tab-switch-btn active" onclick="switchSubTab(this,'all')">All links</button>
@@ -780,6 +811,7 @@
 
         <!-- Links loaded by dashboard.js -->
         <div id="links-container"></div>
+        <div id="tab-empty-state" style="display:none;text-align:center;padding:32px 20px;color:var(--text-muted);font-size:13px;line-height:1.7;"></div>
 
         <!-- Free plan limit notice -->
         <div style="margin-top:16px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
@@ -1472,17 +1504,20 @@
 
       // Load auto-reply settings
       const autoReplyEnabled = currentProfile.auto_reply_enabled || false;
-      const checkbox = document.getElementById('settings-auto-reply');
-      if (checkbox) {
-        checkbox.checked = autoReplyEnabled;
-        updateAutoReplyUI(autoReplyEnabled);
-      }
+      updateAllAutoReplyUI(autoReplyEnabled);
       const ctx = document.getElementById('settings-auto-reply-context');
       if (ctx) ctx.value = currentProfile.auto_reply_context || '';
 
       // Check notification permission state
       if ('Notification' in window) {
-        updateNotifUI(Notification.permission === 'granted');
+        if (Notification.permission === 'granted') {
+          const muted = localStorage.getItem('vl_notif_muted') === '1';
+          updateNotifUI(muted ? 'muted' : 'active');
+        } else if (Notification.permission === 'denied') {
+          updateNotifUI('denied');
+        } else {
+          updateNotifUI('default');
+        }
       }
     }
 
@@ -1506,55 +1541,118 @@
       } catch (e) { toast('Error: ' + e.message); }
     }
 
-    function updateAutoReplyUI(enabled) {
+    // Updates BOTH the Settings panel slider and the Quick Controls strip
+    function updateAllAutoReplyUI(enabled) {
+      // Settings panel
       const slider = document.getElementById('auto-reply-slider');
       const knob   = document.getElementById('auto-reply-knob');
       const form   = document.getElementById('auto-reply-form');
+      const cb     = document.getElementById('settings-auto-reply');
       if (slider) slider.style.background = enabled ? '#818cf8' : '#333';
       if (knob)   knob.style.transform    = enabled ? 'translateX(18px)' : 'translateX(0)';
       if (form)   form.style.display      = enabled ? 'block' : 'none';
+      if (cb && cb.checked !== enabled)   cb.checked = enabled;
+      // Quick controls strip
+      const qSlider = document.getElementById('quick-auto-reply-slider');
+      const qKnob   = document.getElementById('quick-auto-reply-knob');
+      const qCb     = document.getElementById('quick-auto-reply-cb');
+      if (qSlider) qSlider.style.background = enabled ? '#818cf8' : '#333';
+      if (qKnob)   qKnob.style.transform    = enabled ? 'translateX(18px)' : 'translateX(0)';
+      if (qCb && qCb.checked !== enabled)   qCb.checked = enabled;
     }
 
+    // Settings panel toggle handler
     function toggleAutoReply(checkbox) {
-      updateAutoReplyUI(checkbox.checked);
+      updateAllAutoReplyUI(checkbox.checked);
       db.from('profiles').update({ auto_reply_enabled: checkbox.checked }).eq('id', currentUser.id);
       currentProfile.auto_reply_enabled = checkbox.checked;
       toast(checkbox.checked ? 'Auto-reply enabled ✓' : 'Auto-reply disabled');
     }
 
+    // Quick controls strip toggle handler
+    function toggleAutoReplyQuick(cb) {
+      updateAllAutoReplyUI(cb.checked);
+      db.from('profiles').update({ auto_reply_enabled: cb.checked }).eq('id', currentUser.id);
+      currentProfile.auto_reply_enabled = cb.checked;
+      toast(cb.checked ? 'Auto-reply enabled ✓' : 'Auto-reply disabled');
+    }
+
+    // Called on page load to sync quick controls with current profile state
+    function initQuickControls() {
+      const arEnabled = currentProfile && currentProfile.auto_reply_enabled;
+      updateAllAutoReplyUI(arEnabled || false);
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          const muted = localStorage.getItem('vl_notif_muted') === '1';
+          updateNotifUI(muted ? 'muted' : 'active');
+        } else if (Notification.permission === 'denied') {
+          updateNotifUI('denied');
+        } else {
+          updateNotifUI('default');
+        }
+      }
+    }
+
+    // ── Notification helpers (all state logic lives here) ─────
+    function syncNotifButtons() {
+      var ids    = ['notif-btn', 'quick-notif-btn'];
+      var perm   = ('Notification' in window) ? Notification.permission : 'unsupported';
+      var muted  = localStorage.getItem('vl_notif_muted') === '1';
+      var text, bg, border, col;
+
+      if (perm === 'granted' && !muted) {
+        text = '✓ On — click to mute'; bg = 'rgba(74,222,128,0.1)'; border = '#4ade80'; col = '#4ade80';
+      } else if (perm === 'granted' && muted) {
+        text = '🔕 Muted — click to unmute'; bg = 'rgba(251,191,36,0.1)'; border = '#fbbf24'; col = '#fbbf24';
+      } else if (perm === 'denied') {
+        text = '⛔ Blocked in browser'; bg = 'rgba(239,68,68,0.08)'; border = '#ef4444'; col = '#ef4444';
+      } else {
+        text = 'Enable notifications'; bg = ''; border = ''; col = '';
+      }
+
+      ids.forEach(function(id) {
+        var btn = document.getElementById(id);
+        if (!btn) return;
+        btn.textContent       = text;
+        btn.style.background  = bg;
+        btn.style.borderColor = border;
+        btn.style.color       = col;
+      });
+
+      var status = document.getElementById('notif-status');
+      if (status) status.style.display = 'none';
+    }
+
     function handleNotificationToggle() {
-      if (!('Notification' in window)) {
-        toast('Your browser does not support notifications');
+      if (!('Notification' in window)) { toast('Notifications not supported in this browser'); return; }
+      var perm = Notification.permission;
+
+      if (perm === 'denied') {
+        toast('Notifications are blocked. Open browser Settings → Site Settings to allow them.');
         return;
       }
-      if (Notification.permission === 'granted') {
-        updateNotifUI(true);
-        toast('Notifications already enabled ✓');
+      if (perm === 'granted') {
+        // Browser won't let JS revoke permission — so we mute/unmute within VoilaLink instead
+        if (localStorage.getItem('vl_notif_muted') === '1') {
+          localStorage.removeItem('vl_notif_muted');
+          toast('Notifications unmuted ✓');
+        } else {
+          localStorage.setItem('vl_notif_muted', '1');
+          toast('Notifications muted — click again to unmute');
+        }
+        syncNotifButtons();
         return;
       }
-      Notification.requestPermission().then(permission => {
-        updateNotifUI(permission === 'granted');
-        toast(permission === 'granted' ? 'Notifications enabled ✓' : 'Notifications blocked — check browser settings');
+      // perm === 'default' — ask browser
+      Notification.requestPermission().then(function(p) {
+        if (p === 'granted') localStorage.removeItem('vl_notif_muted');
+        syncNotifButtons();
+        toast(p === 'granted' ? '✓ Notifications enabled!' : 'Blocked — check your browser settings');
       });
     }
 
-    function updateNotifUI(enabled) {
-      const btn    = document.getElementById('notif-btn');
-      const status = document.getElementById('notif-status');
-      if (!btn) return;
-      if (enabled) {
-        btn.textContent = '✓ Enabled';
-        btn.style.background = 'rgba(74,222,128,0.1)';
-        btn.style.borderColor = '#4ade80';
-        btn.style.color = '#4ade80';
-        if (status) status.style.display = 'none';
-      } else {
-        btn.textContent = 'Enable notifications';
-        btn.style.background = '';
-        btn.style.borderColor = '';
-        btn.style.color = '';
-      }
-    }
+    // Kept for backward-compatibility (loadSettings / initQuickControls call this)
+    function updateNotifUI(state) { syncNotifButtons(); }
 
     async function saveAutoReply() {
       const context = document.getElementById('settings-auto-reply-context').value.trim();
@@ -1579,9 +1677,31 @@
       }
     }
 
-    function switchSubTab(btn, tab) {
-      document.querySelectorAll('.tab-switch-btn').forEach(b => b.classList.remove('active'));
+    function switchSubTab(btn, type) {
+      // Update active tab button
+      document.querySelectorAll('.tab-switch-btn').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
+
+      // CSS classes on the container do all the hiding (see CSS rules above)
+      var c = document.getElementById('links-container');
+      c.classList.remove('show-social', 'show-custom');
+      if (type === 'social') c.classList.add('show-social');
+      if (type === 'custom') c.classList.add('show-custom');
+
+      // Show empty state if no visible links in this tab
+      var emptyEl = document.getElementById('tab-empty-state');
+      if (!emptyEl) return;
+      if (type === 'all') { emptyEl.style.display = 'none'; return; }
+      var countClass   = type === 'social' ? 'social-link' : 'custom-link';
+      var countVisible = c.querySelectorAll('.link-item.' + countClass).length;
+      if (countVisible === 0) {
+        emptyEl.innerHTML = type === 'social'
+          ? '📱 No social links yet.<br>Add Facebook, Instagram, TikTok, YouTube, WhatsApp etc.'
+          : '🌐 No custom links yet.<br>Add your website, shop, blog, or any other URL.';
+        emptyEl.style.display = 'block';
+      } else {
+        emptyEl.style.display = 'none';
+      }
     }
 
     // selectTheme lives in dashboard.js
@@ -1596,6 +1716,9 @@
     document.getElementById('modal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+
+    // ── Boot: sync notification buttons as soon as DOM is ready ──
+    syncNotifButtons();
 
     // fillPreset, pickEmoji, addLink handled by dashboard.js
 
