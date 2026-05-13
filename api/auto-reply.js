@@ -1,9 +1,7 @@
 // ============================================================
 //  VoilaLink — AI Auto-Reply (Vercel Serverless)
-//  Generates and sends an automatic reply when owner is away
+//  Uses fetch only — no npm dependencies needed
 // ============================================================
-
-const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,7 +39,7 @@ Write a short, friendly, helpful auto-reply (2-3 sentences max) that:
 Write ONLY the message. No quotes, no intro.`;
 
   try {
-    // Generate AI reply
+    // Generate AI reply using Claude
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -56,24 +54,44 @@ Write ONLY the message. No quotes, no intro.`;
       })
     });
 
-    if (!aiResponse.ok) throw new Error('AI generation failed');
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      throw new Error('AI error: ' + errText);
+    }
     const aiData = await aiResponse.json();
     const replyText = aiData.content[0].text.trim();
 
-    // Send the reply as owner message
-    const db = createClient(supabaseUrl, supabaseKey);
-    const { error } = await db.from('messages').insert({
-      conversation_id: conversationId,
-      sender: 'owner',
-      content: replyText
+    // Insert reply into messages table via Supabase REST API
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        sender: 'owner',
+        content: replyText
+      })
     });
 
-    if (error) throw error;
+    if (!insertRes.ok) {
+      const errText = await insertRes.text();
+      throw new Error('DB insert error: ' + errText);
+    }
 
     // Update conversation timestamp
-    await db.from('conversations').update({
-      last_message_at: new Date().toISOString()
-    }).eq('id', conversationId);
+    await fetch(`${supabaseUrl}/rest/v1/conversations?id=eq.${conversationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      },
+      body: JSON.stringify({ last_message_at: new Date().toISOString() })
+    });
 
     return res.status(200).json({ reply: replyText });
 
