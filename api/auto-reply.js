@@ -45,8 +45,7 @@ Write ONLY the message. No quotes, no intro.`;
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'messages-2023-12-15'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-3-5-sonnet-20241022',
