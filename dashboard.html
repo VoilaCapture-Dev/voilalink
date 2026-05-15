@@ -777,66 +777,49 @@
       left: calc(240px + 50%);
       transform: translateX(-50%);
       z-index: 200;
-      display: none; /* shown by JS for free users */
-      align-items: center;
-      gap: 14px;
-      background: rgba(18,18,28,0.92);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(18,18,28,0.95);
       border: 1px solid rgba(129,140,248,0.3);
-      border-radius: 99px;
-      padding: 10px 18px 10px 14px;
+      border-radius: 18px;
+      padding: 14px 16px;
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(129,140,248,0.1);
-      white-space: nowrap;
-      max-width: 700px;
+      width: 240px;
     }
-    #pro-float-bar .pf-icon {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; flex-shrink: 0;
+    #pro-float-bar .pf-top {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #pro-float-bar .pf-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; color: var(--accent);
     }
     #pro-float-bar .pf-features {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; flex-direction: column; gap: 5px;
     }
     #pro-float-bar .pf-chip {
-      display: flex; align-items: center; gap: 4px;
+      display: flex; align-items: center; gap: 6px;
       font-size: 11px; color: var(--text-muted);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 99px;
-      padding: 3px 10px 3px 6px;
-    }
-    #pro-float-bar .pf-chip span:first-child { font-size: 12px; }
-    #pro-float-bar .pf-sep {
-      width: 1px; height: 18px;
-      background: rgba(255,255,255,0.08);
-      flex-shrink: 0;
     }
     #pro-float-bar .pf-upgrade {
       background: linear-gradient(135deg, #818cf8, #a78bfa);
-      color: #fff; border: none; border-radius: 99px;
-      padding: 6px 16px; font-size: 12px; font-weight: 700;
-      cursor: pointer; flex-shrink: 0;
+      color: #fff; border: none; border-radius: 10px;
+      padding: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; width: 100%;
       font-family: 'Inter', sans-serif;
       transition: opacity 0.15s;
     }
     #pro-float-bar .pf-upgrade:hover { opacity: 0.85; }
     #pro-float-bar .pf-dismiss {
       background: none; border: none; color: var(--text-muted);
-      cursor: pointer; font-size: 14px; padding: 0 0 0 4px;
+      cursor: pointer; font-size: 14px; padding: 0;
       line-height: 1; flex-shrink: 0;
       transition: color 0.15s;
     }
     #pro-float-bar .pf-dismiss:hover { color: var(--text-primary); }
     @media (max-width: 768px) {
-      #pro-float-bar {
-        margin-left: 0;
-        max-width: calc(100vw - 32px);
-        bottom: 72px; /* above mobile nav */
-        border-radius: 16px;
-        flex-wrap: wrap;
-        padding: 12px 16px;
-      }
+      #pro-float-bar { left: 50%; bottom: 80px; }
     }
   </style>
 </head>
@@ -1970,16 +1953,16 @@
 
   <!-- ── Pro floating upsell bar ─────────────────────────── -->
   <div id="pro-float-bar">
-    <div class="pf-icon">⭐</div>
+    <div class="pf-top">
+      <div class="pf-title">⭐ Unlock Pro</div>
+      <button class="pf-dismiss" onclick="dismissProBar()" title="Dismiss">✕</button>
+    </div>
     <div class="pf-features">
       <div class="pf-chip"><span>📊</span> Analytics</div>
       <div class="pf-chip"><span>✍️</span> AI Outreach</div>
       <div class="pf-chip"><span>🔍</span> Research</div>
     </div>
-    <div class="pf-sep"></div>
-    <span style="font-size:11px;color:var(--text-muted);">require Pro</span>
-    <button class="pf-upgrade" onclick="showTab('upgrade')">Upgrade →</button>
-    <button class="pf-dismiss" onclick="dismissProBar()" title="Dismiss">✕</button>
+    <button class="pf-upgrade" onclick="showTab('upgrade')">Upgrade → £3.99/mo</button>
   </div>
 
   <!-- Global avatar file input -->
