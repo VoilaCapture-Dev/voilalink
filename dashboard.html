@@ -3068,14 +3068,12 @@
       }
       // Hide or restore Unlock Pro bar depending on current tab
       if (tabsHidingProBar.includes(tab)) {
-        if (pfb && pfb.dataset.hiddenByTab === undefined) {
-          pfb.dataset.hiddenByTab = pfb.style.display;
-          pfb.style.display = 'none';
-        }
+        if (pfb) { pfb.style.display = 'none'; pfb.dataset.hiddenByTab = '1'; }
       } else {
-        if (pfb && pfb.dataset.hiddenByTab !== undefined) {
-          pfb.style.display = pfb.dataset.hiddenByTab || 'flex';
+        if (pfb) {
           delete pfb.dataset.hiddenByTab;
+          var dismissed = localStorage.getItem('vl_probar_dismissed') === '1';
+          if (!dismissed) pfb.style.display = 'flex';
         }
       }
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
@@ -3304,7 +3302,8 @@
               if (sep) floatBar.insertBefore(trialEl, sep);
             }
           }
-          floatBar.style.display = 'flex';
+          // Only show if not on a tab that hides it (respect current tab)
+          if (!floatBar.dataset.hiddenByTab) floatBar.style.display = 'flex';
         } else {
           floatBar.style.display = 'none';
         }
