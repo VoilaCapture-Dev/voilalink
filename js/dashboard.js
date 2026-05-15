@@ -539,7 +539,6 @@ async function loadAnalytics() {
     const topLinkId = Object.entries(counts).sort((a,b) => b[1]-a[1])[0]?.[0];
     const topLink = allLinks.find(l => l.id === topLinkId);
 
-    document.getElementById('stat-total-clicks').textContent = total;
     document.getElementById('stat-total-main').textContent   = total;
     document.getElementById('stat-links-clicked').textContent = linksClicked;
     document.getElementById('stat-top-link').textContent     = topLink ? (topLink.emoji + ' ' + topLink.title) : '—';
