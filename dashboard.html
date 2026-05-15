@@ -970,7 +970,9 @@
     }
     #pro-float-bar .pf-top {
       display: flex; align-items: center; justify-content: space-between;
+      cursor: grab; user-select: none;
     }
+    #pro-float-bar .pf-top:active { cursor: grabbing; }
     #pro-float-bar .pf-title {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: 700; color: var(--accent);
@@ -2253,7 +2255,7 @@
   <!-- ── Pro floating upsell bar ─────────────────────────── -->
   <div id="pro-float-bar">
     <div class="pf-top">
-      <div class="pf-title">⭐ Unlock Pro</div>
+      <div class="pf-title"><span style="opacity:0.35;margin-right:4px;font-size:10px;">⠿</span>⭐ Unlock Pro</div>
       <button class="pf-dismiss" onclick="dismissProBar()" title="Dismiss">✕</button>
     </div>
     <div class="pf-features">
@@ -3221,15 +3223,64 @@
     function dismissProBar() {
       const bar = document.getElementById('pro-float-bar');
       if (bar) {
-        bar.style.transition = 'opacity 0.3s, transform 0.3s';
+        bar.style.transition = 'opacity 0.3s';
         bar.style.opacity = '0';
-        bar.style.transform = 'translateX(-50%) translateY(16px)';
         setTimeout(() => bar.style.display = 'none', 300);
       }
       // Remember for 24 hours
       localStorage.setItem('vl_probar_dismissed', '1');
       setTimeout(() => localStorage.removeItem('vl_probar_dismissed'), 24 * 60 * 60 * 1000);
     }
+
+    // ── Draggable Pro bar ─────────────────────────────────────
+    (function initDraggableProBar() {
+      var bar = document.getElementById('pro-float-bar');
+      if (!bar) return;
+      // Restore saved drag position
+      try {
+        var saved = JSON.parse(localStorage.getItem('vl_probar_pos') || 'null');
+        if (saved && saved.left >= 0 && saved.left < window.innerWidth
+                  && saved.top  >= 0 && saved.top  < window.innerHeight) {
+          bar.style.left      = saved.left + 'px';
+          bar.style.top       = saved.top  + 'px';
+          bar.style.bottom    = 'auto';
+          bar.style.transform = 'none';
+        }
+      } catch(e) { localStorage.removeItem('vl_probar_pos'); }
+
+      var handle = bar.querySelector('.pf-top');
+      if (!handle) return;
+      var dragging = false, ox = 0, oy = 0;
+
+      handle.addEventListener('mousedown', function(e) {
+        if (e.target.classList.contains('pf-dismiss')) return;
+        dragging = true;
+        var rect = bar.getBoundingClientRect();
+        // Snap from CSS-centred position to explicit pixel coords
+        bar.style.left      = rect.left + 'px';
+        bar.style.top       = rect.top  + 'px';
+        bar.style.bottom    = 'auto';
+        bar.style.transform = 'none';
+        ox = e.clientX - rect.left;
+        oy = e.clientY - rect.top;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        var nx = Math.max(0, Math.min(window.innerWidth  - bar.offsetWidth,  e.clientX - ox));
+        var ny = Math.max(0, Math.min(window.innerHeight - bar.offsetHeight, e.clientY - oy));
+        bar.style.left = nx + 'px';
+        bar.style.top  = ny + 'px';
+      });
+      document.addEventListener('mouseup', function() {
+        if (!dragging) return;
+        dragging = false;
+        localStorage.setItem('vl_probar_pos', JSON.stringify({
+          left: parseInt(bar.style.left),
+          top:  parseInt(bar.style.top)
+        }));
+      });
+    })();
 
     // ── World Clock ───────────────────────────────────────────
     (function startWorldClock() {
