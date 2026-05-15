@@ -2884,10 +2884,23 @@
         loadQuickStats();
       }
 
-      // Show floating Pro bar for free users (unless dismissed)
+      // Show floating Pro bar for non-Pro users (trial OR free), unless dismissed
       const floatBar = document.getElementById('pro-float-bar');
       if (floatBar) {
-        if (!access && localStorage.getItem('vl_probar_dismissed') !== '1') {
+        const dismissed = localStorage.getItem('vl_probar_dismissed') === '1';
+        if (!isPro && !dismissed) {
+          // Tweak label if in trial
+          if (trialDaysLeft && trialDaysLeft > 0) {
+            const label = floatBar.querySelector('.pf-trial-label');
+            if (!label) {
+              const sep = floatBar.querySelector('.pf-sep');
+              const trialEl = document.createElement('span');
+              trialEl.className = 'pf-trial-label';
+              trialEl.style.cssText = 'font-size:11px;color:#f59e0b;font-weight:600;';
+              trialEl.textContent = '⏳ ' + trialDaysLeft + 'd trial left';
+              if (sep) floatBar.insertBefore(trialEl, sep);
+            }
+          }
           floatBar.style.display = 'flex';
         } else {
           floatBar.style.display = 'none';
