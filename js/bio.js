@@ -27,6 +27,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // vCard
     const vcard = await getPublicVCard(profile.id);
     if (vcard) renderVCard(vcard);
+
+    // Email signup widget
+    const emailWidget = await getPublicEmailWidget(profile.id);
+    if (emailWidget) {
+      const signupCount = await getSignupCount(profile.id);
+      renderEmailWidget(emailWidget, profile.id, signupCount);
+    }
+
     applyTheme(profile.theme || 'midnight');
     initChat(profile);
   } catch (e) {
@@ -576,4 +584,65 @@ function downloadVCard() {
   a.href = URL.createObjectURL(blob);
   a.download = `${(v.display_name || 'contact').replace(/\s+/g, '_')}.vcf`;
   a.click();
+}
+
+function renderEmailWidget(widget, userId, count) {
+  const el = document.getElementById('bio-email-widget');
+  if (!el) return;
+  window._emailUserId = userId;
+
+  const counterHtml = widget.show_counter && count > 0
+    ? `<div style="text-align:center;margin-bottom:12px;font-size:13px;color:var(--text-muted);">
+        <span style="color:var(--accent);font-weight:700;">${count.toLocaleString()}</span> people joined
+       </div>`
+    : '';
+
+  el.innerHTML = `
+    <div style="width:100%;max-width:480px;margin:16px auto 0;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:24px 22px;">
+      <div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;text-align:center;">
+        ${escHtml(widget.title || 'Join my newsletter')}
+      </div>
+      ${widget.description ? `<div style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:14px;">${escHtml(widget.description)}</div>` : '<div style="margin-bottom:14px;"></div>'}
+      ${counterHtml}
+      <div id="email-widget-form">
+        <input id="ew-name" type="text" placeholder="Your name (optional)"
+          style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--text-primary);font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;font-family:inherit;" />
+        <input id="ew-email" type="email" placeholder="Your email address"
+          style="width:100%;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--text-primary);font-size:13px;outline:none;margin-bottom:12px;box-sizing:border-box;font-family:inherit;" />
+        <button onclick="submitEmailSignupForm('${userId}')"
+          style="width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+          ${escHtml(widget.button_text || 'Subscribe')} →
+        </button>
+        <div id="ew-error" style="display:none;color:#f87171;font-size:12px;text-align:center;margin-top:8px;"></div>
+      </div>
+      <div id="email-widget-thanks" style="display:none;text-align:center;padding:16px 0;">
+        <div style="font-size:28px;margin-bottom:8px;">🎉</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);">You're in!</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">Thanks for subscribing.</div>
+      </div>
+    </div>`;
+}
+
+async function submitEmailSignupForm(userId) {
+  const emailEl = document.getElementById('ew-email');
+  const nameEl  = document.getElementById('ew-name');
+  const errEl   = document.getElementById('ew-error');
+  const email   = emailEl ? emailEl.value.trim() : '';
+  const name    = nameEl  ? nameEl.value.trim()  : '';
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (errEl) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
+
+  const ok = await submitEmailSignup(userId, email, name);
+  if (ok) {
+    const form   = document.getElementById('email-widget-form');
+    const thanks = document.getElementById('email-widget-thanks');
+    if (form)   form.style.display   = 'none';
+    if (thanks) thanks.style.display = 'block';
+  } else {
+    if (errEl) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display = 'block'; }
+  }
 }

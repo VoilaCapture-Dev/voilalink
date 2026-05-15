@@ -221,3 +221,47 @@ async function saveVCardSettings(userId, settings) {
   if (error) throw error;
   return data;
 }
+
+// ── Email Widget helpers ─────────────────────────────────────
+
+async function getPublicEmailWidget(userId) {
+  const { data } = await db
+    .from('email_widget')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_enabled', true)
+    .single();
+  return data || null;
+}
+
+async function getSignupCount(userId) {
+  const { count } = await db
+    .from('email_signups')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  return count || 0;
+}
+
+async function submitEmailSignup(userId, email, name) {
+  const { error } = await db
+    .from('email_signups')
+    .insert({ user_id: userId, email, name: name || null });
+  return !error;
+}
+
+async function getEmailSignups(userId) {
+  const { data, error } = await db
+    .from('email_signups')
+    .select('*')
+    .eq('user_id', userId)
+    .order('signed_up_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function saveEmailWidget(userId, settings) {
+  const { error } = await db
+    .from('email_widget')
+    .upsert({ user_id: userId, ...settings }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
