@@ -814,6 +814,9 @@
     <a class="nav-item" href="#" onclick="showTab('countdowns')" id="nav-countdowns">
       <span class="nav-item-icon">⏱</span> Countdowns
     </a>
+    <a class="nav-item" href="#" onclick="showTab('polls')" id="nav-polls">
+      <span class="nav-item-icon">📊</span> Polls & Q&A
+    </a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
@@ -1608,6 +1611,24 @@
         </div>
       </div>
 
+      <!-- ── Polls panel ────────────────────────────────────── -->
+      <div class="links-panel" id="panel-polls" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">📊 Polls & Q&A</div>
+            <div class="panel-sub">Engage your audience — let them vote or ask questions</div>
+          </div>
+          <button class="btn-sm primary" onclick="openPollModal()">+ New poll / Q&A</button>
+        </div>
+        <div id="poll-list"></div>
+        <div id="poll-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-muted);">
+          <div style="font-size:52px;margin-bottom:16px;">📊</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">No polls yet</div>
+          <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Ask your audience what they want, or let them submit questions — all from your bio page.</div>
+          <button class="btn-sm primary" onclick="openPollModal()" style="padding:12px 28px;font-size:14px;">+ Create first poll →</button>
+        </div>
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -1810,6 +1831,61 @@
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Poll responses modal ─────────────────────────────────── -->
+  <div class="modal-overlay" id="poll-responses-modal">
+    <div class="modal" style="max-width:500px;max-height:85vh;overflow-y:auto;">
+      <div class="modal-title" id="poll-responses-title">📊 Responses</div>
+      <div class="modal-sub" id="poll-responses-sub"></div>
+      <button class="modal-close" onclick="closePollResponses()">×</button>
+      <div id="poll-responses-body" style="margin-top:8px;"></div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closePollResponses()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Poll create/edit modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="poll-modal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-title" id="poll-modal-title">📊 New Poll / Q&A</div>
+      <div class="modal-sub">Appears on your public profile page</div>
+      <button class="modal-close" onclick="closePollModal()">×</button>
+      <input type="hidden" id="poll-id" value="" />
+
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <div style="display:flex;gap:8px;">
+          <button id="poll-type-poll" onclick="setPollType('poll')" class="btn-sm primary" style="flex:1;font-size:12px;">📊 Poll (multiple choice)</button>
+          <button id="poll-type-qa" onclick="setPollType('qa')" class="btn-sm ghost" style="flex:1;font-size:12px;">💬 Q&A (free text)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Question *</label>
+        <input class="form-input" id="poll-question" type="text" placeholder="What should my next video be about?" maxlength="140" />
+      </div>
+
+      <div id="poll-options-section">
+        <div class="form-label" style="margin-bottom:6px;">Options (up to 4)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="poll-options-list">
+          <input class="form-input" id="poll-opt-0" type="text" placeholder="Option 1" maxlength="80" />
+          <input class="form-input" id="poll-opt-1" type="text" placeholder="Option 2" maxlength="80" />
+          <input class="form-input" id="poll-opt-2" type="text" placeholder="Option 3 (optional)" maxlength="80" />
+          <input class="form-input" id="poll-opt-3" type="text" placeholder="Option 4 (optional)" maxlength="80" />
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0 8px;">
+        <input type="checkbox" id="poll-enabled" checked style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;" />
+        <label for="poll-enabled" style="font-size:13px;cursor:pointer;">Show on my public page</label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closePollModal()">Cancel</button>
+        <button class="btn-sm primary" onclick="savePoll()">Save →</button>
       </div>
     </div>
   </div>
@@ -2320,6 +2396,7 @@
       document.getElementById('panel-invoices').style.display  = tab === 'invoices'  ? 'block' : 'none';
       document.getElementById('panel-growth').style.display      = tab === 'growth'      ? 'block' : 'none';
       document.getElementById('panel-countdowns').style.display  = tab === 'countdowns'  ? 'block' : 'none';
+      document.getElementById('panel-polls').style.display       = tab === 'polls'       ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
@@ -2333,6 +2410,7 @@
       if (tab === 'invoices')  loadInvoices();
       if (tab === 'growth')      loadGrowth();
       if (tab === 'countdowns')  loadCountdowns();
+      if (tab === 'polls')       loadPolls();
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -3839,6 +3917,189 @@
     }
 
     document.getElementById('countdown-modal').addEventListener('click', function(e){ if (e.target === this) closeCountdownModal(); });
+
+    // ── Polls & Q&A ────────────────────────────────────────────
+    var pollList = [];
+    var _currentPollType = 'poll';
+
+    function setPollType(type) {
+      _currentPollType = type;
+      document.getElementById('poll-type-poll').className = type === 'poll' ? 'btn-sm primary' : 'btn-sm ghost';
+      document.getElementById('poll-type-qa').className   = type === 'qa'   ? 'btn-sm primary' : 'btn-sm ghost';
+      document.getElementById('poll-options-section').style.display = type === 'poll' ? 'block' : 'none';
+    }
+
+    async function loadPolls() {
+      if (!currentUser) return;
+      var res = await db.from('polls').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      pollList = res.data || [];
+      // Load response counts
+      if (pollList.length > 0) {
+        var ids = pollList.map(function(p){ return p.id; });
+        var rRes = await db.from('poll_responses').select('poll_id').in('poll_id', ids);
+        var responses = rRes.data || [];
+        pollList.forEach(function(p) {
+          p._responseCount = responses.filter(function(r){ return r.poll_id === p.id; }).length;
+        });
+      }
+      renderPolls();
+    }
+
+    function renderPolls() {
+      var list  = document.getElementById('poll-list');
+      var empty = document.getElementById('poll-empty');
+      if (!list) return;
+      if (pollList.length === 0) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      list.innerHTML = pollList.map(function(p) {
+        var typeBadge = p.type === 'qa'
+          ? '<span style="background:rgba(167,139,250,0.15);color:#a78bfa;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;font-family:\'DM Mono\',monospace;">Q&A</span>'
+          : '<span style="background:rgba(129,140,248,0.15);color:var(--accent);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;font-family:\'DM Mono\',monospace;">POLL</span>';
+        var statusDot = p.is_enabled
+          ? '<span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:5px;"></span>'
+          : '<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;margin-right:5px;"></span>';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">' +
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' + typeBadge +
+                '<span style="font-size:14px;font-weight:700;color:var(--text-primary);">' + escHtml(p.question) + '</span>' +
+              '</div>' +
+              '<div style="font-size:11px;color:var(--text-muted);font-family:\'DM Mono\',monospace;">' +
+                statusDot + (p.is_enabled ? 'Live' : 'Hidden') +
+                ' · <span style="color:var(--accent);">' + (p._responseCount || 0) + ' response' + ((p._responseCount || 0) === 1 ? '' : 's') + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+              '<button onclick="viewPollResponses(\'' + p.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">👁 Results</button>' +
+              '<button onclick="editPoll(\'' + p.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">✏ Edit</button>' +
+              '<button onclick="togglePoll(\'' + p.id + '\',' + !p.is_enabled + ')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">' + (p.is_enabled ? '⏸ Hide' : '▶ Show') + '</button>' +
+              '<button onclick="deletePoll(\'' + p.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;color:var(--danger);">🗑</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openPollModal(p) {
+      _currentPollType = p ? p.type : 'poll';
+      document.getElementById('poll-modal-title').textContent = p ? '✏ Edit Poll / Q&A' : '📊 New Poll / Q&A';
+      document.getElementById('poll-id').value        = p ? p.id : '';
+      document.getElementById('poll-question').value  = p ? p.question : '';
+      document.getElementById('poll-enabled').checked = p ? p.is_enabled : true;
+      setPollType(_currentPollType);
+      var opts = (p && p.options) || [];
+      for (var i = 0; i < 4; i++) {
+        var el = document.getElementById('poll-opt-' + i);
+        if (el) el.value = opts[i] || '';
+      }
+      document.getElementById('poll-modal').classList.add('open');
+    }
+
+    function closePollModal() {
+      document.getElementById('poll-modal').classList.remove('open');
+    }
+
+    async function savePoll() {
+      var question = document.getElementById('poll-question').value.trim();
+      if (!question) { toast('Please enter a question'); return; }
+      var options = null;
+      if (_currentPollType === 'poll') {
+        options = [];
+        for (var i = 0; i < 4; i++) {
+          var el = document.getElementById('poll-opt-' + i);
+          var v  = el ? el.value.trim() : '';
+          if (v) options.push(v);
+        }
+        if (options.length < 2) { toast('Please add at least 2 options'); return; }
+      }
+      var id = document.getElementById('poll-id').value;
+      var payload = {
+        user_id:    currentUser.id,
+        question:   question,
+        type:       _currentPollType,
+        options:    options,
+        is_enabled: document.getElementById('poll-enabled').checked
+      };
+      var res = id
+        ? await db.from('polls').update(payload).eq('id', id)
+        : await db.from('polls').insert(payload);
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      closePollModal();
+      toast('Poll saved ✓');
+      await loadPolls();
+    }
+
+    function editPoll(id) {
+      var p = pollList.find(function(x){ return x.id === id; });
+      if (p) openPollModal(p);
+    }
+
+    async function togglePoll(id, enabled) {
+      await db.from('polls').update({ is_enabled: enabled }).eq('id', id);
+      var p = pollList.find(function(x){ return x.id === id; });
+      if (p) p.is_enabled = enabled;
+      renderPolls();
+      toast(enabled ? 'Poll now live ✓' : 'Poll hidden');
+    }
+
+    async function deletePoll(id) {
+      if (!confirm('Delete this poll and all its responses?')) return;
+      await db.from('polls').delete().eq('id', id);
+      pollList = pollList.filter(function(x){ return x.id !== id; });
+      renderPolls();
+      toast('Poll deleted');
+    }
+
+    async function viewPollResponses(id) {
+      var p = pollList.find(function(x){ return x.id === id; });
+      if (!p) return;
+      var res = await db.from('poll_responses').select('*').eq('poll_id', id).order('created_at', { ascending: false });
+      var responses = res.data || [];
+      document.getElementById('poll-responses-title').textContent = p.type === 'qa' ? '💬 Q&A Responses' : '📊 Poll Results';
+      document.getElementById('poll-responses-sub').textContent   = escHtml(p.question);
+      var body = document.getElementById('poll-responses-body');
+      if (responses.length === 0) {
+        body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No responses yet</div>';
+      } else if (p.type === 'qa') {
+        body.innerHTML = responses.map(function(r) {
+          var d = new Date(r.created_at);
+          var dateStr = d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+          return '<div style="padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;">' +
+            '<div style="font-size:13px;color:var(--text-primary);">' + escHtml(r.answer || '') + '</div>' +
+            '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;">' + dateStr + '</div>' +
+          '</div>';
+        }).join('');
+      } else {
+        // Poll — show bar chart
+        var opts = p.options || [];
+        var counts = opts.map(function(_, i){ return responses.filter(function(r){ return r.option_index === i; }).length; });
+        var max = Math.max.apply(null, counts) || 1;
+        body.innerHTML = opts.map(function(opt, i) {
+          var pct = Math.round((counts[i] / responses.length) * 100);
+          return '<div style="margin-bottom:12px;">' +
+            '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">' +
+              '<span>' + escHtml(opt) + '</span>' +
+              '<span style="color:var(--accent);font-weight:700;">' + counts[i] + ' (' + pct + '%)</span>' +
+            '</div>' +
+            '<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:8px;overflow:hidden;">' +
+              '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;"></div>' +
+            '</div>' +
+          '</div>';
+        }).join('') + '<div style="font-size:12px;color:var(--text-muted);margin-top:12px;text-align:right;">' + responses.length + ' total vote' + (responses.length === 1 ? '' : 's') + '</div>';
+      }
+      document.getElementById('poll-responses-modal').classList.add('open');
+    }
+
+    function closePollResponses() {
+      document.getElementById('poll-responses-modal').classList.remove('open');
+    }
+
+    document.getElementById('poll-modal').addEventListener('click', function(e){ if (e.target === this) closePollModal(); });
+    document.getElementById('poll-responses-modal').addEventListener('click', function(e){ if (e.target === this) closePollResponses(); });
 
     // ── Tip Jar ────────────────────────────────────────────────
     var tipJarData = null;

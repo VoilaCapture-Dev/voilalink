@@ -45,6 +45,30 @@ async function getLinks(userId) {
   return data;
 }
 
+async function getPublicPolls(userId) {
+  const { data } = await db
+    .from('polls')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_enabled', true)
+    .order('created_at', { ascending: false });
+  return data || [];
+}
+
+async function submitPollResponse(pollId, optionIndex, answer) {
+  const { error } = await db.from('poll_responses').insert({
+    poll_id: pollId,
+    option_index: optionIndex !== null ? optionIndex : null,
+    answer: answer || null
+  });
+  return !error;
+}
+
+async function getPollResults(pollId) {
+  const { data } = await db.from('poll_responses').select('option_index, answer').eq('poll_id', pollId);
+  return data || [];
+}
+
 async function getPublicCountdowns(userId) {
   const { data } = await db
     .from('countdowns')

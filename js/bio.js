@@ -19,8 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const links      = await getPublicLinks(profile.id);
     const tipJar     = await getPublicTipJar(profile.id);
     const countdowns = await getPublicCountdowns(profile.id);
+    const polls      = await getPublicPolls(profile.id);
     renderBio(profile, links);
     if (countdowns && countdowns.length > 0) renderCountdowns(countdowns);
+    if (polls && polls.length > 0) renderPolls(polls);
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
     applyTheme(profile.theme || 'midnight');
     initChat(profile);
@@ -149,6 +151,106 @@ function renderCountdowns(countdowns) {
     tick();
     setInterval(tick, 1000);
   });
+}
+
+// ── Polls & Q&A ──────────────────────────────────────────────
+function renderPolls(polls) {
+  const container = document.getElementById('bio-polls');
+  if (!container) return;
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.alignItems = 'center';
+  container.style.gap = '12px';
+  container.style.width = '100%';
+
+  window._bioPolls = polls;
+
+  polls.forEach(poll => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'width:100%;max-width:480px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 22px;';
+
+    if (poll.type === 'qa') {
+      // Q&A widget
+      wrapper.innerHTML = `
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:monospace;margin-bottom:6px;">💬 Ask me</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">${escHtml(poll.question)}</div>
+        <textarea id="qa-${poll.id}" rows="3" placeholder="Type your question..." maxlength="500"
+          style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:var(--text-primary);font-size:13px;resize:none;outline:none;font-family:inherit;"></textarea>
+        <button onclick="submitQA('${poll.id}')" id="qa-btn-${poll.id}"
+          style="margin-top:10px;width:100%;padding:11px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">
+          Send question →
+        </button>
+        <div id="qa-thanks-${poll.id}" style="display:none;text-align:center;padding:12px;color:#4ade80;font-size:14px;font-weight:700;">✓ Thanks! Question sent 🎉</div>`;
+    } else {
+      // Poll widget
+      const opts = poll.options || [];
+      const optHtml = opts.map((opt, i) =>
+        `<button onclick="submitVote('${poll.id}', ${i})" id="poll-opt-${poll.id}-${i}"
+          style="width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--text-primary);font-size:13px;font-weight:500;cursor:pointer;text-align:left;margin-bottom:8px;transition:all 0.15s;"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+          ${escHtml(opt)}
+        </button>`
+      ).join('');
+      wrapper.innerHTML = `
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:monospace;margin-bottom:6px;">📊 Vote</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">${escHtml(poll.question)}</div>
+        <div id="poll-options-${poll.id}">${optHtml}</div>
+        <div id="poll-results-${poll.id}" style="display:none;"></div>`;
+    }
+    container.appendChild(wrapper);
+  });
+}
+
+async function submitVote(pollId, optionIndex) {
+  // Disable all buttons
+  const poll = document.getElementById(`poll-options-${pollId}`);
+  if (poll) poll.querySelectorAll('button').forEach(b => b.disabled = true);
+  const ok = await submitPollResponse(pollId, optionIndex, null);
+  if (!ok) return;
+  // Load and show results
+  const results = await getPollResults(pollId);
+  const poll2 = document.getElementById(`poll-options-${pollId}`);
+  const resDiv = document.getElementById(`poll-results-${pollId}`);
+  if (poll2) poll2.style.display = 'none';
+  if (resDiv) {
+    // Get options from the poll data
+    const allPolls = window._bioPolls || [];
+    const pollData = allPolls.find(p => p.id === pollId);
+    const opts = pollData ? (pollData.options || []) : [];
+    const total = results.length || 1;
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = '<div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Results · ' + results.length + ' vote' + (results.length === 1 ? '' : 's') + '</div>' +
+      opts.map((opt, i) => {
+        const count = results.filter(r => r.option_index === i).length;
+        const pct   = Math.round((count / total) * 100);
+        const isSelected = i === optionIndex;
+        return '<div style="margin-bottom:10px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">' +
+            '<span style="' + (isSelected ? 'color:var(--accent);font-weight:700;' : '') + '">' + escHtml(opt) + (isSelected ? ' ✓' : '') + '</span>' +
+            '<span style="color:var(--accent);">' + pct + '%</span>' +
+          '</div>' +
+          '<div style="background:rgba(255,255,255,0.07);border-radius:99px;height:7px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+  }
+}
+
+async function submitQA(pollId) {
+  const ta  = document.getElementById(`qa-${pollId}`);
+  const btn = document.getElementById(`qa-btn-${pollId}`);
+  const thanks = document.getElementById(`qa-thanks-${pollId}`);
+  if (!ta || !ta.value.trim()) return;
+  if (btn) btn.disabled = true;
+  const ok = await submitPollResponse(pollId, null, ta.value.trim());
+  if (ok) {
+    if (ta) ta.style.display = 'none';
+    if (btn) btn.style.display = 'none';
+    if (thanks) thanks.style.display = 'block';
+  } else {
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ── Tip Jar ──────────────────────────────────────────────────
