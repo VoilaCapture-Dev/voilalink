@@ -456,15 +456,25 @@
     }
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
-      position: absolute;
-      right: 316px;
-      top: 180px;
+      position: fixed;
       width: 230px;
       background: #04060a;
       border: 1px solid rgba(74,222,128,0.15);
       border-radius: 12px;
       padding: 10px 10px 8px;
-      z-index: 10;
+      z-index: 200;
+      cursor: grab;
+      user-select: none;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    }
+    .world-clock-panel:active { cursor: grabbing; }
+    .wc-drag-hint {
+      text-align: center;
+      font-size: 9px;
+      color: rgba(74,222,128,0.25);
+      letter-spacing: 0.15em;
+      margin-bottom: 6px;
+      font-family: 'DM Mono', monospace;
     }
     .wc-header {
       font-family: 'DM Mono', monospace; font-size: 8px;
@@ -2113,7 +2123,8 @@
       </div><!-- /panels-container -->
 
       <!-- ══ World Clock (floating in empty canvas) ════════ -->
-      <div class="world-clock-panel">
+      <div class="world-clock-panel" id="world-clock-widget">
+        <div class="wc-drag-hint">⠿ drag to move</div>
         <div class="wc-grid">
           <div class="wc-zone">
             <div class="wc-time" id="wc-london">--:--</div>
@@ -2971,8 +2982,6 @@
       var pc = document.querySelector('.panels-container');
       var isFullWidth = fullWidth.includes(tab);
       if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
-      var wc = document.querySelector('.world-clock-panel');
-      if (wc) wc.style.display = tab === 'links' ? 'block' : 'none';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
@@ -3225,6 +3234,82 @@
       }
       tick();
       setInterval(tick, 1000);
+    })();
+
+    // ── Draggable World Clock ─────────────────────────────────
+    (function initDraggableClock() {
+      var panel = document.getElementById('world-clock-widget');
+      if (!panel) return;
+
+      // Load saved position or use default (top-right of viewport)
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('wc_position')); } catch(e) {}
+
+      function applyPosition(left, top) {
+        // Keep within viewport
+        var maxL = window.innerWidth  - panel.offsetWidth  - 8;
+        var maxT = window.innerHeight - panel.offsetHeight - 8;
+        panel.style.left = Math.max(8, Math.min(left, maxL)) + 'px';
+        panel.style.top  = Math.max(8, Math.min(top,  maxT)) + 'px';
+      }
+
+      if (saved) {
+        applyPosition(saved.left, saved.top);
+      } else {
+        // Default: right side, vertically centered-ish
+        applyPosition(window.innerWidth - 254, 180);
+      }
+
+      var dragging = false, ox = 0, oy = 0;
+
+      panel.addEventListener('mousedown', function(e) {
+        if (e.target.classList.contains('wc-remove-btn')) return;
+        if (e.target.classList.contains('wc-custom') || e.target.classList.contains('wc-add-icon')) return;
+        dragging = true;
+        ox = e.clientX - panel.getBoundingClientRect().left;
+        oy = e.clientY - panel.getBoundingClientRect().top;
+        panel.style.cursor = 'grabbing';
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        applyPosition(e.clientX - ox, e.clientY - oy);
+      });
+
+      document.addEventListener('mouseup', function() {
+        if (!dragging) return;
+        dragging = false;
+        panel.style.cursor = 'grab';
+        localStorage.setItem('wc_position', JSON.stringify({
+          left: parseInt(panel.style.left),
+          top:  parseInt(panel.style.top)
+        }));
+      });
+
+      // Touch support
+      panel.addEventListener('touchstart', function(e) {
+        if (e.target.classList.contains('wc-remove-btn')) return;
+        var t = e.touches[0];
+        dragging = true;
+        ox = t.clientX - panel.getBoundingClientRect().left;
+        oy = t.clientY - panel.getBoundingClientRect().top;
+      }, { passive: true });
+
+      document.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        var t = e.touches[0];
+        applyPosition(t.clientX - ox, t.clientY - oy);
+      }, { passive: true });
+
+      document.addEventListener('touchend', function() {
+        if (!dragging) return;
+        dragging = false;
+        localStorage.setItem('wc_position', JSON.stringify({
+          left: parseInt(panel.style.left),
+          top:  parseInt(panel.style.top)
+        }));
+      });
     })();
 
     // ── Custom World Clock Slots ───────────────────────────────
