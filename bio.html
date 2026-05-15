@@ -15,7 +15,8 @@
   <meta name="apple-mobile-web-app-title" content="VoilaLink" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Syne:wght@600;700;800&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     /* ── Reset ────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -449,6 +450,19 @@
     </div>
 
   </div>
+
+  <!-- Visitor theme toggle -->
+  <button id="theme-toggle" onclick="toggleVisitorTheme()" style="
+    position:fixed;top:16px;right:16px;
+    width:38px;height:38px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:50%;
+    cursor:pointer;font-size:18px;
+    display:flex;align-items:center;justify-content:center;
+    z-index:200;transition:all 0.2s;
+    backdrop-filter:blur(8px);
+  " title="Toggle light/dark mode">🌙</button>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

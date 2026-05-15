@@ -491,6 +491,31 @@ async function selectTheme(card) {
   window.open('/' + currentProfile.username, 'voilalink_preview');
 }
 
+// ── Font picker ───────────────────────────────────────────────
+async function selectFont(font) {
+  // Update UI
+  document.querySelectorAll('.font-card').forEach(c => {
+    const isSelected = c.dataset.font === font;
+    c.style.borderColor = isSelected ? 'var(--accent)' : 'var(--border)';
+    c.style.background  = isSelected ? 'rgba(129,140,248,0.1)' : 'var(--card)';
+  });
+  // Save to profile
+  try {
+    await db.from('profiles').update({ font }).eq('id', currentUser.id);
+    currentProfile.font = font;
+    toast('Font updated ✓');
+  } catch(e) { toast('Error saving font'); }
+}
+
+function initFontPicker() {
+  const saved = currentProfile?.font || 'inter';
+  document.querySelectorAll('.font-card').forEach(c => {
+    const isSelected = c.dataset.font === saved;
+    c.style.borderColor = isSelected ? 'var(--accent)' : 'var(--border)';
+    c.style.background  = isSelected ? 'rgba(129,140,248,0.1)' : 'var(--card)';
+  });
+}
+
 // ── Onboarding ────────────────────────────────────────────────
 function renderOnboarding() {
   const banner = document.getElementById('onboarding-banner');

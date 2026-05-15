@@ -15,7 +15,8 @@
   <meta name="apple-mobile-web-app-title" content="VoilaLink" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Syne:wght@600;700;800&family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=Raleway:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1046,6 +1047,45 @@
             <div class="theme-bar" style="background:#f59e0b;"></div>
             <div class="theme-bar-sm" style="background:#f59e0b;"></div>
             <div class="theme-name">Sunset</div>
+          </div>
+        </div>
+
+        <!-- Font Picker -->
+        <div style="margin-top:28px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;">Choose font</div>
+          <div id="font-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
+            <div class="font-card" data-font="inter" onclick="selectFont('inter')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Inter',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Inter</div>
+            </div>
+            <div class="font-card" data-font="syne" onclick="selectFont('syne')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Syne</div>
+            </div>
+            <div class="font-card" data-font="poppins" onclick="selectFont('poppins')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Poppins',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Poppins</div>
+            </div>
+            <div class="font-card" data-font="playfair" onclick="selectFont('playfair')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Playfair</div>
+            </div>
+            <div class="font-card" data-font="space" onclick="selectFont('space')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Space Grotesk</div>
+            </div>
+            <div class="font-card" data-font="raleway" onclick="selectFont('raleway')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Raleway',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Raleway</div>
+            </div>
+            <div class="font-card" data-font="montserrat" onclick="selectFont('montserrat')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Montserrat</div>
+            </div>
+            <div class="font-card" data-font="nunito" onclick="selectFont('nunito')" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.18s;">
+              <div style="font-family:'Nunito',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;">Aa</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'Inter',sans-serif;">Nunito</div>
+            </div>
           </div>
         </div>
 
@@ -2501,6 +2541,7 @@
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
+      if (tab === 'themes')    { initFontPicker(); }
       if (tab === 'settings')  loadSettings();
       if (tab === 'messages')  loadMessages();
       if (tab === 'outreach')  loadOutreachLog();

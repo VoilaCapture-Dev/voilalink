@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     applyTheme(profile.theme || 'midnight');
+    initThemeToggle(profile.theme || 'midnight');
     initChat(profile);
   } catch (e) {
     console.error('Bio page error:', e);
@@ -62,6 +63,23 @@ function renderBio(profile, links) {
   document.getElementById('bio-handle').textContent   = '@' + profile.username;
   document.getElementById('bio-bio').textContent      = profile.bio || '';
   document.title = (profile.full_name || profile.username) + ' — VoilaLink';
+
+  // Apply custom font
+  if (profile.font && profile.font !== 'inter') {
+    const fontMap = {
+      poppins:   'Poppins',
+      playfair:  'Playfair Display',
+      space:     'Space Grotesk',
+      raleway:   'Raleway',
+      montserrat:'Montserrat',
+      nunito:    'Nunito',
+      syne:      'Syne',
+    };
+    const fontName = fontMap[profile.font];
+    if (fontName) {
+      document.body.style.fontFamily = `'${fontName}', sans-serif`;
+    }
+  }
 
   // Social pills
   renderSocials(profile);
@@ -653,5 +671,35 @@ async function submitEmailSignupForm(userId) {
     if (thanks) thanks.style.display = 'block';
   } else {
     if (errEl) { errEl.textContent = 'Something went wrong. Please try again.'; errEl.style.display = 'block'; }
+  }
+}
+
+// ── Visitor theme toggle ──────────────────────────────────────
+let _creatorTheme = 'midnight';
+let _visitorLight = false;
+
+function initThemeToggle(themeName) {
+  _creatorTheme = themeName || 'midnight';
+  // Check localStorage for visitor preference
+  const saved = localStorage.getItem('vl_visitor_theme');
+  if (saved === 'light') {
+    _visitorLight = true;
+    applyTheme('light');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+
+function toggleVisitorTheme() {
+  _visitorLight = !_visitorLight;
+  const btn = document.getElementById('theme-toggle');
+  if (_visitorLight) {
+    applyTheme('light');
+    localStorage.setItem('vl_visitor_theme', 'light');
+    if (btn) btn.textContent = '☀️';
+  } else {
+    applyTheme(_creatorTheme);
+    localStorage.setItem('vl_visitor_theme', 'dark');
+    if (btn) btn.textContent = '🌙';
   }
 }
