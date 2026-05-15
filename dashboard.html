@@ -2971,6 +2971,8 @@
       var pc = document.querySelector('.panels-container');
       var isFullWidth = fullWidth.includes(tab);
       if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
+      var wc = document.querySelector('.world-clock-panel');
+      if (wc) wc.style.display = tab === 'links' ? 'block' : 'none';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
