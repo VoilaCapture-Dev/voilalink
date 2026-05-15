@@ -828,6 +828,18 @@
           <div id="onboarding-checklist" style="display:flex;flex-direction:column;gap:0;"></div>
         </div>
 
+        <!-- Global Trial Banner -->
+        <div id="global-trial-banner" style="display:none;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(199,160,80,0.12),rgba(251,191,36,0.07));border:1px solid rgba(251,191,36,0.3);border-radius:12px;padding:12px 16px;margin-bottom:14px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">🎁</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#fbbf24;">Free Pro trial — <span id="global-trial-days">7</span> day(s) remaining</div>
+              <div style="font-size:11px;color:var(--text-muted);">You have full access to all Pro features. Upgrade to keep them.</div>
+            </div>
+          </div>
+          <button class="btn-sm primary" onclick="showTab('upgrade')" style="font-size:11px;white-space:nowrap;flex-shrink:0;">Upgrade to Pro →</button>
+        </div>
+
         <!-- Quick Controls Strip -->
         <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
           <!-- Notifications card -->
@@ -911,7 +923,7 @@
         </div>
 
         <!-- Free plan limit notice -->
-        <div style="margin-top:10px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
+        <div id="link-limit-notice" style="margin-top:10px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
           <div style="font-size:20px;">⭐</div>
           <div style="flex:1;">
             <div style="font-size:12px;font-weight:600;margin-bottom:2px;">5 link limit on Free plan</div>
@@ -1026,7 +1038,7 @@
         </div>
         </div>
 
-        <div style="margin-top:20px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
+        <div id="analytics-upgrade-notice" style="margin-top:20px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
           <div style="font-size:20px;">📊</div>
           <div style="flex:1;">
             <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Analytics requires Pro</div>
@@ -1674,7 +1686,7 @@
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
-      if (tab === 'analytics') loadAnalytics();
+      if (tab === 'analytics') { loadAnalytics(); applyTrialToAnalytics(); }
       if (tab === 'settings')  loadSettings();
       if (tab === 'messages')  loadMessages();
       if (tab === 'outreach')  loadOutreachLog();
@@ -1782,29 +1794,45 @@
     }
 
     // Called on page load to sync quick controls with current profile state
-    function initQuickControls() {
-      const isPro = currentProfile && currentProfile.is_pro;
+    async function initQuickControls() {
+      const { access, trialDaysLeft, isPro } = await getProAccess();
       const arEnabled = currentProfile && currentProfile.auto_reply_enabled;
 
-      // Show/hide Pro lock on quick controls strip
+      // Show/hide global trial banner
+      var globalBanner = document.getElementById('global-trial-banner');
+      var globalDaysEl = document.getElementById('global-trial-days');
+      if (globalBanner) {
+        if (access && !isPro && trialDaysLeft !== null) {
+          globalBanner.style.display = 'flex';
+          if (globalDaysEl) globalDaysEl.textContent = trialDaysLeft;
+        } else {
+          globalBanner.style.display = 'none';
+        }
+      }
+
+      // Auto-reply: show real toggle if Pro or in trial, otherwise show ⭐ Pro button
       var quickToggle = document.getElementById('quick-autoreply-toggle');
       if (quickToggle) {
-        if (!isPro) {
+        if (!access) {
           quickToggle.outerHTML = '<button onclick="showTab(\'upgrade\')" style="font-size:10px;padding:4px 8px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;flex-shrink:0;">⭐ Pro</button>';
         }
       }
 
-      // Show/hide Pro lock in settings panel
-      var proLock = document.getElementById('auto-reply-pro-lock');
+      // Auto-reply pro lock in settings
+      var proLock     = document.getElementById('auto-reply-pro-lock');
       var toggleLabel = document.getElementById('auto-reply-toggle-label');
       if (proLock && toggleLabel) {
-        if (!isPro) {
+        if (!access) {
           toggleLabel.style.display = 'none';
           proLock.style.display = 'block';
         } else {
           proLock.style.display = 'none';
         }
       }
+
+      // Hide "5 link limit" notice during trial / Pro
+      var linkLimitNotice = document.getElementById('link-limit-notice');
+      if (linkLimitNotice) linkLimitNotice.style.display = access ? 'none' : 'flex';
 
       // Pre-fill email in checkout links
       if (currentUser && currentUser.email) {
@@ -1985,36 +2013,39 @@
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Planner access check (Pro OR within 7-day trial) ──────
-    async function getPlannerAccess() {
+    // ── Global Pro access check (Pro OR within 7-day trial) ───
+    // Single source of truth for ALL Pro features
+    var _proAccessCache = null;
+
+    async function getProAccess() {
+      if (_proAccessCache !== null) return _proAccessCache;
+
       const isPro = currentProfile && currentProfile.is_pro;
-      if (isPro) return { access: true, trialDaysLeft: null };
+      if (isPro) { _proAccessCache = { access: true, trialDaysLeft: null, isPro: true }; return _proAccessCache; }
 
       // Check / start trial
       let trialStart = currentProfile && currentProfile.planner_trial_start;
-
       if (!trialStart) {
-        // First time — start the trial now
         const now = new Date().toISOString();
         await db.from('profiles').update({ planner_trial_start: now }).eq('id', currentUser.id);
         currentProfile.planner_trial_start = now;
         trialStart = now;
       }
 
-      const started      = new Date(trialStart);
-      const now          = new Date();
-      const msPerDay     = 1000 * 60 * 60 * 24;
-      const daysElapsed  = (now - started) / msPerDay;
-      const daysLeft     = Math.ceil(7 - daysElapsed);
+      const msPerDay    = 1000 * 60 * 60 * 24;
+      const daysElapsed = (new Date() - new Date(trialStart)) / msPerDay;
+      const daysLeft    = Math.ceil(7 - daysElapsed);
 
-      if (daysLeft > 0) return { access: true, trialDaysLeft: daysLeft };
-      return { access: false, trialDaysLeft: 0 };
+      _proAccessCache = daysLeft > 0
+        ? { access: true,  trialDaysLeft: daysLeft, isPro: false }
+        : { access: false, trialDaysLeft: 0,        isPro: false };
+      return _proAccessCache;
     }
 
     // ── Load full planner tab ──────────────────────────────────
     async function loadPlanner() {
       if (!currentUser) return;
-      const { access, trialDaysLeft } = await getPlannerAccess();
+      const { access, trialDaysLeft } = await getProAccess();
       const lock    = document.getElementById('planner-pro-lock');
       const content = document.getElementById('planner-content');
       const banner  = document.getElementById('planner-trial-banner');
@@ -2203,7 +2234,7 @@
     async function loadWidgetTasks() {
       const widget = document.getElementById('planner-widget');
       if (!widget) return;
-      const { access } = await getPlannerAccess();
+      const { access } = await getProAccess();
       if (!access) { widget.style.display = 'none'; return; }
       widget.style.display = 'block';
 
@@ -2245,6 +2276,13 @@
         more.onclick = showPlannerTab;
         container.appendChild(more);
       }
+    }
+
+    // ── Apply trial access to analytics & themes ──────────────
+    async function applyTrialToAnalytics() {
+      const { access } = await getProAccess();
+      var notice = document.getElementById('analytics-upgrade-notice');
+      if (notice) notice.style.display = access ? 'none' : 'flex';
     }
 
     // ── Boot: sync notification buttons as soon as DOM is ready ──
