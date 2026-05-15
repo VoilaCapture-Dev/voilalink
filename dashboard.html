@@ -192,16 +192,17 @@
 
     /* ── Content area ─────────────────────────────────────── */
     .content {
-      position: relative;
+      display: flex;
       flex: 1;
       min-height: 0;
-      overflow: hidden;
+      position: relative;
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
     .panels-container {
-      position: absolute;
-      top: 0; left: 0; bottom: 0; right: 300px;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
       overflow-y: auto;
       border-right: 1px solid var(--border);
     }
