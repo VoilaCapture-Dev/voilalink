@@ -575,7 +575,64 @@ async function loadAnalytics() {
           </div>
         </div>`;
     });
+    loadReferrerStats(currentUser.id);
   } catch (e) { toast('Error loading analytics: ' + e.message); }
+}
+
+async function loadReferrerStats(userId) {
+  const el = document.getElementById('referrer-stats');
+  if (!el) return;
+  try {
+    const clicks = await getReferrerStats(userId);
+    if (!clicks.length) {
+      el.innerHTML = '<p style="color:#94a3b8;font-size:14px;text-align:center;padding:16px 0;">No traffic data yet. Share your bio link to start tracking!</p>';
+      return;
+    }
+    function parseSource(ref) {
+      if (!ref) return 'Direct / Unknown';
+      const r = ref.toLowerCase();
+      if (r.includes('instagram')) return 'Instagram';
+      if (r.includes('tiktok'))    return 'TikTok';
+      if (r.includes('twitter') || r.includes('t.co') || r.includes('x.com')) return 'Twitter / X';
+      if (r.includes('facebook'))  return 'Facebook';
+      if (r.includes('youtube'))   return 'YouTube';
+      if (r.includes('linkedin'))  return 'LinkedIn';
+      if (r.includes('google'))    return 'Google';
+      if (r.includes('snapchat'))  return 'Snapchat';
+      if (r.includes('pinterest')) return 'Pinterest';
+      if (r.includes('whatsapp'))  return 'WhatsApp';
+      if (r.includes('telegram'))  return 'Telegram';
+      try { return new URL(ref).hostname.replace('www.',''); } catch(e) { return 'Other'; }
+    }
+    const counts = {};
+    clicks.forEach(c => {
+      const src = parseSource(c.referrer);
+      counts[src] = (counts[src] || 0) + 1;
+    });
+    const total = clicks.length;
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    const sourceEmojis = {
+      'Instagram':'📸','TikTok':'🎵','Twitter / X':'🐦','Facebook':'👥',
+      'YouTube':'▶️','LinkedIn':'💼','Google':'🔍','Snapchat':'👻',
+      'Pinterest':'📌','WhatsApp':'💬','Telegram':'✈️','Direct / Unknown':'🔗'
+    };
+    el.innerHTML = sorted.map(([src, count]) => {
+      const pct = Math.round((count / total) * 100);
+      const emoji = sourceEmojis[src] || '🌐';
+      return `<div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:13px;font-weight:600;color:#334155;">${emoji} ${src}</span>
+          <span style="font-size:12px;color:#64748b;">${count} click${count===1?'':'s'} · ${pct}%</span>
+        </div>
+        <div style="background:#f1f5f9;border-radius:99px;height:8px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#6366f1,#a78bfa);border-radius:99px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Referrer stats error', e);
+    el.innerHTML = '<p style="color:#f87171;font-size:13px;">Could not load traffic sources.</p>';
+  }
 }
 
 // ── Creator Research ──────────────────────────────────────────

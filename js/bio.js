@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  window._pageReferrer = document.referrer || null;
+
   try {
     const profile    = await getProfileByUsername(username);
     const links      = await getPublicLinks(profile.id);
@@ -343,7 +345,7 @@ function renderSocials(profile) {
 // ── Click tracking ───────────────────────────────────────────
 async function handleClick(link) {
   // Track click in background — don't await so page feels instant
-  trackClick(link.id).catch(() => {});
+  trackClick(link.id, window._pageReferrer).catch(() => {});
   // Open link
   window.open(link.url, '_blank', 'noopener,noreferrer');
 }

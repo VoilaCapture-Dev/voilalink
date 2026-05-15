@@ -125,8 +125,11 @@ async function deleteLink(id) {
   if (error) throw error;
 }
 
-async function trackClick(linkId) {
-  await db.from('link_clicks').insert({ link_id: linkId });
+async function trackClick(linkId, referrer) {
+  await db.from('link_clicks').insert({
+    link_id: linkId,
+    referrer: referrer || null
+  });
 }
 
 async function getLinkClicks(userId) {
@@ -264,4 +267,13 @@ async function saveEmailWidget(userId, settings) {
     .from('email_widget')
     .upsert({ user_id: userId, ...settings }, { onConflict: 'user_id' });
   if (error) throw error;
+}
+
+async function getReferrerStats(userId) {
+  const { data, error } = await db
+    .from('link_clicks')
+    .select('referrer, clicked_at, links!inner(user_id)')
+    .eq('links.user_id', userId);
+  if (error) throw error;
+  return data || [];
 }
