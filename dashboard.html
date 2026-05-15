@@ -120,6 +120,7 @@
     .main {
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
+      min-height: 100vh;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -160,13 +161,15 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
-    .content { display: flex; gap: 0; flex: 1; }
+    .content { display: flex; gap: 0; flex: 1; min-height: 0; }
 
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
       flex: 1; padding: 32px;
       border-right: 1px solid var(--border);
       max-width: 600px;
+      min-width: 0;
+      overflow-y: auto;
     }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -405,8 +408,9 @@
       width: 320px; flex-shrink: 0;
       padding: 32px 24px;
       display: flex; flex-direction: column; align-items: center;
-      position: sticky; top: 64px;
-      height: calc(100vh - 64px);
+      align-self: flex-start;
+      position: sticky; top: 0;
+      max-height: 100vh;
       overflow-y: auto;
     }
     .preview-label {
@@ -1659,7 +1663,7 @@
       </div>
 
       <!-- vCard Panel -->
-      <div id="panel-vcard" style="display:none">
+      <div class="links-panel" id="panel-vcard" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
           <div>
             <h2 style="margin:0;font-size:22px;font-weight:700;color:#1e293b">📇 vCard / Save Contact</h2>
@@ -1705,7 +1709,7 @@
       </div>
 
       <!-- Email List Panel -->
-      <div id="panel-email" style="display:none">
+      <div class="links-panel" id="panel-email" style="display:none">
         <div style="margin-bottom:24px">
           <h2 style="margin:0;font-size:22px;font-weight:700;color:#1e293b">📧 Email List</h2>
           <p style="margin:4px 0 0;color:#64748b;font-size:14px">Collect emails from your bio page visitors and build your list.</p>
@@ -2615,7 +2619,7 @@
       document.getElementById('panel-email').style.display      = tab === 'email'       ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
-      document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
+      document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : 'flex';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
