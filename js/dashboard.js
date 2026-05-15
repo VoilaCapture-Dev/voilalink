@@ -553,6 +553,23 @@ function dismissOnboarding() {
 
 // ── Analytics ────────────────────────────────────────────────
 async function loadAnalytics() {
+  const { access: isPro } = await getProAccess();
+  if (!isPro) {
+    const container = document.getElementById('analytics-links');
+    const panel = document.getElementById('panel-analytics');
+    if (panel) panel.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:16px;">📊</div>
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;color:var(--text-primary);">Analytics is a Pro feature</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:24px;max-width:280px;line-height:1.6;">See exactly how many people click your links, which ones perform best, and where your traffic comes from.</div>
+        <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank"
+          style="padding:12px 28px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;">
+          Upgrade to Pro — £3.99/mo →
+        </a>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">7-day free trial · Cancel anytime</div>
+      </div>`;
+    return;
+  }
   try {
     const clicks = await getLinkClicks(currentUser.id);
 
@@ -657,6 +674,34 @@ async function loadReferrerStats(userId) {
     console.error('Referrer stats error', e);
     el.innerHTML = '<p style="color:#f87171;font-size:13px;">Could not load traffic sources.</p>';
   }
+}
+
+// ── Quick stats (Pro users, preview panel) ────────────────────
+async function loadQuickStats() {
+  try {
+    // Total clicks
+    const clicks = await getLinkClicks(currentUser.id);
+    const qsClicks = document.getElementById('qs-clicks');
+    if (qsClicks) qsClicks.textContent = clicks.length;
+
+    // Active links
+    const activeLinks = allLinks.filter(l => l.enabled).length;
+    const qsLinks = document.getElementById('qs-links');
+    if (qsLinks) qsLinks.textContent = activeLinks;
+
+    // Top link
+    const counts = {};
+    clicks.forEach(c => { counts[c.link_id] = (counts[c.link_id] || 0) + 1; });
+    const topLinkId = Object.entries(counts).sort((a,b) => b[1]-a[1])[0]?.[0];
+    const topLink = allLinks.find(l => l.id === topLinkId);
+    const qsTop = document.getElementById('qs-top-link');
+    if (qsTop) qsTop.textContent = topLink ? (topLink.emoji || '') + ' ' + topLink.title : '—';
+
+    // Subscribers
+    const { count } = await db.from('email_signups').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+    const qsSubs = document.getElementById('qs-subscribers');
+    if (qsSubs) qsSubs.textContent = count || 0;
+  } catch(e) { console.error('Quick stats error', e); }
 }
 
 // ── Creator Research ──────────────────────────────────────────

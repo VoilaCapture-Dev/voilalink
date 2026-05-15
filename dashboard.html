@@ -788,6 +788,7 @@
     </a>
     <a class="nav-item" href="#" onclick="showTab('analytics')">
       <span class="nav-item-icon">📊</span> Analytics
+      <span style="margin-left:auto;font-size:9px;font-weight:700;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;padding:2px 7px;border-radius:99px;letter-spacing:0.04em;">PRO</span>
     </a>
     <a class="nav-item" href="#" onclick="showTab('messages')" id="nav-messages">
       <span class="nav-item-icon">💬</span> Messages
@@ -1828,6 +1829,30 @@
 
         <a class="view-page-btn" id="preview-page-link" href="#" target="_blank">View my page →</a>
 
+        <!-- Quick stats card (Pro users only) -->
+        <div id="quick-stats-card" style="display:none;margin:16px 16px 0;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">
+          <div style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Quick stats</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+              <div id="qs-clicks" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">—</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Total clicks</div>
+            </div>
+            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+              <div id="qs-links" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--accent);">—</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Active links</div>
+            </div>
+            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+              <div id="qs-subscribers" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#4ade80;">—</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Subscribers</div>
+            </div>
+            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+              <div id="qs-top-link" style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f59e0b;">—</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Top link</div>
+            </div>
+          </div>
+          <a href="#" onclick="showTab('analytics');return false;" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--accent);text-decoration:none;">View full analytics →</a>
+        </div>
+
         <!-- Pro upgrade card -->
         <div id="pro-upgrade-card" style="margin:16px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.08));border:1px solid rgba(129,140,248,0.25);border-radius:16px;padding:18px 16px;">
           <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">⭐ Unlock Pro features</div>
@@ -2765,6 +2790,13 @@
       const proCard = document.getElementById('pro-upgrade-card');
       if (proCard && isPro) proCard.style.display = 'none';
 
+      if (isPro) {
+        // Show quick stats card
+        const qsCard = document.getElementById('quick-stats-card');
+        if (qsCard) qsCard.style.display = 'block';
+        loadQuickStats();
+      }
+
       updateAllAutoReplyUI(arEnabled || false);
       loadWidgetTasks();
       loadTipJar();
@@ -2778,6 +2810,34 @@
           updateNotifUI('default');
         }
       }
+    }
+
+    // ── Quick stats (Pro users, preview panel) ────────────────
+    async function loadQuickStats() {
+      try {
+        // Total clicks
+        const clicks = await getLinkClicks(currentUser.id);
+        const qsClicks = document.getElementById('qs-clicks');
+        if (qsClicks) qsClicks.textContent = clicks.length;
+
+        // Active links
+        const activeLinks = allLinks.filter(l => l.enabled).length;
+        const qsLinks = document.getElementById('qs-links');
+        if (qsLinks) qsLinks.textContent = activeLinks;
+
+        // Top link
+        const counts = {};
+        clicks.forEach(c => { counts[c.link_id] = (counts[c.link_id] || 0) + 1; });
+        const topLinkId = Object.entries(counts).sort((a,b) => b[1]-a[1])[0]?.[0];
+        const topLink = allLinks.find(l => l.id === topLinkId);
+        const qsTop = document.getElementById('qs-top-link');
+        if (qsTop) qsTop.textContent = topLink ? (topLink.emoji || '') + ' ' + topLink.title : '—';
+
+        // Subscribers
+        const { count } = await db.from('email_signups').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+        const qsSubs = document.getElementById('qs-subscribers');
+        if (qsSubs) qsSubs.textContent = count || 0;
+      } catch(e) { console.error('Quick stats error', e); }
     }
 
     // ── Notification helpers (all state logic lives here) ─────
