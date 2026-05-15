@@ -811,6 +811,9 @@
     <a class="nav-item" href="#" onclick="openTipJar()" id="nav-tipjar">
       <span class="nav-item-icon">☕</span> Tip Jar
     </a>
+    <a class="nav-item" href="#" onclick="showTab('countdowns')" id="nav-countdowns">
+      <span class="nav-item-icon">⏱</span> Countdowns
+    </a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
@@ -1587,6 +1590,24 @@
         </div>
       </div>
 
+      <!-- ── Countdowns panel ──────────────────────────────── -->
+      <div class="links-panel" id="panel-countdowns" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">⏱ Countdowns</div>
+            <div class="panel-sub">Create urgency for launches, events & live streams</div>
+          </div>
+          <button class="btn-sm primary" onclick="openCountdownModal()">+ New countdown</button>
+        </div>
+        <div id="countdown-list"></div>
+        <div id="countdown-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-muted);">
+          <div style="font-size:52px;margin-bottom:16px;">⏱</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">No countdowns yet</div>
+          <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Add a countdown for your next video drop, product launch or live event — it appears live on your bio page.</div>
+          <button class="btn-sm primary" onclick="openCountdownModal()" style="padding:12px 28px;font-size:14px;">+ Create first countdown →</button>
+        </div>
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -1789,6 +1810,36 @@
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Countdown modal ─────────────────────────────────────── -->
+  <div class="modal-overlay" id="countdown-modal">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-title" id="countdown-modal-title">⏱ New Countdown</div>
+      <div class="modal-sub">Appears live on your public profile page</div>
+      <button class="modal-close" onclick="closeCountdownModal()">×</button>
+      <input type="hidden" id="cd-id" value="" />
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input class="form-input" id="cd-title" type="text" placeholder="🎬 New video drops in..." maxlength="80" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" id="cd-description" type="text" placeholder="Subscribe so you don't miss it!" maxlength="120" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date & time *</label>
+        <input class="form-input" id="cd-date" type="datetime-local" />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <input type="checkbox" id="cd-enabled" checked style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;" />
+        <label for="cd-enabled" style="font-size:13px;cursor:pointer;">Show on my public page</label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeCountdownModal()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveCountdown()">Save →</button>
       </div>
     </div>
   </div>
@@ -2267,7 +2318,8 @@
       document.getElementById('panel-research').style.display  = tab === 'research'  ? 'block' : 'none';
       document.getElementById('panel-planner').style.display   = tab === 'planner'   ? 'block' : 'none';
       document.getElementById('panel-invoices').style.display  = tab === 'invoices'  ? 'block' : 'none';
-      document.getElementById('panel-growth').style.display    = tab === 'growth'    ? 'block' : 'none';
+      document.getElementById('panel-growth').style.display      = tab === 'growth'      ? 'block' : 'none';
+      document.getElementById('panel-countdowns').style.display  = tab === 'countdowns'  ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
@@ -2279,7 +2331,8 @@
       if (tab === 'outreach')  loadOutreachLog();
       if (tab === 'planner')   loadPlanner();
       if (tab === 'invoices')  loadInvoices();
-      if (tab === 'growth')    loadGrowth();
+      if (tab === 'growth')      loadGrowth();
+      if (tab === 'countdowns')  loadCountdowns();
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -3669,6 +3722,123 @@
         '</div>' + printBtn +
         '</body></html>';
     }
+
+    // ── Countdowns ─────────────────────────────────────────────
+    var countdownList = [];
+    var _cdTickInterval = null;
+
+    async function loadCountdowns() {
+      if (!currentUser) return;
+      var res = await db.from('countdowns').select('*').eq('user_id', currentUser.id).order('target_date', { ascending: true });
+      countdownList = res.data || [];
+      renderCountdowns();
+    }
+
+    function renderCountdowns() {
+      var list  = document.getElementById('countdown-list');
+      var empty = document.getElementById('countdown-empty');
+      if (!list) return;
+      if (countdownList.length === 0) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+
+      list.innerHTML = countdownList.map(function(cd) {
+        var target = new Date(cd.target_date);
+        var now    = new Date();
+        var diff   = target - now;
+        var expired = diff <= 0;
+        var dateStr = target.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        var statusDot = cd.is_enabled
+          ? '<span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:5px;"></span>'
+          : '<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;margin-right:5px;"></span>';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;">' +
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:3px;">' + escHtml(cd.title) + '</div>' +
+              (cd.description ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + escHtml(cd.description) + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text-muted);font-family:\'DM Mono\',monospace;">' + statusDot + (cd.is_enabled ? 'Live' : 'Hidden') + ' · ' + dateStr + (expired ? ' · <span style="color:#ef4444;">Expired</span>' : '') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+              '<button onclick="editCountdown(\'' + cd.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">✏ Edit</button>' +
+              '<button onclick="toggleCountdown(\'' + cd.id + '\',' + !cd.is_enabled + ')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">' + (cd.is_enabled ? '⏸ Hide' : '▶ Show') + '</button>' +
+              '<button onclick="deleteCountdown(\'' + cd.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;color:var(--danger);">🗑</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openCountdownModal(cd) {
+      document.getElementById('countdown-modal-title').textContent = cd ? '✏ Edit Countdown' : '⏱ New Countdown';
+      document.getElementById('cd-id').value          = cd ? cd.id : '';
+      document.getElementById('cd-title').value       = cd ? cd.title : '';
+      document.getElementById('cd-description').value = cd ? (cd.description || '') : '';
+      document.getElementById('cd-enabled').checked   = cd ? cd.is_enabled : true;
+      // Format datetime-local value
+      if (cd && cd.target_date) {
+        var d = new Date(cd.target_date);
+        var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+        document.getElementById('cd-date').value = local;
+      } else {
+        document.getElementById('cd-date').value = '';
+      }
+      document.getElementById('countdown-modal').classList.add('open');
+    }
+
+    function closeCountdownModal() {
+      document.getElementById('countdown-modal').classList.remove('open');
+    }
+
+    async function saveCountdown() {
+      var title = document.getElementById('cd-title').value.trim();
+      var date  = document.getElementById('cd-date').value;
+      if (!title) { toast('Please enter a title'); return; }
+      if (!date)  { toast('Please select a date and time'); return; }
+      var id = document.getElementById('cd-id').value;
+      var payload = {
+        user_id:     currentUser.id,
+        title:       title,
+        description: document.getElementById('cd-description').value.trim() || null,
+        target_date: new Date(date).toISOString(),
+        is_enabled:  document.getElementById('cd-enabled').checked
+      };
+      var res;
+      if (id) {
+        res = await db.from('countdowns').update(payload).eq('id', id);
+      } else {
+        res = await db.from('countdowns').insert(payload);
+      }
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      closeCountdownModal();
+      toast('Countdown saved ✓');
+      await loadCountdowns();
+    }
+
+    function editCountdown(id) {
+      var cd = countdownList.find(function(c){ return c.id === id; });
+      if (cd) openCountdownModal(cd);
+    }
+
+    async function toggleCountdown(id, enabled) {
+      await db.from('countdowns').update({ is_enabled: enabled }).eq('id', id);
+      var cd = countdownList.find(function(c){ return c.id === id; });
+      if (cd) cd.is_enabled = enabled;
+      renderCountdowns();
+      toast(enabled ? 'Countdown now live ✓' : 'Countdown hidden');
+    }
+
+    async function deleteCountdown(id) {
+      if (!confirm('Delete this countdown?')) return;
+      await db.from('countdowns').delete().eq('id', id);
+      countdownList = countdownList.filter(function(c){ return c.id !== id; });
+      renderCountdowns();
+      toast('Countdown deleted');
+    }
+
+    document.getElementById('countdown-modal').addEventListener('click', function(e){ if (e.target === this) closeCountdownModal(); });
 
     // ── Tip Jar ────────────────────────────────────────────────
     var tipJarData = null;

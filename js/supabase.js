@@ -45,6 +45,16 @@ async function getLinks(userId) {
   return data;
 }
 
+async function getPublicCountdowns(userId) {
+  const { data } = await db
+    .from('countdowns')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_enabled', true)
+    .order('target_date', { ascending: true });
+  return data || [];
+}
+
 async function getPublicTipJar(userId) {
   const { data } = await db
     .from('tip_jar')

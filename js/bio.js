@@ -15,10 +15,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    const profile = await getProfileByUsername(username);
-    const links   = await getPublicLinks(profile.id);
-    const tipJar  = await getPublicTipJar(profile.id);
+    const profile    = await getProfileByUsername(username);
+    const links      = await getPublicLinks(profile.id);
+    const tipJar     = await getPublicTipJar(profile.id);
+    const countdowns = await getPublicCountdowns(profile.id);
     renderBio(profile, links);
+    if (countdowns && countdowns.length > 0) renderCountdowns(countdowns);
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
     applyTheme(profile.theme || 'midnight');
     initChat(profile);
@@ -78,6 +80,75 @@ function renderBio(profile, links) {
   if (footerLink) {
     footerLink.href = 'https://voilalink.com/login.html?ref=' + encodeURIComponent(profile.username) + '&mode=signup';
   }
+}
+
+// ── Countdowns ───────────────────────────────────────────────
+function renderCountdowns(countdowns) {
+  const container = document.getElementById('bio-countdowns');
+  if (!container) return;
+  container.innerHTML = '';
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.alignItems = 'center';
+  container.style.gap = '12px';
+  container.style.width = '100%';
+
+  countdowns.forEach(cd => {
+    const target  = new Date(cd.target_date);
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'width:100%;max-width:480px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 22px;text-align:center;';
+
+    wrapper.innerHTML = `
+      <div style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:monospace;margin-bottom:6px;">⏱ Coming soon</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:16px;">${escHtml(cd.title)}</div>
+      ${cd.description ? `<div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">${escHtml(cd.description)}</div>` : ''}
+      <div style="display:flex;justify-content:center;gap:12px;" id="cd-${cd.id}">
+        <div style="text-align:center;">
+          <div class="cd-num" id="cd-${cd.id}-d" style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);line-height:1;">00</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;">Days</div>
+        </div>
+        <div style="font-size:28px;color:var(--text-muted);line-height:1.2;">:</div>
+        <div style="text-align:center;">
+          <div class="cd-num" id="cd-${cd.id}-h" style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);line-height:1;">00</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;">Hours</div>
+        </div>
+        <div style="font-size:28px;color:var(--text-muted);line-height:1.2;">:</div>
+        <div style="text-align:center;">
+          <div class="cd-num" id="cd-${cd.id}-m" style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);line-height:1;">00</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;">Mins</div>
+        </div>
+        <div style="font-size:28px;color:var(--text-muted);line-height:1.2;">:</div>
+        <div style="text-align:center;">
+          <div class="cd-num" id="cd-${cd.id}-s" style="font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:var(--accent);line-height:1;">00</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;">Secs</div>
+        </div>
+      </div>`;
+
+    container.appendChild(wrapper);
+
+    // Tick every second
+    function tick() {
+      const diff = target - new Date();
+      if (diff <= 0) {
+        document.getElementById(`cd-${cd.id}-d`).textContent = '00';
+        document.getElementById(`cd-${cd.id}-h`).textContent = '00';
+        document.getElementById(`cd-${cd.id}-m`).textContent = '00';
+        document.getElementById(`cd-${cd.id}-s`).textContent = '00';
+        return;
+      }
+      const days  = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins  = Math.floor((diff % 3600000)  / 60000);
+      const secs  = Math.floor((diff % 60000)    / 1000);
+      const pad   = n => String(n).padStart(2,'0');
+      document.getElementById(`cd-${cd.id}-d`).textContent = pad(days);
+      document.getElementById(`cd-${cd.id}-h`).textContent = pad(hours);
+      document.getElementById(`cd-${cd.id}-m`).textContent = pad(mins);
+      document.getElementById(`cd-${cd.id}-s`).textContent = pad(secs);
+    }
+    tick();
+    setInterval(tick, 1000);
+  });
 }
 
 // ── Tip Jar ──────────────────────────────────────────────────
