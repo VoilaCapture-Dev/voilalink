@@ -508,6 +508,62 @@
       letter-spacing: 0.1em; margin-top: 5px;
       opacity: 0.75;
     }
+    .wc-custom {
+      cursor: pointer;
+      border: 1px dashed rgba(74,222,128,0.2) !important;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .wc-custom:hover {
+      border-color: rgba(74,222,128,0.5) !important;
+      background: rgba(74,222,128,0.06) !important;
+    }
+    .wc-add-icon {
+      font-size: 20px; line-height: 1;
+      color: rgba(74,222,128,0.35);
+      font-weight: 300;
+    }
+    .wc-custom:hover .wc-add-icon { color: rgba(74,222,128,0.75); }
+    .wc-remove-btn {
+      position: absolute; top: 4px; right: 5px;
+      font-size: 10px; color: rgba(74,222,128,0.35);
+      cursor: pointer; line-height: 1; padding: 1px 3px;
+      background: none; border: none;
+      font-family: monospace;
+    }
+    .wc-remove-btn:hover { color: #4ade80; }
+    /* ── Clock picker dropdown ─────────────────────────────── */
+    .wc-picker {
+      position: fixed;
+      background: #0d1117;
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 10px;
+      padding: 10px;
+      z-index: 9999;
+      width: 190px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    }
+    .wc-picker select {
+      width: 100%;
+      background: #080d08;
+      color: #4ade80;
+      border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+    }
+    .wc-picker-btns { display: flex; gap: 6px; }
+    .wc-picker-btn {
+      flex: 1; padding: 5px 0;
+      border-radius: 6px; font-size: 11px;
+      cursor: pointer; border: 1px solid rgba(74,222,128,0.3);
+      background: transparent; color: #4ade80;
+      font-family: 'DM Mono', monospace;
+    }
+    .wc-picker-btn.primary { background: rgba(74,222,128,0.15); }
+    .wc-picker-btn.danger  { color: rgba(74,222,128,0.45); }
     /* ─────────────────────────────────────────────────────── */
     .preview-panel-body {
       flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -1987,6 +2043,16 @@
             <div class="wc-time" id="wc-sydney">--:--</div>
             <div class="wc-city">Sydney</div>
           </div>
+          <!-- Custom slot 1 -->
+          <div class="wc-zone wc-custom" id="wc-slot-1" onclick="openClockPicker(event,1)" style="position:relative;align-items:center;">
+            <div class="wc-add-icon">＋</div>
+            <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
+          </div>
+          <!-- Custom slot 2 -->
+          <div class="wc-zone wc-custom" id="wc-slot-2" onclick="openClockPicker(event,2)" style="position:relative;align-items:center;">
+            <div class="wc-add-icon">＋</div>
+            <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
+          </div>
         </div>
       </div>
 
@@ -3065,6 +3131,181 @@
       }
       tick();
       setInterval(tick, 1000);
+    })();
+
+    // ── Custom World Clock Slots ───────────────────────────────
+    (function initCustomClocks() {
+      var TZ_OPTIONS = [
+        { group: 'Europe', zones: [
+          { tz: 'Europe/London',     label: 'London' },
+          { tz: 'Europe/Dublin',     label: 'Dublin' },
+          { tz: 'Europe/Lisbon',     label: 'Lisbon' },
+          { tz: 'Europe/Paris',      label: 'Paris' },
+          { tz: 'Europe/Berlin',     label: 'Berlin' },
+          { tz: 'Europe/Rome',       label: 'Rome' },
+          { tz: 'Europe/Madrid',     label: 'Madrid' },
+          { tz: 'Europe/Amsterdam',  label: 'Amsterdam' },
+          { tz: 'Europe/Brussels',   label: 'Brussels' },
+          { tz: 'Europe/Zurich',     label: 'Zurich' },
+          { tz: 'Europe/Stockholm',  label: 'Stockholm' },
+          { tz: 'Europe/Oslo',       label: 'Oslo' },
+          { tz: 'Europe/Copenhagen', label: 'Copenhagen' },
+          { tz: 'Europe/Warsaw',     label: 'Warsaw' },
+          { tz: 'Europe/Vienna',     label: 'Vienna' },
+          { tz: 'Europe/Athens',     label: 'Athens' },
+          { tz: 'Europe/Istanbul',   label: 'Istanbul' },
+          { tz: 'Europe/Moscow',     label: 'Moscow' },
+        ]},
+        { group: 'Americas', zones: [
+          { tz: 'America/New_York',    label: 'New York' },
+          { tz: 'America/Chicago',     label: 'Chicago' },
+          { tz: 'America/Denver',      label: 'Denver' },
+          { tz: 'America/Los_Angeles', label: 'Los Angeles' },
+          { tz: 'America/Toronto',     label: 'Toronto' },
+          { tz: 'America/Vancouver',   label: 'Vancouver' },
+          { tz: 'America/Phoenix',     label: 'Phoenix' },
+          { tz: 'Pacific/Honolulu',    label: 'Honolulu' },
+          { tz: 'America/Anchorage',   label: 'Anchorage' },
+          { tz: 'America/Mexico_City', label: 'Mexico City' },
+          { tz: 'America/Bogota',      label: 'Bogotá' },
+          { tz: 'America/Lima',        label: 'Lima' },
+          { tz: 'America/Caracas',     label: 'Caracas' },
+          { tz: 'America/Santiago',    label: 'Santiago' },
+          { tz: 'America/Sao_Paulo',   label: 'São Paulo' },
+          { tz: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires' },
+        ]},
+        { group: 'Middle East & Africa', zones: [
+          { tz: 'Asia/Dubai',          label: 'Dubai' },
+          { tz: 'Asia/Riyadh',         label: 'Riyadh' },
+          { tz: 'Asia/Kuwait',         label: 'Kuwait' },
+          { tz: 'Asia/Qatar',          label: 'Doha' },
+          { tz: 'Asia/Beirut',         label: 'Beirut' },
+          { tz: 'Asia/Jerusalem',      label: 'Tel Aviv' },
+          { tz: 'Africa/Cairo',        label: 'Cairo' },
+          { tz: 'Africa/Lagos',        label: 'Lagos' },
+          { tz: 'Africa/Nairobi',      label: 'Nairobi' },
+          { tz: 'Africa/Johannesburg', label: 'Johannesburg' },
+          { tz: 'Africa/Casablanca',   label: 'Casablanca' },
+        ]},
+        { group: 'Asia & Pacific', zones: [
+          { tz: 'Asia/Karachi',      label: 'Karachi' },
+          { tz: 'Asia/Kolkata',      label: 'Mumbai / Delhi' },
+          { tz: 'Asia/Dhaka',        label: 'Dhaka' },
+          { tz: 'Asia/Colombo',      label: 'Colombo' },
+          { tz: 'Asia/Bangkok',      label: 'Bangkok' },
+          { tz: 'Asia/Singapore',    label: 'Singapore' },
+          { tz: 'Asia/Hong_Kong',    label: 'Hong Kong' },
+          { tz: 'Asia/Shanghai',     label: 'Shanghai' },
+          { tz: 'Asia/Seoul',        label: 'Seoul' },
+          { tz: 'Asia/Tokyo',        label: 'Tokyo' },
+          { tz: 'Asia/Taipei',       label: 'Taipei' },
+          { tz: 'Asia/Almaty',       label: 'Almaty' },
+          { tz: 'Australia/Perth',   label: 'Perth' },
+          { tz: 'Australia/Sydney',  label: 'Sydney' },
+          { tz: 'Australia/Melbourne', label: 'Melbourne' },
+          { tz: 'Pacific/Auckland',  label: 'Auckland' },
+        ]},
+      ];
+
+      var customs = (function() {
+        try { return JSON.parse(localStorage.getItem('wc_custom')) || [null, null]; }
+        catch(e) { return [null, null]; }
+      })();
+
+      function saveCustoms() {
+        localStorage.setItem('wc_custom', JSON.stringify(customs));
+      }
+
+      function renderSlot(slot, data) {
+        var el = document.getElementById('wc-slot-' + slot);
+        if (!el) return;
+        if (data) {
+          el.style.alignItems = '';
+          el.innerHTML =
+            '<button class="wc-remove-btn" onclick="event.stopPropagation();removeCustomClock(' + slot + ')">✕</button>' +
+            '<div class="wc-time" id="wc-c' + slot + '">--:--</div>' +
+            '<div class="wc-city">' + data.label + '</div>';
+          tickCustom();
+        } else {
+          el.style.alignItems = 'center';
+          el.innerHTML =
+            '<div class="wc-add-icon">＋</div>' +
+            '<div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>';
+        }
+      }
+
+      function tickCustom() {
+        customs.forEach(function(c, i) {
+          if (!c) return;
+          var el = document.getElementById('wc-c' + (i + 1));
+          if (!el) return;
+          el.textContent = new Date().toLocaleTimeString('en-GB', {
+            timeZone: c.tz, hour: '2-digit', minute: '2-digit', hour12: false
+          });
+        });
+      }
+
+      // Init slots on load
+      customs.forEach(function(c, i) { renderSlot(i + 1, c); });
+      setInterval(tickCustom, 1000);
+
+      window.openClockPicker = function(e, slot) {
+        e.stopPropagation();
+        var existing = document.getElementById('wc-picker');
+        if (existing) { existing.remove(); return; }
+
+        var rect = document.getElementById('wc-slot-' + slot).getBoundingClientRect();
+        var picker = document.createElement('div');
+        picker.id = 'wc-picker';
+        picker.className = 'wc-picker';
+        picker.style.top  = Math.min(rect.bottom + 6, window.innerHeight - 160) + 'px';
+        picker.style.left = Math.max(rect.left, 8) + 'px';
+
+        var opts = '<option value="">— choose a city —</option>';
+        TZ_OPTIONS.forEach(function(g) {
+          opts += '<optgroup label="' + g.group + '">';
+          g.zones.forEach(function(z) {
+            opts += '<option value="' + z.tz + '|' + z.label + '">' + z.label + '</option>';
+          });
+          opts += '</optgroup>';
+        });
+
+        var hasData = !!customs[slot - 1];
+        picker.innerHTML =
+          '<select id="wc-picker-sel">' + opts + '</select>' +
+          '<div class="wc-picker-btns">' +
+            '<button class="wc-picker-btn primary" onclick="setCustomClock(' + slot + ')">Set</button>' +
+            (hasData ? '<button class="wc-picker-btn danger" onclick="removeCustomClock(' + slot + ')">Remove</button>' : '') +
+            '<button class="wc-picker-btn" onclick="closeClockPicker()">Cancel</button>' +
+          '</div>';
+
+        document.body.appendChild(picker);
+        setTimeout(function() {
+          document.addEventListener('click', closeClockPicker, { once: true });
+        }, 0);
+      };
+
+      window.closeClockPicker = function() {
+        var p = document.getElementById('wc-picker');
+        if (p) p.remove();
+      };
+
+      window.setCustomClock = function(slot) {
+        var sel = document.getElementById('wc-picker-sel');
+        if (!sel || !sel.value) return;
+        var parts = sel.value.split('|');
+        customs[slot - 1] = { tz: parts[0], label: parts[1] };
+        saveCustoms();
+        renderSlot(slot, customs[slot - 1]);
+        closeClockPicker();
+      };
+
+      window.removeCustomClock = function(slot) {
+        customs[slot - 1] = null;
+        saveCustoms();
+        renderSlot(slot, null);
+        closeClockPicker();
+      };
     })();
 
     // ── Quick stats (Pro users, preview panel) ────────────────
