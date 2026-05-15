@@ -68,12 +68,19 @@ function renderBio(profile, links) {
   const container = document.getElementById('bio-links');
   container.innerHTML = '';
 
-  if (links.length === 0) {
+  const now = new Date();
+  const activeLinks = links.filter(link => {
+    if (link.start_at && new Date(link.start_at) > now) return false; // not started yet
+    if (link.end_at   && new Date(link.end_at)   < now) return false; // already expired
+    return true;
+  });
+
+  if (activeLinks.length === 0) {
     container.innerHTML = '<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:32px 0;">No links added yet.</p>';
     return;
   }
 
-  links.forEach((link, index) => {
+  activeLinks.forEach((link, index) => {
     const a = document.createElement('a');
     a.className = index === 0 ? 'link-card bio-link bio-link-featured' : 'link-card bio-link';
     a.href = '#';

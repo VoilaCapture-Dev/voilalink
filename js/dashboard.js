@@ -167,6 +167,9 @@ function renderLinks() {
     el.className = 'link-item ' + socialClass;
     el.dataset.id  = link.id;
     el.dataset.url = link.url || '';
+    const scheduleBadge = (link.start_at || link.end_at)
+      ? `<span style="font-size:10px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;border-radius:6px;padding:1px 6px;margin-left:6px;">⏰ Scheduled</span>`
+      : '';
     el.innerHTML = `
       <div class="drag-handle"><span></span><span></span><span></span></div>
       <div class="link-icon-box" style="background:rgba(129,140,248,0.12);">
@@ -174,7 +177,7 @@ function renderLinks() {
         <div class="edit-hint">✏️</div>
       </div>
       <div class="link-info">
-        <div class="link-title-text">${escHtml(link.title)}</div>
+        <div class="link-title-text">${escHtml(link.title)}${scheduleBadge}</div>
         <div class="link-url-text">${escHtml(link.url)}</div>
       </div>
       <div class="link-actions">
@@ -301,6 +304,18 @@ function openModal() {
   document.getElementById('input-title').value = '';
   document.getElementById('input-emoji').value = '🔗';
   document.getElementById('input-desc').value  = '';
+
+  const schedToggle2 = document.getElementById('link-schedule-toggle');
+  const schedFields2 = document.getElementById('schedule-fields');
+  const schedSpan2   = schedToggle2 && schedToggle2.nextElementSibling;
+  if (schedToggle2) schedToggle2.checked = false;
+  if (schedFields2) schedFields2.style.display = 'none';
+  if (schedSpan2)   schedSpan2.style.background = '#cbd5e1';
+  const startEl2 = document.getElementById('link-start-at');
+  const endEl2   = document.getElementById('link-end-at');
+  if (startEl2) startEl2.value = '';
+  if (endEl2)   endEl2.value   = '';
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -314,6 +329,22 @@ function openEditModal(id) {
   document.getElementById('input-title').value = link.title;
   document.getElementById('input-emoji').value = link.emoji || '🔗';
   document.getElementById('input-desc').value  = link.description || '';
+
+  // Schedule fields
+  const hasSchedule = !!(link.start_at || link.end_at);
+  const schedToggle = document.getElementById('link-schedule-toggle');
+  const schedFields = document.getElementById('schedule-fields');
+  const schedSpan   = schedToggle && schedToggle.nextElementSibling;
+  if (schedToggle) schedToggle.checked = hasSchedule;
+  if (schedFields) schedFields.style.display = hasSchedule ? 'grid' : 'none';
+  if (schedSpan)   schedSpan.style.background = hasSchedule ? '#6366f1' : '#cbd5e1';
+  // Convert UTC ISO to datetime-local value (strip seconds/ms)
+  const toLocal = iso => iso ? iso.slice(0,16) : '';
+  const startEl = document.getElementById('link-start-at');
+  const endEl   = document.getElementById('link-end-at');
+  if (startEl) startEl.value = toLocal(link.start_at);
+  if (endEl)   endEl.value   = toLocal(link.end_at);
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -335,6 +366,14 @@ function pickEmoji(el, emoji) {
   document.getElementById('input-emoji').value = emoji;
 }
 
+function toggleScheduleFields() {
+  const cb   = document.getElementById('link-schedule-toggle');
+  const wrap = document.getElementById('schedule-fields');
+  const span = cb && cb.nextElementSibling;
+  if (wrap) wrap.style.display = cb.checked ? 'grid' : 'none';
+  if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+}
+
 async function saveLink() {
   const url   = document.getElementById('input-url').value.trim();
   const title = document.getElementById('input-title').value.trim();
@@ -352,10 +391,16 @@ async function saveLink() {
     return;
   }
 
+  const schedEnabled = document.getElementById('link-schedule-toggle')?.checked;
+  const startVal = document.getElementById('link-start-at')?.value;
+  const endVal   = document.getElementById('link-end-at')?.value;
+  // Convert datetime-local to UTC ISO string (or null)
+  const toISO = val => (val && schedEnabled) ? new Date(val).toISOString() : null;
+
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     if (editingId) {
-      const updated = await updateLink(editingId, { url, title, emoji, description: desc });
+      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal) });
       const idx = allLinks.findIndex(l => l.id === editingId);
       if (idx !== -1) allLinks[idx] = updated;
       toast('Link updated ✓');
@@ -366,7 +411,9 @@ async function saveLink() {
         url, title, emoji,
         description: desc,
         position: maxPos + 1,
-        enabled: true
+        enabled: true,
+        start_at: toISO(startVal),
+        end_at: toISO(endVal)
       });
       allLinks.push(newLink);
       toast('Link added ✓');
