@@ -149,6 +149,7 @@
     .main {
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -157,7 +158,8 @@
       padding: 16px 32px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
-      position: sticky; top: 0; z-index: 5;
+      flex-shrink: 0;
+      z-index: 5;
     }
     .topbar-left { display: flex; flex-direction: column; gap: 2px; }
     .topbar-title {
@@ -189,14 +191,25 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
-    .content { display: flex; gap: 0; flex: 1; min-height: 0; }
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 600px) 320px;
+      grid-template-rows: 1fr;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    /* Full-width tabs (messages, outreach, etc.) collapse the right column */
+    .content.full-width { grid-template-columns: 1fr 0px; }
+    .content.full-width .preview-panel { overflow: hidden; }
 
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
-      flex: 1; padding: 32px;
+      grid-column: 1; grid-row: 1;
+      padding: 32px;
       border-right: 1px solid var(--border);
-      max-width: 600px;
       min-width: 0;
+      overflow-y: auto;
     }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -432,12 +445,64 @@
 
     /* ── Preview panel ────────────────────────────────────── */
     .preview-panel {
-      width: 320px; flex-shrink: 0;
-      padding: 32px 24px;
+      grid-column: 2; grid-row: 1;
+      width: 100%;
+      padding: 0;
       display: flex; flex-direction: column; align-items: center;
-      align-self: flex-start;
-      position: sticky; top: 0;
-      max-height: 100vh;
+      overflow-y: auto;
+      height: 100%;
+      background: var(--surface);
+    }
+    /* ── World Clock ─────────────────────────────────────── */
+    .world-clock-panel {
+      width: 100%;
+      background: #06060d;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      flex-shrink: 0;
+    }
+    .wc-header {
+      font-family: 'DM Mono', monospace; font-size: 8px;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: rgba(129,140,248,0.5); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .wc-header::before {
+      content: ''; display: inline-block;
+      width: 4px; height: 4px; border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 4px #ef4444;
+      animation: wc-blink 1s steps(1) infinite;
+    }
+    @keyframes wc-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .wc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 4px;
+    }
+    .wc-zone {
+      background: #0a0a14;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 8px 10px 6px;
+    }
+    .wc-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px; font-weight: 500;
+      color: #ff3b3b;
+      text-shadow: 0 0 8px rgba(255,59,59,0.6);
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+    .wc-city {
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      color: rgba(255,80,80,0.55); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-top: 4px;
+    }
+    /* ─────────────────────────────────────────────────────── */
+    .preview-panel-body {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 20px 20px 24px; width: 100%;
       overflow-y: auto;
     }
     .preview-label {
@@ -579,7 +644,8 @@
 
     /* ── Messages / Inbox ────────────────────────────────── */
     .messages-panel {
-      flex: 1; display: flex; height: calc(100vh - 64px);
+      grid-column: 1; grid-row: 1;
+      display: flex; height: 100%;
       max-width: none; padding: 0;
     }
     .conv-list {
@@ -747,6 +813,7 @@
       }
       .main {
         margin-left: 0;
+        height: 100vh;
       }
       .topbar {
         padding: 12px 16px;
@@ -762,10 +829,12 @@
         display: none !important;
       }
       .content {
+        display: flex;
         flex-direction: column;
+        overflow-y: auto;
       }
       .messages-panel {
-        height: calc(100vh - 120px);
+        height: 100%;
         flex-direction: column;
       }
       .conv-list {
@@ -1883,100 +1952,112 @@
         </div>
       </div>
 
-      <!-- ── Live preview ────────────────────────────────── -->
+      <!-- ── Right panel (preview + clock) ────────────────── -->
       <div class="preview-panel">
-        <div class="preview-label">
-          <div class="preview-dot"></div>
-          Live preview
-        </div>
 
-        <div class="phone-frame">
-          <div class="phone-avatar" id="preview-avatar" onclick="document.getElementById('avatar-input-global').click()" title="Change photo" style="cursor:pointer;position:relative;">
-            <div class="avatar-cam-hint">📷</div>
-          </div>
-          <div class="phone-name" id="preview-name">Your Name</div>
-          <div class="phone-handle" id="preview-handle">@yourname</div>
-          <div id="preview-links"></div>
-        </div>
-
-        <div class="stats-strip">
-          <div class="stat-mini">
-            <div class="stat-mini-num" id="stat-total-clicks">0</div>
-            <div class="stat-mini-label">Total clicks</div>
-          </div>
-          <div class="stat-mini">
-            <div class="stat-mini-num" id="stat-links">0</div>
-            <div class="stat-mini-label">Active links</div>
-          </div>
-        </div>
-
-        <a class="view-page-btn" id="preview-page-link" href="#" target="_blank">View my page →</a>
-
-        <!-- Quick stats card (Pro users only) -->
-        <div id="quick-stats-card" style="display:none;margin:16px 16px 0;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">
-          <div style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Quick Stats</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
-              <div id="qs-clicks" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">—</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Total clicks</div>
+        <!-- World Clock -->
+        <div class="world-clock-panel">
+          <div class="wc-header">World Clock</div>
+          <div class="wc-grid">
+            <div class="wc-zone">
+              <div class="wc-time" id="wc-london">--:--</div>
+              <div class="wc-city">London</div>
             </div>
-            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
-              <div id="qs-links" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--accent);">—</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Active links</div>
+            <div class="wc-zone">
+              <div class="wc-time" id="wc-newyork">--:--</div>
+              <div class="wc-city">New York</div>
             </div>
-            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
-              <div id="qs-subscribers" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#4ade80;">—</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Subscribers</div>
+            <div class="wc-zone">
+              <div class="wc-time" id="wc-tokyo">--:--</div>
+              <div class="wc-city">Tokyo</div>
             </div>
-            <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
-              <div id="qs-top-link" style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:#f59e0b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">—</div>
-              <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Top link</div>
+            <div class="wc-zone">
+              <div class="wc-time" id="wc-sydney">--:--</div>
+              <div class="wc-city">Sydney</div>
             </div>
           </div>
-          <a href="#" onclick="showTab('analytics');return false;" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--accent);text-decoration:none;">View full analytics →</a>
         </div>
 
-        <!-- Pro upgrade card -->
-        <div id="pro-upgrade-card" style="margin:16px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.08));border:1px solid rgba(129,140,248,0.25);border-radius:16px;padding:18px 16px;">
-          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">⭐ Unlock Pro features</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
-              <span style="font-size:14px;">🤖</span>
-              <div>
-                <div style="font-weight:600;">AI Auto-Reply</div>
-                <div style="font-size:11px;color:var(--text-muted);">Replies to visitors when you're away</div>
+        <!-- Preview body (scrollable) -->
+        <div class="preview-panel-body">
+          <div class="preview-label">
+            <div class="preview-dot"></div>
+            Live preview
+          </div>
+
+          <div class="phone-frame">
+            <div class="phone-avatar" id="preview-avatar" onclick="document.getElementById('avatar-input-global').click()" title="Change photo" style="cursor:pointer;position:relative;">
+              <div class="avatar-cam-hint">📷</div>
+            </div>
+            <div class="phone-name" id="preview-name">Your Name</div>
+            <div class="phone-handle" id="preview-handle">@yourname</div>
+            <div id="preview-links"></div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-mini">
+              <div class="stat-mini-num" id="stat-total-clicks">0</div>
+              <div class="stat-mini-label">Total clicks</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-num" id="stat-links">0</div>
+              <div class="stat-mini-label">Active links</div>
+            </div>
+          </div>
+
+          <a class="view-page-btn" id="preview-page-link" href="#" target="_blank">View my page →</a>
+
+          <!-- Quick stats card (Pro users only) -->
+          <div id="quick-stats-card" style="display:none;width:100%;margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">
+            <div style="font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Quick Stats</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+                <div id="qs-clicks" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">—</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Total clicks</div>
+              </div>
+              <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+                <div id="qs-links" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--accent);">—</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Active links</div>
+              </div>
+              <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+                <div id="qs-subscribers" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#4ade80;">—</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Subscribers</div>
+              </div>
+              <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
+                <div id="qs-top-link" style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:#f59e0b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">—</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Top link</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
-              <span style="font-size:14px;">✍️</span>
-              <div>
-                <div style="font-weight:600;">AI Outreach</div>
-                <div style="font-size:11px;color:var(--text-muted);">Generate personalised outreach messages</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
-              <span style="font-size:14px;">🔍</span>
-              <div>
-                <div style="font-weight:600;">Creator Research</div>
-                <div style="font-size:11px;color:var(--text-muted);">AI-powered influencer discovery</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
-              <span style="font-size:14px;">🔗</span>
-              <div>
-                <div style="font-weight:600;">Unlimited links</div>
-                <div style="font-size:11px;color:var(--text-muted);">Free plan limited to 5 links</div>
-              </div>
-            </div>
+            <a href="#" onclick="showTab('analytics');return false;" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--accent);text-decoration:none;">View full analytics →</a>
           </div>
-          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank"
-            style="display:block;text-align:center;padding:10px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.15s;"
-            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-            Upgrade to Pro — £3.99/mo →
-          </a>
-          <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-muted);">7-day free trial · Cancel anytime</div>
-        </div>
-      </div>
+
+          <!-- Pro upgrade card -->
+          <div id="pro-upgrade-card" style="width:100%;margin-top:16px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.08));border:1px solid rgba(129,140,248,0.25);border-radius:16px;padding:18px 16px;">
+            <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">⭐ Unlock Pro features</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+                <span style="font-size:14px;">🤖</span>
+                <div><div style="font-weight:600;">AI Auto-Reply</div><div style="font-size:11px;color:var(--text-muted);">Replies to visitors when you're away</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+                <span style="font-size:14px;">✍️</span>
+                <div><div style="font-weight:600;">AI Outreach</div><div style="font-size:11px;color:var(--text-muted);">Generate personalised outreach messages</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+                <span style="font-size:14px;">🔍</span>
+                <div><div style="font-weight:600;">Creator Research</div><div style="font-size:11px;color:var(--text-muted);">AI-powered influencer discovery</div></div>
+              </div>
+            </div>
+            <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank"
+              style="display:block;text-align:center;padding:10px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.15s;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              Upgrade to Pro — £3.99/mo →
+            </a>
+            <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-muted);">7-day free trial · Cancel anytime</div>
+          </div>
+        </div><!-- /preview-panel-body -->
+
+      </div><!-- /preview-panel -->
 
     </div>
   </div>
@@ -2711,10 +2792,10 @@
       sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
-      // Always show/hide preview panel — never crashes
+      // Show/hide preview panel via grid class
       const fullWidth = ['messages','outreach','research','planner'];
-      var pp = document.querySelector('.preview-panel');
-      if (pp) pp.style.display = fullWidth.includes(tab) ? 'none' : 'flex';
+      var ct = document.querySelector('.content');
+      if (ct) ct.classList.toggle('full-width', fullWidth.includes(tab));
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
@@ -2946,6 +3027,28 @@
       localStorage.setItem('vl_probar_dismissed', '1');
       setTimeout(() => localStorage.removeItem('vl_probar_dismissed'), 24 * 60 * 60 * 1000);
     }
+
+    // ── World Clock ───────────────────────────────────────────
+    (function startWorldClock() {
+      const zones = [
+        { id: 'wc-london',  tz: 'Europe/London' },
+        { id: 'wc-newyork', tz: 'America/New_York' },
+        { id: 'wc-tokyo',   tz: 'Asia/Tokyo' },
+        { id: 'wc-sydney',  tz: 'Australia/Sydney' }
+      ];
+      function tick() {
+        zones.forEach(function(z) {
+          var el = document.getElementById(z.id);
+          if (!el) return;
+          var now = new Date();
+          el.textContent = now.toLocaleTimeString('en-GB', {
+            timeZone: z.tz, hour: '2-digit', minute: '2-digit', hour12: false
+          });
+        });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
 
     // ── Quick stats (Pro users, preview panel) ────────────────
     async function loadQuickStats() {
