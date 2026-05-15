@@ -2077,7 +2077,14 @@
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Download a full backup of your links, settings, and preferences as a <code style="background:rgba(129,140,248,0.1);padding:1px 6px;border-radius:4px;font-size:12px;">.json</code> file. You can restore it at any time.</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
             <button onclick="exportSettings()" class="btn-sm primary">⬇ Download Backup</button>
-            <button onclick="document.getElementById('backup-file-input').click()" class="btn-sm ghost">⬆ Restore from Backup</button>
+            <div style="position:relative;display:inline-block;">
+              <button class="btn-sm ghost" onclick="toggleRestorePicker(event)">⬆ Restore from Backup ▾</button>
+              <div id="restore-picker" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:#13131a;border:1px solid var(--border);border-radius:10px;padding:6px;z-index:300;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+                <div onclick="document.getElementById('backup-file-input').click();closeRestorePicker()" style="padding:9px 12px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">📁 <div><div style="font-weight:600;">From a file</div><div style="font-size:11px;color:var(--text-muted);">Import a .json backup file</div></div></div>
+                <div onclick="showSnapshotPicker('vl_auto_backups','Daily snapshots');closeRestorePicker()" style="padding:9px 12px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">🕐 <div><div style="font-weight:600;">From daily auto-save</div><div style="font-size:11px;color:var(--text-muted);">Choose from last 5 daily snapshots</div></div></div>
+                <div onclick="showSnapshotPicker('vl_monthly_backups','Monthly snapshots');closeRestorePicker()" style="padding:9px 12px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">📅 <div><div style="font-weight:600;">From monthly auto-save</div><div style="font-size:11px;color:var(--text-muted);">Choose from last 12 monthly snapshots</div></div></div>
+              </div>
+            </div>
             <input type="file" id="backup-file-input" accept=".json" style="display:none;" onchange="importSettings(this)">
           </div>
 
@@ -2182,6 +2189,7 @@
       </div>
 
       <!-- ══ Right: live preview (fixed) ═════════════════════ -->
+      <div id="preview-resizer" style="position:absolute;top:0;bottom:0;width:6px;background:transparent;cursor:col-resize;z-index:10;right:300px;" title="Drag to resize preview"></div>
       <div class="preview-panel">
 
         <!-- Preview body (scrollable) -->
@@ -5777,7 +5785,116 @@
     // Call version check after page load
     document.addEventListener('DOMContentLoaded', function() {
       checkVersionModal();
+      initPreviewResizer();
     });
+
+    // ── Restore picker ────────────────────────────────────────
+    function toggleRestorePicker(e) {
+      e.stopPropagation();
+      var p = document.getElementById('restore-picker');
+      if (!p) return;
+      var open = p.style.display === 'block';
+      p.style.display = open ? 'none' : 'block';
+      if (!open) {
+        setTimeout(function() {
+          document.addEventListener('click', closeRestorePicker, { once: true });
+        }, 0);
+      }
+    }
+    function closeRestorePicker() {
+      var p = document.getElementById('restore-picker');
+      if (p) p.style.display = 'none';
+    }
+
+    // Show a snapshot picker modal for daily or monthly tier
+    function showSnapshotPicker(storageKey, label) {
+      var history = [];
+      try { history = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+      if (!history.length) {
+        alert('No ' + label.toLowerCase() + ' found yet.\n\nAuto-saves run once a day — check back after your next login.');
+        return;
+      }
+      // Build a simple modal
+      var existing = document.getElementById('snapshot-picker-modal');
+      if (existing) existing.remove();
+      var rows = history.map(function(b, i) {
+        var dt = new Date(b.exported_at);
+        var label2 = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })
+                   + ' · ' + dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+        var n = (b.links || []).length;
+        return '<div onclick="restoreFromAutoBackup(\'' + storageKey + '\',' + i + ');closeSnapshotPicker()" '
+          + 'style="padding:11px 14px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;'
+          + (i > 0 ? 'border-top:1px solid rgba(255,255,255,0.05);' : '') + '" '
+          + 'onmouseover="this.style.background=\'rgba(99,102,241,0.1)\'" onmouseout="this.style.background=\'none\'">'
+          + '<div><div style="font-size:13px;font-weight:600;">' + label2 + (i === 0 ? ' <span style="font-size:10px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:1px 6px;margin-left:4px;">Latest</span>' : '') + '</div>'
+          + '<div style="font-size:11px;color:#7878a0;margin-top:2px;">' + n + ' link' + (n !== 1 ? 's' : '') + ' · v' + (b.version || '?') + '</div></div>'
+          + '<span style="font-size:11px;color:#818cf8;">Restore →</span>'
+          + '</div>';
+      }).join('');
+      var modal = document.createElement('div');
+      modal.id = 'snapshot-picker-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      modal.innerHTML = '<div style="background:#0f1117;border:1px solid rgba(99,102,241,0.3);border-radius:16px;padding:24px;width:90%;max-width:460px;max-height:80vh;overflow-y:auto;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+        + '<div style="font-family:\'Syne\',sans-serif;font-weight:700;font-size:15px;">' + label + '</div>'
+        + '<button onclick="closeSnapshotPicker()" style="background:none;border:none;color:#7878a0;font-size:18px;cursor:pointer;line-height:1;">×</button></div>'
+        + '<div style="font-size:12px;color:#7878a0;margin-bottom:14px;">Click a snapshot to restore it. Your current data will be overwritten.</div>'
+        + rows + '</div>';
+      modal.addEventListener('click', function(e) { if (e.target === modal) closeSnapshotPicker(); });
+      document.body.appendChild(modal);
+    }
+    function closeSnapshotPicker() {
+      var m = document.getElementById('snapshot-picker-modal');
+      if (m) m.remove();
+    }
+
+    // ── Preview panel resizer ─────────────────────────────────
+    function initPreviewResizer() {
+      var resizer = document.getElementById('preview-resizer');
+      var preview = document.querySelector('.preview-panel');
+      if (!resizer || !preview) return;
+
+      // Restore saved width
+      var savedW = parseInt(localStorage.getItem('vl_preview_width') || '0');
+      if (savedW >= 220 && savedW <= 600) {
+        preview.style.width = savedW + 'px';
+        resizer.style.right  = savedW + 'px';
+      }
+
+      // Hover glow
+      resizer.addEventListener('mouseenter', function() {
+        resizer.style.background = 'rgba(99,102,241,0.35)';
+        resizer.style.transition = 'background 0.15s';
+      });
+      resizer.addEventListener('mouseleave', function() {
+        if (!resizing) resizer.style.background = 'transparent';
+      });
+
+      var resizing = false, startX = 0, startW = 0;
+      resizer.addEventListener('mousedown', function(e) {
+        resizing = true;
+        startX = e.clientX;
+        startW = preview.offsetWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!resizing) return;
+        var delta = startX - e.clientX;           // drag left = wider
+        var newW  = Math.max(220, Math.min(600, startW + delta));
+        preview.style.width   = newW + 'px';
+        resizer.style.right   = newW + 'px';
+      });
+      document.addEventListener('mouseup', function() {
+        if (!resizing) return;
+        resizing = false;
+        resizer.style.background = 'transparent';
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        localStorage.setItem('vl_preview_width', parseInt(preview.style.width));
+      });
+    }
 
     // ── Toast ──────────────────────────────────────────────
     function toast(msg) {
