@@ -1506,40 +1506,39 @@
                   Shown at the bottom of your bio page. Leave blank for default: "Create your free page →"
                 </div>
               </div>
-          <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
-        </div>
 
-        <!-- SEO Settings -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">🔍 SEO Settings</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Control how your bio page appears in Google search results and when shared on social media.</div>
+          <!-- SEO Settings -->
+          <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">🔍 SEO Settings</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Control how your bio page appears in Google search results and when shared on social media.</div>
 
-          <div style="margin-bottom:14px;">
-            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Page Title</label>
-            <input class="form-input" id="settings-seo-title" type="text" maxlength="70"
-              oninput="updateSeoDescCount()"
-              placeholder="e.g. Boris | Creator, Designer &amp; Developer" />
-            <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown as the tab title and Google headline. Keep under 60 characters for best results. Leave blank to use your name.</div>
-          </div>
-
-          <div style="margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-              <label style="font-size:12px;font-weight:600;">Meta Description</label>
-              <span id="seo-desc-count" style="font-size:11px;color:var(--text-muted);">0 / 160</span>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Page Title</label>
+              <input class="form-input" id="settings-seo-title" type="text" maxlength="70"
+                oninput="updateSeoDescCount()"
+                placeholder="e.g. Boris | Creator, Designer &amp; Developer" />
+              <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown as the tab title and Google headline. Keep under 60 characters. Leave blank to use your name.</div>
             </div>
-            <textarea class="form-input" id="settings-seo-desc" rows="3" maxlength="160"
-              oninput="updateSeoDescCount()"
-              placeholder="e.g. Photographer &amp; content creator based in London. Check out my latest work and collaborations."
-              style="resize:vertical;min-height:72px;"></textarea>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown under your link in Google results. Aim for 120–160 characters. Leave blank to use your bio.</div>
+
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+                <label style="font-size:11px;color:var(--text-muted);">Meta Description</label>
+                <span id="seo-desc-count" style="font-size:11px;color:var(--text-muted);">0 / 160</span>
+              </div>
+              <textarea class="form-input" id="settings-seo-desc" rows="3" maxlength="160"
+                oninput="updateSeoDescCount()"
+                placeholder="e.g. Photographer &amp; content creator based in London. Check out my latest work and collaborations."
+                style="resize:vertical;min-height:72px;"></textarea>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown under your link in Google results. Aim for 120–160 characters. Leave blank to use your bio.</div>
+            </div>
+
+            <div style="padding:10px 12px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+              💡 <strong style="color:var(--text-primary);">Preview:</strong> <span id="seo-preview-title" style="color:#818cf8;font-weight:600;"></span><br/>
+              <span id="seo-preview-desc" style="font-size:11px;margin-top:2px;display:inline-block;"></span>
+            </div>
           </div>
 
-          <div style="padding:12px 14px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:16px;">
-            💡 <strong style="color:var(--text-primary);">Preview:</strong> <span id="seo-preview-title" style="color:#818cf8;font-weight:600;"></span><br/>
-            <span id="seo-preview-desc" style="font-size:11px;margin-top:2px;display:inline-block;"></span>
-          </div>
-
-          <button class="btn-sm primary" onclick="saveSettings()">Save SEO settings</button>
+          <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
         </div>
 
         <!-- AI Auto-Reply -->
