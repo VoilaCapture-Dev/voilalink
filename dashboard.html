@@ -1368,6 +1368,18 @@
         <!-- Planner content -->
         <div id="planner-content" style="display:none;">
 
+          <!-- Trial banner (shown for free users during trial) -->
+          <div id="planner-trial-banner" style="display:none;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.07));border:1px solid rgba(129,140,248,0.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:18px;">⏳</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;">Free trial — <span id="planner-trial-days">7</span> day(s) remaining</div>
+                <div style="font-size:11px;color:var(--text-muted);">Upgrade to Pro to keep access after your trial ends</div>
+              </div>
+            </div>
+            <button class="btn-sm primary" onclick="showTab('upgrade')" style="font-size:11px;white-space:nowrap;flex-shrink:0;">Upgrade to Pro →</button>
+          </div>
+
           <!-- Week navigation -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
             <button onclick="prevWeek()" class="btn-sm ghost" style="flex-shrink:0;">← Prev</button>
@@ -1973,19 +1985,61 @@
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    // ── Planner access check (Pro OR within 7-day trial) ──────
+    async function getPlannerAccess() {
+      const isPro = currentProfile && currentProfile.is_pro;
+      if (isPro) return { access: true, trialDaysLeft: null };
+
+      // Check / start trial
+      let trialStart = currentProfile && currentProfile.planner_trial_start;
+
+      if (!trialStart) {
+        // First time — start the trial now
+        const now = new Date().toISOString();
+        await db.from('profiles').update({ planner_trial_start: now }).eq('id', currentUser.id);
+        currentProfile.planner_trial_start = now;
+        trialStart = now;
+      }
+
+      const started      = new Date(trialStart);
+      const now          = new Date();
+      const msPerDay     = 1000 * 60 * 60 * 24;
+      const daysElapsed  = (now - started) / msPerDay;
+      const daysLeft     = Math.ceil(7 - daysElapsed);
+
+      if (daysLeft > 0) return { access: true, trialDaysLeft: daysLeft };
+      return { access: false, trialDaysLeft: 0 };
+    }
+
     // ── Load full planner tab ──────────────────────────────────
     async function loadPlanner() {
       if (!currentUser) return;
-      const isPro    = currentProfile && currentProfile.is_pro;
-      const lock     = document.getElementById('planner-pro-lock');
-      const content  = document.getElementById('planner-content');
-      if (!isPro) {
+      const { access, trialDaysLeft } = await getPlannerAccess();
+      const lock    = document.getElementById('planner-pro-lock');
+      const content = document.getElementById('planner-content');
+      const banner  = document.getElementById('planner-trial-banner');
+
+      if (!access) {
         if (lock)    lock.style.display    = 'block';
         if (content) content.style.display = 'none';
+        if (banner)  banner.style.display  = 'none';
         return;
       }
       if (lock)    lock.style.display    = 'none';
       if (content) content.style.display = 'block';
+
+      // Show trial banner for non-Pro users
+      if (banner) {
+        if (trialDaysLeft !== null) {
+          banner.style.display = 'flex';
+          const isPro = currentProfile && currentProfile.is_pro;
+          if (!isPro) {
+            document.getElementById('planner-trial-days').textContent = trialDaysLeft;
+          }
+        } else {
+          banner.style.display = 'none';
+        }
+      }
 
       const weekStart = formatDate(plannerWeekStart);
       const weekEnd   = formatDate(addDays(plannerWeekStart, 6));
@@ -2147,10 +2201,10 @@
 
     // ── Widget (today's tasks on the links tab) ────────────────
     async function loadWidgetTasks() {
-      const isPro   = currentProfile && currentProfile.is_pro;
-      const widget  = document.getElementById('planner-widget');
+      const widget = document.getElementById('planner-widget');
       if (!widget) return;
-      if (!isPro) { widget.style.display = 'none'; return; }
+      const { access } = await getPlannerAccess();
+      if (!access) { widget.style.display = 'none'; return; }
       widget.style.display = 'block';
 
       const today  = getTodayStr();
