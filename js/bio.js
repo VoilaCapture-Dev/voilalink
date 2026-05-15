@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (countdowns && countdowns.length > 0) renderCountdowns(countdowns);
     if (polls && polls.length > 0) renderPolls(polls);
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
+    // vCard
+    const vcard = await getPublicVCard(profile.id);
+    if (vcard) renderVCard(vcard);
     applyTheme(profile.theme || 'midnight');
     initChat(profile);
   } catch (e) {
@@ -523,4 +526,42 @@ function subscribeToChatReplies() {
       }
     })
     .subscribe();
+}
+
+function renderVCard(v) {
+  const el = document.getElementById('bio-vcard');
+  if (!el) return;
+  el.innerHTML = `
+    <div style="margin:16px 0;text-align:center;">
+      <button onclick="downloadVCard()" style="
+        display:inline-flex;align-items:center;gap:8px;
+        background:#fff;border:2px solid #e2e8f0;
+        color:#334155;font-size:15px;font-weight:600;
+        padding:12px 28px;border-radius:50px;cursor:pointer;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        transition:all 0.2s;
+      " onmouseover="this.style.borderColor='#6366f1';this.style.color='#6366f1'"
+         onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#334155'">
+        <span style="font-size:18px;">📇</span> Save Contact
+      </button>
+    </div>`;
+  window._bioVCard = v;
+}
+
+function downloadVCard() {
+  const v = window._bioVCard;
+  if (!v) return;
+  const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
+  if (v.display_name) lines.push(`FN:${v.display_name}`);
+  if (v.email)        lines.push(`EMAIL:${v.email}`);
+  if (v.phone)        lines.push(`TEL:${v.phone}`);
+  if (v.company)      lines.push(`ORG:${v.company}`);
+  if (v.job_title)    lines.push(`TITLE:${v.job_title}`);
+  if (v.website)      lines.push(`URL:${v.website}`);
+  lines.push('END:VCARD');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/vcard' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(v.display_name || 'contact').replace(/\s+/g, '_')}.vcf`;
+  a.click();
 }

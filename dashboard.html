@@ -817,6 +817,9 @@
     <a class="nav-item" href="#" onclick="showTab('polls')" id="nav-polls">
       <span class="nav-item-icon">📊</span> Polls & Q&A
     </a>
+              <a class="nav-item" onclick="showTab('vcard')">
+                <span>📇</span><span>vCard</span>
+              </a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
@@ -1629,6 +1632,52 @@
         </div>
       </div>
 
+      <!-- vCard Panel -->
+      <div id="panel-vcard" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+          <div>
+            <h2 style="margin:0;font-size:22px;font-weight:700;color:#1e293b">📇 vCard / Save Contact</h2>
+            <p style="margin:4px 0 0;color:#64748b;font-size:14px">Let visitors save your contact details directly to their phone.</p>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;max-width:560px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <span style="font-weight:600;color:#1e293b">Show Save Contact button on my bio page</span>
+            <label style="position:relative;display:inline-block;width:44px;height:24px">
+              <input type="checkbox" id="vcard-enabled" style="opacity:0;width:0;height:0" onchange="saveVCardSettings()">
+              <span onclick="document.getElementById('vcard-enabled').click()" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s"></span>
+            </label>
+          </div>
+          <div style="display:grid;gap:14px">
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Display Name</label>
+              <input id="vcard-name" type="text" placeholder="e.g. Jane Smith" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Email</label>
+              <input id="vcard-email" type="email" placeholder="e.g. jane@example.com" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Phone</label>
+              <input id="vcard-phone" type="tel" placeholder="e.g. +44 7700 900000" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Company / Organisation</label>
+              <input id="vcard-company" type="text" placeholder="e.g. Acme Ltd" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Job Title</label>
+              <input id="vcard-title" type="text" placeholder="e.g. Content Creator" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+            <div>
+              <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Website</label>
+              <input id="vcard-website" type="url" placeholder="e.g. https://voilalink.com/yourname" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+            </div>
+          </div>
+          <p id="vcard-status" style="margin:14px 0 0;font-size:13px;color:#10b981;display:none">✓ Saved</p>
+        </div>
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -2397,6 +2446,7 @@
       document.getElementById('panel-growth').style.display      = tab === 'growth'      ? 'block' : 'none';
       document.getElementById('panel-countdowns').style.display  = tab === 'countdowns'  ? 'block' : 'none';
       document.getElementById('panel-polls').style.display       = tab === 'polls'       ? 'block' : 'none';
+      document.getElementById('panel-vcard').style.display       = tab === 'vcard'       ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
@@ -2411,6 +2461,7 @@
       if (tab === 'growth')      loadGrowth();
       if (tab === 'countdowns')  loadCountdowns();
       if (tab === 'polls')       loadPolls();
+      if (tab === 'vcard') { loadVCardSettings(); }
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -4369,6 +4420,59 @@
     // ── Copy URL ───────────────────────────────────────────
     function copyUrl() {
       navigator.clipboard.writeText('https://voilalink.com/yourname').then(() => toast('Link copied ✓'));
+    }
+
+    // ── vCard ────────────────────────────────────────────────────
+    let _vcardSaveTimer = null;
+
+    async function loadVCardSettings() {
+      const user = await getUser();
+      if (!user) return;
+      const { data } = await db.from('vcard_settings').select('*').eq('user_id', user.id).single();
+      if (!data) return;
+      document.getElementById('vcard-enabled').checked = data.is_enabled || false;
+      document.getElementById('vcard-name').value    = data.display_name || '';
+      document.getElementById('vcard-email').value   = data.email || '';
+      document.getElementById('vcard-phone').value   = data.phone || '';
+      document.getElementById('vcard-company').value = data.company || '';
+      document.getElementById('vcard-title').value   = data.job_title || '';
+      document.getElementById('vcard-website').value = data.website || '';
+      updateVCardToggleUI();
+    }
+
+    function updateVCardToggleUI() {
+      const cb = document.getElementById('vcard-enabled');
+      const span = cb && cb.nextElementSibling;
+      if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+    }
+
+    async function saveVCardSettings() {
+      updateVCardToggleUI();
+      clearTimeout(_vcardSaveTimer);
+      _vcardSaveTimer = setTimeout(async () => {
+        const user = await getUser();
+        if (!user) return;
+        const settings = {
+          is_enabled:   document.getElementById('vcard-enabled').checked,
+          display_name: document.getElementById('vcard-name').value.trim(),
+          email:        document.getElementById('vcard-email').value.trim(),
+          phone:        document.getElementById('vcard-phone').value.trim(),
+          company:      document.getElementById('vcard-company').value.trim(),
+          job_title:    document.getElementById('vcard-title').value.trim(),
+          website:      document.getElementById('vcard-website').value.trim(),
+        };
+        try {
+          await saveVCardSettings_db(user.id, settings);
+          const st = document.getElementById('vcard-status');
+          st.style.display = 'block';
+          setTimeout(() => { st.style.display = 'none'; }, 2000);
+        } catch(e) { console.error('vCard save error', e); }
+      }, 600);
+    }
+
+    async function saveVCardSettings_db(userId, settings) {
+      const { error } = await db.from('vcard_settings').upsert({ user_id: userId, ...settings }, { onConflict: 'user_id' });
+      if (error) throw error;
     }
 
     // ── Toast ──────────────────────────────────────────────

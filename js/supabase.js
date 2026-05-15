@@ -201,3 +201,23 @@ async function markConversationRead(conversationId) {
     .update({ has_unread: false })
     .eq('id', conversationId);
 }
+
+async function getPublicVCard(userId) {
+  const { data } = await db
+    .from('vcard_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_enabled', true)
+    .single();
+  return data || null;
+}
+
+async function saveVCardSettings(userId, settings) {
+  const { data, error } = await db
+    .from('vcard_settings')
+    .upsert({ user_id: userId, ...settings }, { onConflict: 'user_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
