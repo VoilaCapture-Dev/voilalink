@@ -447,9 +447,10 @@
 
     /* ── Preview panel (right column, always visible) ────── */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0; width: 300px;
-      display: flex; flex-direction: column;
+      width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
       border-left: 1px solid var(--border);
@@ -2810,7 +2811,6 @@
       var pc = document.querySelector('.panels-container');
       var isFullWidth = fullWidth.includes(tab);
       if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
-      if (pc) pc.style.right = isFullWidth ? '0' : '300px';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
