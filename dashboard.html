@@ -2043,7 +2043,7 @@
       </div><!-- /panels-container -->
 
       <!-- ── Help & About panel (absolute, overlays content area) ── -->
-      <div id="panel-help" style="display:none;position:absolute;left:0;top:0;bottom:0;right:300px;overflow-y:auto;padding:32px;background:var(--bg);z-index:5;box-sizing:border-box;">
+      <div id="panel-help" style="display:none;flex:1;overflow-y:auto;padding:32px;background:var(--bg);min-height:0;">
 
         <!-- Version info -->
         <div class="panel-header">
@@ -2131,7 +2131,7 @@
       <div class="world-clock-panel" id="world-clock-widget">
         <div class="wc-drag-hint" style="display:flex;justify-content:space-between;align-items:center;">
           <span>⠿ drag to move</span>
-          <span onclick="popOutClock()" title="Pop out to separate window" style="cursor:pointer;font-size:11px;color:rgba(74,222,128,0.4);padding:0 2px;" onmouseover="this.style.color='#4ade80'" onmouseout="this.style.color='rgba(74,222,128,0.4)'">⤢</span>
+          <span onclick="popOutClock()" title="Open clock in its own window" style="cursor:pointer;font-size:9px;color:rgba(74,222,128,0.55);padding:2px 5px;border:1px solid rgba(74,222,128,0.2);border-radius:4px;letter-spacing:0.05em;font-family:'DM Mono',monospace;white-space:nowrap;" onmouseover="this.style.color='#4ade80';this.style.borderColor='rgba(74,222,128,0.5)'" onmouseout="this.style.color='rgba(74,222,128,0.55)';this.style.borderColor='rgba(74,222,128,0.2)'">⊞ pop out</span>
         </div>
         <div class="wc-grid">
           <div class="wc-zone">
@@ -2983,13 +2983,22 @@
       sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
-      sp('panel-help',       tab === 'help'       ? 'block' : 'none');
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
       var pc = document.querySelector('.panels-container');
       var isFullWidth = fullWidth.includes(tab);
-      if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
+      // Help tab: swap panels-container for panel-help as a flex sibling
+      var ph = document.getElementById('panel-help');
+      if (tab === 'help') {
+        if (pc) pc.style.display = 'none';
+        if (pp) pp.style.display = 'none';
+        if (ph) ph.style.display = 'flex';
+      } else {
+        if (pc) pc.style.display = '';
+        if (ph) ph.style.display = 'none';
+        if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
+      }
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
