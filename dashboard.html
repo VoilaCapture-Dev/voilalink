@@ -1113,6 +1113,14 @@
       </div>
     </div>
 
+    <!-- Canvas zone (empty space above content, height draggable) -->
+    <div id="canvas-zone" style="flex-shrink:0;height:0;min-height:0;background:var(--bg);"></div>
+
+    <!-- Horizontal resizer -->
+    <div id="h-resizer" style="flex-shrink:0;height:10px;cursor:row-resize;display:flex;align-items:center;justify-content:center;background:transparent;position:relative;z-index:10;" title="Drag to adjust workspace height">
+      <div id="h-resizer-grip" style="width:48px;height:4px;border-radius:4px;background:rgba(255,255,255,0.13);transition:background 0.15s;pointer-events:none;"></div>
+    </div>
+
     <!-- Content -->
     <div class="content">
 
@@ -3028,6 +3036,7 @@
         if (pfb) pfb.dataset.hiddenByHelp = pfb.style.display;
         if (pfb) pfb.style.display = 'none';
         renderAutoBackups();
+        if (ph) ph.scrollTop = 0;
       } else {
         if (pc) pc.style.display = '';
         if (ph) ph.style.display = 'none';
@@ -5836,7 +5845,51 @@
     document.addEventListener('DOMContentLoaded', function() {
       checkVersionModal();
       initPreviewResizer();
+      initHorizontalResizer();
     });
+
+    // ── Horizontal canvas/content resizer ─────────────────────
+    function initHorizontalResizer() {
+      var resizer = document.getElementById('h-resizer');
+      var grip    = document.getElementById('h-resizer-grip');
+      var canvas  = document.getElementById('canvas-zone');
+      if (!resizer || !canvas) return;
+
+      // Restore saved canvas height
+      var savedH = parseInt(localStorage.getItem('vl_canvas_height') || '0');
+      canvas.style.height = Math.max(0, Math.min(500, savedH)) + 'px';
+
+      resizer.addEventListener('mouseenter', function() {
+        if (grip) grip.style.background = '#818cf8';
+      });
+      resizer.addEventListener('mouseleave', function() {
+        if (!hResizing && grip) grip.style.background = 'rgba(255,255,255,0.13)';
+      });
+
+      var hResizing = false, startY = 0, startH = 0;
+      resizer.addEventListener('mousedown', function(e) {
+        hResizing = true;
+        startY = e.clientY;
+        startH = canvas.offsetHeight;
+        if (grip) grip.style.background = '#a78bfa';
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e) {
+        if (!hResizing) return;
+        var newH = Math.max(0, Math.min(500, startH + (e.clientY - startY)));
+        canvas.style.height = newH + 'px';
+      });
+      document.addEventListener('mouseup', function() {
+        if (!hResizing) return;
+        hResizing = false;
+        if (grip) grip.style.background = 'rgba(255,255,255,0.13)';
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        localStorage.setItem('vl_canvas_height', parseInt(canvas.style.height));
+      });
+    }
 
     // ── Restore picker ────────────────────────────────────────
     function toggleRestorePicker(e) {
