@@ -192,7 +192,7 @@
 
     /* ── Content area ─────────────────────────────────────── */
     .content {
-      display: flex;
+      position: relative;
       flex: 1;
       min-height: 0;
       overflow: hidden;
@@ -200,8 +200,8 @@
 
     /* ── Panels container (left column, scrollable) ───────── */
     .panels-container {
-      flex: 1;
-      min-width: 0;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 300px;
       overflow-y: auto;
       border-right: 1px solid var(--border);
     }
@@ -209,6 +209,7 @@
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
       padding: 32px;
+      max-width: 680px;
       min-width: 0;
     }
     .panel-header {
@@ -445,59 +446,62 @@
 
     /* ── Preview panel (right column, always visible) ────── */
     .preview-panel {
-      width: 300px;
-      flex-shrink: 0;
+      position: absolute;
+      top: 0; right: 0; bottom: 0; width: 300px;
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
+      border-left: 1px solid var(--border);
     }
     /* ── World Clock ─────────────────────────────────────── */
     .world-clock-panel {
       width: 100%;
-      background: #06060d;
-      border-bottom: 1px solid var(--border);
-      padding: 12px 14px 10px;
+      background: #04060a;
+      border-bottom: 1px solid rgba(74,222,128,0.12);
+      padding: 12px 12px 10px;
       flex-shrink: 0;
     }
     .wc-header {
       font-family: 'DM Mono', monospace; font-size: 8px;
-      letter-spacing: 0.15em; text-transform: uppercase;
-      color: rgba(74,222,128,0.45); margin-bottom: 8px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(74,222,128,0.5); margin-bottom: 8px;
       display: flex; align-items: center; gap: 6px;
     }
     .wc-header::before {
       content: ''; display: inline-block;
-      width: 4px; height: 4px; border-radius: 50%;
+      width: 5px; height: 5px; border-radius: 50%;
       background: #4ade80;
-      box-shadow: 0 0 5px #4ade80;
+      box-shadow: 0 0 6px #4ade80, 0 0 12px #4ade80;
       animation: wc-blink 1s steps(1) infinite;
     }
-    @keyframes wc-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes wc-blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
     .wc-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 5px;
+      gap: 6px;
     }
     .wc-zone {
-      background: #0b0f0b;
-      border: 1px solid rgba(74,222,128,0.08);
-      border-radius: 6px;
-      padding: 8px 8px 7px;
-      aspect-ratio: 1 / 0.85;
+      background: #080d08;
+      border: 1px solid rgba(74,222,128,0.1);
+      border-radius: 8px;
+      padding: 10px 10px 8px;
       display: flex; flex-direction: column; justify-content: center;
     }
     .wc-time {
       font-family: 'DM Mono', monospace;
-      font-size: 20px; font-weight: 500;
+      font-size: 26px; font-weight: 500;
       color: #4ade80;
-      text-shadow: 0 0 10px rgba(74,222,128,0.5);
-      letter-spacing: 0.04em;
+      text-shadow: 0 0 8px rgba(74,222,128,0.7), 0 0 20px rgba(74,222,128,0.3);
+      letter-spacing: 0.03em;
       line-height: 1;
     }
     .wc-city {
-      font-family: 'DM Mono', monospace; font-size: 8px;
-      color: rgba(74,222,128,0.4); text-transform: uppercase;
-      letter-spacing: 0.08em; margin-top: 5px;
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      color: #4ade80;
+      text-shadow: 0 0 6px rgba(74,222,128,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em; margin-top: 5px;
+      opacity: 0.75;
     }
     /* ─────────────────────────────────────────────────────── */
     .preview-panel-body {
@@ -827,9 +831,13 @@
         display: none !important;
       }
       .content {
-        display: flex;
-        flex-direction: column;
+        position: relative;
         overflow-y: auto;
+      }
+      .panels-container {
+        position: static;
+        right: auto; bottom: auto;
+        overflow-y: visible;
       }
       .messages-panel {
         height: 100%;
@@ -2798,7 +2806,10 @@
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
-      if (pp) pp.style.display = fullWidth.includes(tab) ? 'none' : 'flex';
+      var pc = document.querySelector('.panels-container');
+      var isFullWidth = fullWidth.includes(tab);
+      if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
+      if (pc) pc.style.right = isFullWidth ? '0' : '300px';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
