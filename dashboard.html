@@ -454,13 +454,17 @@
       background: var(--surface);
       border-left: 1px solid var(--border);
     }
-    /* ── World Clock ─────────────────────────────────────── */
+    /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
-      width: 100%;
+      position: absolute;
+      right: 316px; /* sits just left of the 300px preview panel */
+      top: 24px;
+      width: 230px;
       background: #04060a;
-      border-bottom: 1px solid rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.15);
+      border-radius: 12px;
       padding: 12px 12px 10px;
-      flex-shrink: 0;
+      z-index: 2;
     }
     .wc-header {
       font-family: 'DM Mono', monospace; font-size: 8px;
@@ -1964,31 +1968,31 @@
 
       </div><!-- /panels-container -->
 
-      <!-- ══ Right: clock + live preview (fixed) ════════════ -->
-      <div class="preview-panel">
-
-        <!-- World Clock -->
-        <div class="world-clock-panel">
-          <div class="wc-header">World Clock</div>
-          <div class="wc-grid">
-            <div class="wc-zone">
-              <div class="wc-time" id="wc-london">--:--</div>
-              <div class="wc-city">London</div>
-            </div>
-            <div class="wc-zone">
-              <div class="wc-time" id="wc-newyork">--:--</div>
-              <div class="wc-city">New York</div>
-            </div>
-            <div class="wc-zone">
-              <div class="wc-time" id="wc-tokyo">--:--</div>
-              <div class="wc-city">Tokyo</div>
-            </div>
-            <div class="wc-zone">
-              <div class="wc-time" id="wc-sydney">--:--</div>
-              <div class="wc-city">Sydney</div>
-            </div>
+      <!-- ══ World Clock (floating in empty canvas) ════════ -->
+      <div class="world-clock-panel">
+        <div class="wc-header">World Clock</div>
+        <div class="wc-grid">
+          <div class="wc-zone">
+            <div class="wc-time" id="wc-london">--:--</div>
+            <div class="wc-city">London</div>
+          </div>
+          <div class="wc-zone">
+            <div class="wc-time" id="wc-newyork">--:--</div>
+            <div class="wc-city">New York</div>
+          </div>
+          <div class="wc-zone">
+            <div class="wc-time" id="wc-tokyo">--:--</div>
+            <div class="wc-city">Tokyo</div>
+          </div>
+          <div class="wc-zone">
+            <div class="wc-time" id="wc-sydney">--:--</div>
+            <div class="wc-city">Sydney</div>
           </div>
         </div>
+      </div>
+
+      <!-- ══ Right: live preview (fixed) ═════════════════════ -->
+      <div class="preview-panel">
 
         <!-- Preview body (scrollable) -->
         <div class="preview-panel-body">
