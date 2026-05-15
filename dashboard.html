@@ -1919,7 +1919,7 @@
               <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Subscribers</div>
             </div>
             <div style="background:var(--surface);border-radius:10px;padding:12px;text-align:center;">
-              <div id="qs-top-link" style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#f59e0b;">—</div>
+              <div id="qs-top-link" style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:#f59e0b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">—</div>
               <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Top link</div>
             </div>
           </div>
@@ -2941,7 +2941,7 @@
         const topLinkId = Object.entries(counts).sort((a,b) => b[1]-a[1])[0]?.[0];
         const topLink = allLinks.find(l => l.id === topLinkId);
         const qsTop = document.getElementById('qs-top-link');
-        if (qsTop) qsTop.textContent = topLink ? (topLink.emoji || '') + ' ' + topLink.title : '—';
+        if (qsTop) qsTop.textContent = topLink ? topLink.title : '—';
 
         // Subscribers
         const { count } = await db.from('email_signups').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
