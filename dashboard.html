@@ -2189,7 +2189,9 @@
       </div>
 
       <!-- ══ Right: live preview (fixed) ═════════════════════ -->
-      <div id="preview-resizer" style="position:absolute;top:0;bottom:0;width:6px;background:transparent;cursor:col-resize;z-index:10;right:300px;" title="Drag to resize preview"></div>
+      <div id="preview-resizer" style="position:absolute;top:0;bottom:0;width:12px;cursor:col-resize;z-index:10;right:294px;display:flex;align-items:center;justify-content:center;" title="Drag to resize preview">
+        <div id="preview-resizer-grip" style="width:3px;height:40px;border-radius:3px;background:rgba(255,255,255,0.12);transition:background 0.15s;"></div>
+      </div>
       <div class="preview-panel">
 
         <!-- Preview body (scrollable) -->
@@ -5851,6 +5853,7 @@
     // ── Preview panel resizer ─────────────────────────────────
     function initPreviewResizer() {
       var resizer = document.getElementById('preview-resizer');
+      var grip    = document.getElementById('preview-resizer-grip');
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
@@ -5858,16 +5861,15 @@
       var savedW = parseInt(localStorage.getItem('vl_preview_width') || '0');
       if (savedW >= 220 && savedW <= 600) {
         preview.style.width = savedW + 'px';
-        resizer.style.right  = savedW + 'px';
+        resizer.style.right = (savedW - 6) + 'px';
       }
 
-      // Hover glow
+      // Hover highlight on the grip bar
       resizer.addEventListener('mouseenter', function() {
-        resizer.style.background = 'rgba(99,102,241,0.35)';
-        resizer.style.transition = 'background 0.15s';
+        if (grip) grip.style.background = '#818cf8';
       });
       resizer.addEventListener('mouseleave', function() {
-        if (!resizing) resizer.style.background = 'transparent';
+        if (!resizing && grip) grip.style.background = 'rgba(255,255,255,0.12)';
       });
 
       var resizing = false, startX = 0, startW = 0;
@@ -5875,21 +5877,22 @@
         resizing = true;
         startX = e.clientX;
         startW = preview.offsetWidth;
+        if (grip) grip.style.background = '#a78bfa';
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
         e.preventDefault();
       });
       document.addEventListener('mousemove', function(e) {
         if (!resizing) return;
-        var delta = startX - e.clientX;           // drag left = wider
+        var delta = startX - e.clientX;   // drag left = wider preview
         var newW  = Math.max(220, Math.min(600, startW + delta));
-        preview.style.width   = newW + 'px';
-        resizer.style.right   = newW + 'px';
+        preview.style.width = newW + 'px';
+        resizer.style.right = (newW - 6) + 'px';
       });
       document.addEventListener('mouseup', function() {
         if (!resizing) return;
         resizing = false;
-        resizer.style.background = 'transparent';
+        if (grip) grip.style.background = 'rgba(255,255,255,0.12)';
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         localStorage.setItem('vl_preview_width', parseInt(preview.style.width));
