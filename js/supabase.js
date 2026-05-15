@@ -45,6 +45,15 @@ async function getLinks(userId) {
   return data;
 }
 
+async function getPublicTipJar(userId) {
+  const { data } = await db
+    .from('tip_jar')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  return data || null;
+}
+
 async function getPublicLinks(userId) {
   const { data, error } = await db
     .from('links')

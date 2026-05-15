@@ -851,6 +851,7 @@
       <div class="topbar-actions">
         <button class="btn-sm ghost" onclick="showQR()">⬛ QR Code</button>
         <a class="btn-sm ghost" id="topbar-preview-link" href="#" onclick="window.open('/'+(currentProfile&&currentProfile.username),'_blank');return false;">👁 Preview</a>
+        <button class="btn-sm ghost" onclick="openTipJar()" style="font-size:12px;">☕ Tip Jar</button>
         <button class="btn-sm primary" onclick="openModal()">+ Add link</button>
       </div>
     </div>
@@ -1790,6 +1791,58 @@
     </div>
   </div>
 
+  <!-- ── Tip Jar modal ───────────────────────────────────────── -->
+  <div class="modal-overlay" id="tipjar-modal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-title">☕ Tip Jar Settings</div>
+      <div class="modal-sub">Appears on your public profile page — visitors can tip you directly</div>
+      <button class="modal-close" onclick="closeTipJar()">×</button>
+
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input class="form-input" id="tj-title" type="text" placeholder="Buy me a coffee ☕" maxlength="60" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" id="tj-description" type="text" placeholder="Support my content — every little helps!" maxlength="120" />
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="max-width:110px;">
+          <label class="form-label">Currency</label>
+          <select class="form-input" id="tj-currency" style="cursor:pointer;">
+            <option value="£">£ GBP</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="AED">AED</option>
+            <option value="CAD">CAD</option>
+            <option value="AUD">AUD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Goal amount (optional)</label>
+          <input class="form-input" id="tj-goal" type="number" min="0" step="1" placeholder="e.g. 500" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Raised so far</label>
+          <input class="form-input" id="tj-current" type="number" min="0" step="1" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your payment link *</label>
+        <input class="form-input" id="tj-link" type="url" placeholder="https://paypal.me/yourname" />
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">PayPal, Stripe, Ko-fi, Buy Me a Coffee — any link works</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+        <input type="checkbox" id="tj-enabled" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;" />
+        <label for="tj-enabled" style="font-size:13px;cursor:pointer;">Show tip jar on my public page</label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeTipJar()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveTipJar()">Save →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Growth Settings modal ───────────────────────────────── -->
   <div class="modal-overlay" id="growth-settings-modal">
     <div class="modal" style="max-width:460px;">
@@ -2379,6 +2432,7 @@
 
       updateAllAutoReplyUI(arEnabled || false);
       loadWidgetTasks();
+      loadTipJar();
       if ('Notification' in window) {
         if (Notification.permission === 'granted') {
           const muted = localStorage.getItem('vl_notif_muted') === '1';
@@ -3613,6 +3667,56 @@
         '</div>' + printBtn +
         '</body></html>';
     }
+
+    // ── Tip Jar ────────────────────────────────────────────────
+    var tipJarData = null;
+
+    async function loadTipJar() {
+      if (!currentUser) return;
+      var res = await db.from('tip_jar').select('*').eq('user_id', currentUser.id).single();
+      tipJarData = res.data || null;
+    }
+
+    function openTipJar() {
+      var d = tipJarData || {};
+      document.getElementById('tj-title').value       = d.title       || '';
+      document.getElementById('tj-description').value = d.description || '';
+      document.getElementById('tj-goal').value        = d.goal_amount  != null ? d.goal_amount  : '';
+      document.getElementById('tj-current').value     = d.current_amount != null ? d.current_amount : '';
+      document.getElementById('tj-link').value        = d.payment_link || '';
+      document.getElementById('tj-enabled').checked   = d.is_enabled  || false;
+      var sel = document.getElementById('tj-currency');
+      if (sel) sel.value = d.currency || '£';
+      document.getElementById('tipjar-modal').classList.add('open');
+    }
+
+    function closeTipJar() {
+      document.getElementById('tipjar-modal').classList.remove('open');
+    }
+
+    async function saveTipJar() {
+      var link = document.getElementById('tj-link').value.trim();
+      if (!link) { toast('Please add a payment link'); return; }
+      var goalVal    = parseFloat(document.getElementById('tj-goal').value);
+      var currentVal = parseFloat(document.getElementById('tj-current').value);
+      var payload = {
+        user_id:         currentUser.id,
+        title:           document.getElementById('tj-title').value.trim()       || 'Support my work',
+        description:     document.getElementById('tj-description').value.trim() || null,
+        goal_amount:     isNaN(goalVal)    ? null : goalVal,
+        current_amount:  isNaN(currentVal) ? 0    : currentVal,
+        payment_link:    link,
+        currency:        document.getElementById('tj-currency').value || '£',
+        is_enabled:      document.getElementById('tj-enabled').checked
+      };
+      var res = await db.from('tip_jar').upsert(payload, { onConflict: 'user_id' });
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      tipJarData = payload;
+      closeTipJar();
+      toast(payload.is_enabled ? 'Tip jar live on your page ✓' : 'Tip jar saved (not visible yet)');
+    }
+
+    document.getElementById('tipjar-modal').addEventListener('click', function(e){ if (e.target === this) closeTipJar(); });
 
     // ── Growth tracker ─────────────────────────────────────────
     var growthData     = []; // all rows from social_stats

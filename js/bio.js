@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const profile = await getProfileByUsername(username);
     const links   = await getPublicLinks(profile.id);
+    const tipJar  = await getPublicTipJar(profile.id);
     renderBio(profile, links);
+    if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
     applyTheme(profile.theme || 'midnight');
     initChat(profile);
   } catch (e) {
@@ -76,6 +78,44 @@ function renderBio(profile, links) {
   if (footerLink) {
     footerLink.href = 'https://voilalink.com/login.html?ref=' + encodeURIComponent(profile.username) + '&mode=signup';
   }
+}
+
+// ── Tip Jar ──────────────────────────────────────────────────
+function renderTipJar(tj) {
+  const container = document.getElementById('bio-tipjar');
+  if (!container) return;
+
+  const cur      = tj.currency || '£';
+  const goal     = parseFloat(tj.goal_amount || 0);
+  const current  = parseFloat(tj.current_amount || 0);
+  const hasGoal  = goal > 0;
+  const pct      = hasGoal ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+
+  const progressHtml = hasGoal ? `
+    <div style="margin:14px 0 6px;">
+      <div style="background:rgba(255,255,255,0.1);border-radius:99px;height:10px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;transition:width 0.6s ease;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text-muted);">
+        <span>${cur}${current.toLocaleString()} raised</span>
+        <span>${pct}% of ${cur}${goal.toLocaleString()} goal</span>
+      </div>
+    </div>` : '';
+
+  container.innerHTML = `
+    <div style="width:100%;max-width:480px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 22px;text-align:center;">
+      <div style="font-size:28px;margin-bottom:8px;">☕</div>
+      <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">${escHtml(tj.title || 'Support my work')}</div>
+      ${tj.description ? `<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">${escHtml(tj.description)}</div>` : ''}
+      ${progressHtml}
+      <a href="${escHtml(tj.payment_link)}" target="_blank" rel="noopener noreferrer"
+        style="display:inline-block;margin-top:14px;padding:12px 32px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:99px;font-size:14px;font-weight:700;text-decoration:none;transition:opacity 0.15s;"
+        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        ☕ Support me
+      </a>
+    </div>`;
+  container.style.display = 'flex';
+  container.style.justifyContent = 'center';
 }
 
 // ── Social pills ─────────────────────────────────────────────
