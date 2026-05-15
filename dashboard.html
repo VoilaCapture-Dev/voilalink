@@ -204,7 +204,6 @@
       min-width: 0;
       min-height: 0;
       overflow-y: auto;
-      border-right: 1px solid var(--border);
     }
 
     /* ── Links panel ──────────────────────────────────────── */
@@ -452,12 +451,13 @@
 
     /* ── Preview panel (right column, always visible) ────── */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0; width: 300px;
+      width: 300px;
+      flex-shrink: 0;
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
       border-left: 1px solid var(--border);
+      position: relative;
     }
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
@@ -911,8 +911,6 @@
         overflow-y: auto;
       }
       .panels-container {
-        position: static;
-        right: auto; bottom: auto;
         overflow-y: visible;
       }
       .messages-panel {
@@ -2184,43 +2182,7 @@
         </div>
       </div>
 
-      <!-- ══ World Clock (floating in empty canvas) ════════ -->
-      <div class="world-clock-panel" id="world-clock-widget">
-        <div class="wc-drag-hint" style="display:flex;justify-content:space-between;align-items:center;">
-          <span>⠿ drag to move</span>
-          <span onclick="popOutClock()" title="Open clock in its own window" style="cursor:pointer;font-size:9px;color:rgba(74,222,128,0.55);padding:2px 5px;border:1px solid rgba(74,222,128,0.2);border-radius:4px;letter-spacing:0.05em;font-family:'DM Mono',monospace;white-space:nowrap;" onmouseover="this.style.color='#4ade80';this.style.borderColor='rgba(74,222,128,0.5)'" onmouseout="this.style.color='rgba(74,222,128,0.55)';this.style.borderColor='rgba(74,222,128,0.2)'">⊞ pop out</span>
-        </div>
-        <div class="wc-grid">
-          <div class="wc-zone">
-            <div class="wc-time" id="wc-london">--:--</div>
-            <div class="wc-city">London</div>
-          </div>
-          <div class="wc-zone">
-            <div class="wc-time" id="wc-newyork">--:--</div>
-            <div class="wc-city">New York</div>
-          </div>
-          <div class="wc-zone">
-            <div class="wc-time" id="wc-tokyo">--:--</div>
-            <div class="wc-city">Tokyo</div>
-          </div>
-          <div class="wc-zone">
-            <div class="wc-time" id="wc-sydney">--:--</div>
-            <div class="wc-city">Sydney</div>
-          </div>
-          <!-- Custom slot 1 -->
-          <div class="wc-zone wc-custom" id="wc-slot-1" onclick="openClockPicker(event,1)" style="position:relative;align-items:center;">
-            <div class="wc-add-icon">＋</div>
-            <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
-          </div>
-          <!-- Custom slot 2 -->
-          <div class="wc-zone wc-custom" id="wc-slot-2" onclick="openClockPicker(event,2)" style="position:relative;align-items:center;">
-            <div class="wc-add-icon">＋</div>
-            <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══ Right: live preview (fixed) ═════════════════════ -->
+      <!-- ══ Right: live preview ══════════════════════════════ -->
       <div class="preview-panel">
         <!-- Drag handle on the left edge of the preview panel -->
         <div id="preview-resizer" title="Drag to resize" style="position:absolute;left:-7px;top:0;bottom:0;width:14px;cursor:col-resize;z-index:20;display:flex;align-items:center;justify-content:center;">
@@ -2308,6 +2270,42 @@
 
       </div><!-- /preview-panel -->
 
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+  <!-- ══ World Clock (floating, fixed position) ═══════════════ -->
+  <div class="world-clock-panel" id="world-clock-widget">
+    <div class="wc-drag-hint" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>⠿ drag to move</span>
+      <span onclick="popOutClock()" title="Open clock in its own window" style="cursor:pointer;font-size:9px;color:rgba(74,222,128,0.55);padding:2px 5px;border:1px solid rgba(74,222,128,0.2);border-radius:4px;letter-spacing:0.05em;font-family:'DM Mono',monospace;white-space:nowrap;" onmouseover="this.style.color='#4ade80';this.style.borderColor='rgba(74,222,128,0.5)'" onmouseout="this.style.color='rgba(74,222,128,0.55)';this.style.borderColor='rgba(74,222,128,0.2)'">⊞ pop out</span>
+    </div>
+    <div class="wc-grid">
+      <div class="wc-zone">
+        <div class="wc-time" id="wc-london">--:--</div>
+        <div class="wc-city">London</div>
+      </div>
+      <div class="wc-zone">
+        <div class="wc-time" id="wc-newyork">--:--</div>
+        <div class="wc-city">New York</div>
+      </div>
+      <div class="wc-zone">
+        <div class="wc-time" id="wc-tokyo">--:--</div>
+        <div class="wc-city">Tokyo</div>
+      </div>
+      <div class="wc-zone">
+        <div class="wc-time" id="wc-sydney">--:--</div>
+        <div class="wc-city">Sydney</div>
+      </div>
+      <!-- Custom slot 1 -->
+      <div class="wc-zone wc-custom" id="wc-slot-1" onclick="openClockPicker(event,1)" style="position:relative;align-items:center;">
+        <div class="wc-add-icon">＋</div>
+        <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
+      </div>
+      <!-- Custom slot 2 -->
+      <div class="wc-zone wc-custom" id="wc-slot-2" onclick="openClockPicker(event,2)" style="position:relative;align-items:center;">
+        <div class="wc-add-icon">＋</div>
+        <div class="wc-city" style="opacity:0.4;margin-top:4px;">Add city</div>
+      </div>
     </div>
   </div>
 
@@ -3053,7 +3051,7 @@
       var ph = document.getElementById('panel-help');
       var pfb = document.getElementById('pro-float-bar');
       // Tabs where the Unlock Pro bar should be hidden (it would block content)
-      var tabsHidingProBar = ['help', 'settings', 'upgrade'];
+      var tabsHidingProBar = ['help', 'settings', 'upgrade', 'feedback'];
       if (tab === 'help') {
         if (pc) pc.style.display = 'none';
         if (pp) pp.style.display = 'none';
