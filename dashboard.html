@@ -796,9 +796,11 @@
 
     <a class="nav-item" href="#" onclick="showTab('outreach')" id="nav-outreach">
       <span class="nav-item-icon">🤖</span> AI Outreach
+      <span style="margin-left:auto;font-size:9px;font-weight:700;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;padding:2px 7px;border-radius:99px;letter-spacing:0.04em;">PRO</span>
     </a>
     <a class="nav-item" href="#" onclick="showTab('research')" id="nav-research">
       <span class="nav-item-icon">🔍</span> Research
+      <span style="margin-left:auto;font-size:9px;font-weight:700;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;padding:2px 7px;border-radius:99px;letter-spacing:0.04em;">PRO</span>
     </a>
     <a class="nav-item" href="#" onclick="showTab('planner')" id="nav-planner">
       <span class="nav-item-icon">📅</span> Planner
@@ -1825,6 +1827,47 @@
         </div>
 
         <a class="view-page-btn" id="preview-page-link" href="#" target="_blank">View my page →</a>
+
+        <!-- Pro upgrade card -->
+        <div id="pro-upgrade-card" style="margin:16px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.08));border:1px solid rgba(129,140,248,0.25);border-radius:16px;padding:18px 16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:10px;">⭐ Unlock Pro features</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+              <span style="font-size:14px;">🤖</span>
+              <div>
+                <div style="font-weight:600;">AI Auto-Reply</div>
+                <div style="font-size:11px;color:var(--text-muted);">Replies to visitors when you're away</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+              <span style="font-size:14px;">✍️</span>
+              <div>
+                <div style="font-weight:600;">AI Outreach</div>
+                <div style="font-size:11px;color:var(--text-muted);">Generate personalised outreach messages</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+              <span style="font-size:14px;">🔍</span>
+              <div>
+                <div style="font-weight:600;">Creator Research</div>
+                <div style="font-size:11px;color:var(--text-muted);">AI-powered influencer discovery</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-primary);">
+              <span style="font-size:14px;">🔗</span>
+              <div>
+                <div style="font-weight:600;">Unlimited links</div>
+                <div style="font-size:11px;color:var(--text-muted);">Free plan limited to 5 links</div>
+              </div>
+            </div>
+          </div>
+          <a href="https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb" target="_blank"
+            style="display:block;text-align:center;padding:10px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.15s;"
+            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Upgrade to Pro — £3.99/mo →
+          </a>
+          <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-muted);">7-day free trial · Cancel anytime</div>
+        </div>
       </div>
 
     </div>
@@ -2717,6 +2760,10 @@
         if (mLink) mLink.href = 'https://voilacapture.lemonsqueezy.com/checkout/buy/02fbe8ff-0025-403f-b09d-9b451c8ac1cb?checkout[email]=' + email;
         if (aLink) aLink.href = 'https://voilacapture.lemonsqueezy.com/checkout/buy/74128f87-4d03-4ab7-9ece-bd332362a157?checkout[email]=' + email;
       }
+
+      // Hide upgrade card if already Pro
+      const proCard = document.getElementById('pro-upgrade-card');
+      if (proCard && isPro) proCard.style.display = 'none';
 
       updateAllAutoReplyUI(arEnabled || false);
       loadWidgetTasks();
