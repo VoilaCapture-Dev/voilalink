@@ -1516,6 +1516,15 @@
             </div>
             <input id="inv-search" type="text" placeholder="🔍 Search client…" oninput="onInvSearch(this.value)"
               style="flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text-primary);font-size:12px;outline:none;" />
+            <select id="inv-sort" onchange="onInvSort(this.value)"
+              style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text-muted);font-size:12px;cursor:pointer;outline:none;flex-shrink:0;">
+              <option value="date_desc">Date ↓ Newest</option>
+              <option value="date_asc">Date ↑ Oldest</option>
+              <option value="amount_desc">Amount ↓</option>
+              <option value="amount_asc">Amount ↑</option>
+              <option value="client_az">Client A–Z</option>
+              <option value="client_za">Client Z–A</option>
+            </select>
           </div>
 
           <!-- List -->
@@ -2711,6 +2720,7 @@
     // ── Invoice list state ─────────────────────────────────────
     var _invFilter   = 'all';
     var _invSearch   = '';
+    var _invSort     = 'date_desc';
     var _invPage     = 1;
     var INV_PAGE_SIZE = 20;
 
@@ -2726,6 +2736,12 @@
     function onInvSearch(val) {
       _invSearch = val.toLowerCase().trim();
       _invPage   = 1;
+      renderInvList();
+    }
+
+    function onInvSort(val) {
+      _invSort = val;
+      _invPage = 1;
       renderInvList();
     }
 
@@ -2769,6 +2785,18 @@
         if (_invFilter !== 'all' && sc !== _invFilter) return false;
         if (_invSearch && inv.client_name.toLowerCase().indexOf(_invSearch) === -1) return false;
         return true;
+      });
+
+      // Sort
+      filtered = filtered.slice().sort(function(a, b) {
+        switch (_invSort) {
+          case 'date_asc':    return new Date(a.issue_date||a.created_at) - new Date(b.issue_date||b.created_at);
+          case 'amount_desc': return parseFloat(b._total||0) - parseFloat(a._total||0);
+          case 'amount_asc':  return parseFloat(a._total||0) - parseFloat(b._total||0);
+          case 'client_az':   return (a.client_name||'').localeCompare(b.client_name||'');
+          case 'client_za':   return (b.client_name||'').localeCompare(a.client_name||'');
+          default:            return new Date(b.issue_date||b.created_at) - new Date(a.issue_date||a.created_at); // date_desc
+        }
       });
 
       if (filtered.length === 0) {
