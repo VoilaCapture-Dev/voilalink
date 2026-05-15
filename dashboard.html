@@ -615,6 +615,11 @@
     }
     .toast.show { opacity: 1; }
 
+    /* ── Invoice filter tabs ──────────────────────────────────── */
+    .inv-filter-btn { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:5px 10px; font-size:11px; color:var(--text-muted); cursor:pointer; font-family:'DM Mono',monospace; transition:all 0.15s; }
+    .inv-filter-btn:hover { color:var(--text-primary); border-color:rgba(129,140,248,0.3); }
+    .inv-filter-btn.active { background:rgba(129,140,248,0.12); color:var(--accent); border-color:var(--border-accent); }
+
     /* ── Invoice template cards ───────────────────────────────── */
     .inv-tpl-card {
       border:2px solid var(--border); border-radius:10px; padding:8px;
@@ -1483,8 +1488,42 @@
             <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Add your business name, address and payment info — it pre-fills every invoice automatically.</div>
             <button class="btn-sm primary" onclick="openInvSettings()" style="font-size:12px;">⚙ Set up now →</button>
           </div>
+
+          <!-- Stats row -->
+          <div id="inv-stats" style="display:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:4px;">Outstanding</div>
+              <div id="inv-stat-outstanding" style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#f59e0b;">£0.00</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:4px;">Paid this month</div>
+              <div id="inv-stat-paid" style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#4ade80;">£0.00</div>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:4px;">Total invoices</div>
+              <div id="inv-stat-count" style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent);">0</div>
+            </div>
+          </div>
+
+          <!-- Filter + Search -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <div style="display:flex;gap:4px;flex-wrap:wrap;" id="inv-filter-tabs">
+              <button onclick="setInvFilter('all')"     class="inv-filter-btn active" data-f="all">All</button>
+              <button onclick="setInvFilter('draft')"   class="inv-filter-btn" data-f="draft">Draft</button>
+              <button onclick="setInvFilter('sent')"    class="inv-filter-btn" data-f="sent">Sent</button>
+              <button onclick="setInvFilter('paid')"    class="inv-filter-btn" data-f="paid">Paid</button>
+              <button onclick="setInvFilter('overdue')" class="inv-filter-btn" data-f="overdue">Overdue</button>
+            </div>
+            <input id="inv-search" type="text" placeholder="🔍 Search client…" oninput="onInvSearch(this.value)"
+              style="flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text-primary);font-size:12px;outline:none;" />
+          </div>
+
           <!-- List -->
           <div id="inv-list"></div>
+          <!-- Load more -->
+          <div id="inv-load-more" style="display:none;text-align:center;margin-top:12px;">
+            <button class="btn-sm ghost" onclick="invLoadMore()" style="font-size:12px;">Load more ↓</button>
+          </div>
           <!-- Empty state -->
           <div id="inv-empty" style="display:none;text-align:center;padding:48px 20px;color:var(--text-muted);">
             <div style="font-size:48px;margin-bottom:12px;">🧾</div>
@@ -1768,6 +1807,7 @@
       <!-- Template selector -->
       <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin:18px 0 10px;">Invoice Template</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px;">
+        <!-- Row 1 -->
         <div class="inv-tpl-card selected" id="tpl-card-classic" onclick="selectInvTemplate('classic')">
           <div class="inv-tpl-preview" style="display:flex;flex-direction:column;padding:6px;gap:3px;">
             <div style="height:8px;background:#111;border-radius:2px;width:100%;"></div>
@@ -1814,6 +1854,52 @@
             <div style="height:8px;background:#1e3a5f;width:100%;"></div>
           </div>
           <div class="inv-tpl-name">Corporate</div>
+        </div>
+        <!-- Row 2 -->
+        <div class="inv-tpl-card" id="tpl-card-bold" onclick="selectInvTemplate('bold')">
+          <div class="inv-tpl-preview" style="display:flex;flex-direction:column;padding:0;overflow:hidden;">
+            <div style="height:22px;background:#111;width:100%;display:flex;align-items:center;padding:0 6px;">
+              <div style="height:6px;background:#f59e0b;border-radius:1px;width:55%;"></div>
+            </div>
+            <div style="padding:4px 6px;flex:1;display:flex;flex-direction:column;gap:3px;">
+              <div style="height:3px;background:#eee;border-radius:2px;width:80%;"></div>
+              <div style="height:3px;background:#eee;border-radius:2px;width:60%;"></div>
+            </div>
+          </div>
+          <div class="inv-tpl-name">Bold</div>
+        </div>
+        <div class="inv-tpl-card" id="tpl-card-creative" onclick="selectInvTemplate('creative')">
+          <div class="inv-tpl-preview" style="display:flex;flex-direction:row;padding:0;overflow:hidden;">
+            <div style="width:10px;background:linear-gradient(180deg,#ec4899,#f97316);flex-shrink:0;"></div>
+            <div style="flex:1;padding:5px;display:flex;flex-direction:column;gap:3px;">
+              <div style="height:5px;background:#333;border-radius:1px;width:60%;"></div>
+              <div style="height:3px;background:#ddd;border-radius:1px;width:80%;"></div>
+              <div style="height:3px;background:#ddd;border-radius:1px;width:50%;"></div>
+            </div>
+          </div>
+          <div class="inv-tpl-name">Creative</div>
+        </div>
+        <div class="inv-tpl-card" id="tpl-card-simple" onclick="selectInvTemplate('simple')">
+          <div class="inv-tpl-preview" style="display:flex;flex-direction:column;padding:6px;gap:3px;">
+            <div style="height:4px;background:#555;border-radius:1px;width:40%;"></div>
+            <div style="height:3px;background:#ccc;border-radius:1px;width:60%;margin-bottom:4px;"></div>
+            <div style="height:1px;background:#bbb;width:100%;"></div>
+            <div style="height:3px;background:#ddd;border-radius:1px;width:90%;margin-top:4px;"></div>
+            <div style="height:3px;background:#ddd;border-radius:1px;width:70%;"></div>
+          </div>
+          <div class="inv-tpl-name">Simple</div>
+        </div>
+        <div class="inv-tpl-card" id="tpl-card-elegant" onclick="selectInvTemplate('elegant')">
+          <div class="inv-tpl-preview" style="display:flex;flex-direction:column;padding:5px;gap:3px;background:#fafaf8;">
+            <div style="display:flex;justify-content:space-between;">
+              <div style="height:5px;background:#2d2d2d;border-radius:1px;width:35%;"></div>
+              <div style="height:3px;background:#c9a84c;border-radius:1px;width:20%;margin-top:1px;"></div>
+            </div>
+            <div style="height:1px;background:#c9a84c;width:100%;margin:3px 0;"></div>
+            <div style="height:3px;background:#ddd;border-radius:1px;width:75%;"></div>
+            <div style="height:3px;background:#ddd;border-radius:1px;width:55%;"></div>
+          </div>
+          <div class="inv-tpl-name">Elegant</div>
         </div>
       </div>
       <input type="hidden" id="inv-s-template" value="classic" />
@@ -2622,19 +2708,85 @@
       renderInvList();
     }
 
+    // ── Invoice list state ─────────────────────────────────────
+    var _invFilter   = 'all';
+    var _invSearch   = '';
+    var _invPage     = 1;
+    var INV_PAGE_SIZE = 20;
+
+    function setInvFilter(f) {
+      _invFilter = f;
+      _invPage   = 1;
+      document.querySelectorAll('.inv-filter-btn').forEach(function(btn){
+        btn.classList.toggle('active', btn.dataset.f === f);
+      });
+      renderInvList();
+    }
+
+    function onInvSearch(val) {
+      _invSearch = val.toLowerCase().trim();
+      _invPage   = 1;
+      renderInvList();
+    }
+
+    function invLoadMore() {
+      _invPage++;
+      renderInvList();
+    }
+
+    function updateInvStats() {
+      var cur = (invoiceSettings && invoiceSettings.currency) || '£';
+      var now  = new Date();
+      var thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2,'0');
+      var outstanding = 0, paidMonth = 0;
+      invoiceList.forEach(function(inv) {
+        var sc = invStatusClass(inv);
+        var total = parseFloat(inv._total || 0);
+        if (sc === 'sent' || sc === 'overdue') outstanding += total;
+        if (inv.status === 'paid' && inv.updated_at && inv.updated_at.startsWith(thisMonth)) paidMonth += total;
+      });
+      var statEl = document.getElementById('inv-stats');
+      if (statEl) statEl.style.display = invoiceList.length > 0 ? 'grid' : 'none';
+      var outEl = document.getElementById('inv-stat-outstanding');
+      var paidEl = document.getElementById('inv-stat-paid');
+      var cntEl  = document.getElementById('inv-stat-count');
+      if (outEl)  outEl.textContent  = cur + outstanding.toFixed(2);
+      if (paidEl) paidEl.textContent = cur + paidMonth.toFixed(2);
+      if (cntEl)  cntEl.textContent  = invoiceList.length;
+    }
+
     // ── Render invoice list ────────────────────────────────────
     function renderInvList() {
-      var list  = document.getElementById('inv-list');
-      var empty = document.getElementById('inv-empty');
+      updateInvStats();
+      var list     = document.getElementById('inv-list');
+      var empty    = document.getElementById('inv-empty');
+      var loadMore = document.getElementById('inv-load-more');
       if (!list) return;
-      if (invoiceList.length === 0) {
-        list.innerHTML = '';
-        if (empty) empty.style.display = 'block';
+
+      // Filter
+      var filtered = invoiceList.filter(function(inv) {
+        var sc = invStatusClass(inv);
+        if (_invFilter !== 'all' && sc !== _invFilter) return false;
+        if (_invSearch && inv.client_name.toLowerCase().indexOf(_invSearch) === -1) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = invoiceList.length === 0
+          ? ''
+          : '<div style="text-align:center;padding:32px 20px;color:var(--text-muted);font-size:13px;">No invoices match your filter</div>';
+        if (empty)    empty.style.display    = invoiceList.length === 0 ? 'block' : 'none';
+        if (loadMore) loadMore.style.display = 'none';
         return;
       }
       if (empty) empty.style.display = 'none';
+
+      var visible = filtered.slice(0, _invPage * INV_PAGE_SIZE);
+      var hasMore = filtered.length > visible.length;
+      if (loadMore) loadMore.style.display = hasMore ? 'block' : 'none';
+
       var cur = (invoiceSettings && invoiceSettings.currency) || '£';
-      list.innerHTML = invoiceList.map(function(inv) {
+      list.innerHTML = visible.map(function(inv) {
         var sc = invStatusClass(inv);
         var sl = sc === 'overdue' ? 'Overdue' : (inv.status.charAt(0).toUpperCase() + inv.status.slice(1));
         var actionBtns = '';
@@ -2701,7 +2853,7 @@
       // Template
       var tpl = s.template || 'classic';
       document.getElementById('inv-s-template').value = tpl;
-      ['classic','modern','minimal','corporate'].forEach(function(t){
+      ['classic','modern','minimal','corporate','bold','creative','simple','elegant'].forEach(function(t){
         var card = document.getElementById('tpl-card-' + t);
         if (card) card.classList.toggle('selected', t === tpl);
       });
@@ -2737,7 +2889,7 @@
 
     function selectInvTemplate(name) {
       document.getElementById('inv-s-template').value = name;
-      ['classic','modern','minimal','corporate'].forEach(function(t){
+      ['classic','modern','minimal','corporate','bold','creative','simple','elegant'].forEach(function(t){
         var card = document.getElementById('tpl-card-' + t);
         if (card) card.classList.toggle('selected', t === name);
       });
@@ -3089,7 +3241,13 @@
           '</body></html>';
       }
 
-      // ─── CORPORATE ────────────────────────────────────────────────
+      // ─── NEW TEMPLATES (bolt, creative, simple, elegant) ────────
+      if (tpl === 'bold')     return _buildBoldHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor);
+      if (tpl === 'creative') return _buildCreativeHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor);
+      if (tpl === 'simple')   return _buildSimpleHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor);
+      if (tpl === 'elegant')  return _buildElegantHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor);
+
+      // ─── CORPORATE (default fallback) ──────────────────────────────
       return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
         'body{font-family:Arial,sans-serif;max-width:820px;margin:0 auto;color:#1a2433;font-size:14px;line-height:1.6;background:#fff;}' +
         '.topbar{background:#1e3a5f;color:#fff;padding:10px 48px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;}' +
@@ -3129,6 +3287,164 @@
           footerHtml + printBtn +
         '</div>' +
         '<div class="bottombar">' + escHtml(s.business_name || '') + (s.email ? ' · ' + escHtml(s.email) : '') + (s.phone ? ' · ' + escHtml(s.phone) : '') + '</div>' +
+        '</body></html>';
+
+    }
+
+    // ─── BOLD ─────────────────────────────────────────────────
+    function _buildBoldHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
+        'body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;color:#111;font-size:14px;line-height:1.6;background:#fff;}' +
+        '.hero{background:#111;color:#fff;padding:40px 48px;display:flex;justify-content:space-between;align-items:flex-start;}' +
+        '.hero-left .sender-name{font-size:22px;font-weight:800;color:#f59e0b;margin:0 0 4px;}.hero-left p{margin:2px 0;font-size:13px;opacity:.75;}.vat-line{opacity:.5!important;font-size:12px!important;}' +
+        '.hero-right{text-align:right;}.inv-title{font-size:48px;font-weight:900;letter-spacing:-3px;color:#f59e0b;margin:0 0 6px;}' +
+        '.inv-num-line{font-family:monospace;font-size:13px;opacity:.7;}.due-line{font-weight:700;color:#fbbf24;}' +
+        '.status-pill{display:inline-block;padding:3px 10px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;background:rgba(245,158,11,0.25);color:#f59e0b;border:1px solid #f59e0b;margin-left:8px;}' +
+        '.body{padding:36px 48px;}' +
+        '.bill-to{display:flex;gap:48px;margin-bottom:28px;padding-bottom:20px;border-bottom:3px solid #111;}' +
+        '.bill-section{flex:1;}.bill-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#f59e0b;margin-bottom:8px;font-weight:700;}' +
+        '.client-name{font-size:15px;font-weight:700;}.bill-to p{margin:2px 0;font-size:13px;color:#444;}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:28px;}' +
+        'th{background:#111;color:#f59e0b;padding:11px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:left;}' +
+        '.td-center{text-align:center;}.td-right{text-align:right;}' +
+        'td{padding:11px 14px;border-bottom:2px solid #f0f0f0;font-size:13px;vertical-align:top;}' +
+        '.totals{margin-left:auto;width:300px;margin-bottom:32px;}' +
+        '.totals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid #eee;color:#555;}' +
+        '.totals-total{display:flex;justify-content:space-between;padding:14px 16px;font-size:20px;font-weight:900;background:#111;color:#f59e0b;margin-top:8px;}' +
+        '.notes-block{padding:16px 20px;background:#fffbeb;border-left:4px solid #f59e0b;font-size:13px;color:#555;margin-bottom:16px;}' +
+        '.payment-block{padding:12px 16px;background:#f5f5f5;border-radius:4px;font-size:13px;}' +
+        '.payment-block a{color:#111;font-weight:700;}' +
+        '.print-btn-wrap{margin-top:32px;text-align:center;}.print-btn{padding:12px 36px;background:#111;color:#f59e0b;border:none;border-radius:4px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.05em;}' +
+        '@media print{.print-btn-wrap{display:none;}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.totals-total{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+        '</style></head><body>' +
+        '<div class="hero">' +
+          '<div class="hero-left">' + logoHtml + senderBlock + '</div>' +
+          '<div class="hero-right"><div class="inv-title">INV<span class="status-pill">' + inv.status.toUpperCase() + '</span></div>' + metaBlock + '</div>' +
+        '</div>' +
+        '<div class="body">' +
+          '<div class="bill-to"><div class="bill-section"><div class="bill-label">Bill to</div>' + clientBlock + '</div></div>' +
+          '<table><thead><tr><th>Description</th><th class="td-center">Qty</th><th class="td-right">Unit Price</th><th class="td-right">Total</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+          '<div class="totals">' + totalsHtml + '</div>' +
+          footerHtml +
+        '</div>' +
+        printBtn + '</body></html>';
+    }
+
+    // ─── CREATIVE ────────────────────────────────────────────────
+    function _buildCreativeHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
+        'body{font-family:Arial,sans-serif;max-width:820px;margin:40px auto;color:#1a1a1a;font-size:14px;line-height:1.6;background:#fff;display:flex;gap:0;}' +
+        '.sidebar{width:180px;min-height:100vh;background:linear-gradient(180deg,#ec4899,#f97316);flex-shrink:0;padding:32px 20px;display:flex;flex-direction:column;gap:20px;}' +
+        '.sidebar .sender-name{color:#fff;font-size:16px;font-weight:800;margin-bottom:4px;}.sidebar p{color:rgba(255,255,255,0.8);font-size:11px;margin:2px 0;}.sidebar .vat-line{color:rgba(255,255,255,0.55)!important;font-size:10px!important;}' +
+        '.sidebar-logo{margin-bottom:12px;}' +
+        '.sidebar-label{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:rgba(255,255,255,0.55);margin-bottom:4px;font-weight:700;}' +
+        '.sidebar-bill p{margin:1px 0;font-size:11px;color:rgba(255,255,255,0.85);}.client-name{font-size:13px;font-weight:700;color:#fff!important;}' +
+        '.main{flex:1;padding:36px 36px;}' +
+        '.inv-title{font-size:42px;font-weight:900;letter-spacing:-2px;color:#ec4899;margin:0 0 4px;}' +
+        '.inv-num-line{font-family:monospace;font-size:13px;color:#888;}.due-line{font-weight:700;color:#f97316;}' +
+        '.status-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;background:' + badgeColor + '20;color:' + badgeColor + ';border:1px solid ' + badgeColor + '60;margin-left:8px;}' +
+        '.meta-block{margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #f97316;}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:24px;}' +
+        'th{border-bottom:2px solid #ec4899;padding:9px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#ec4899;text-align:left;}' +
+        '.td-center{text-align:center;}.td-right{text-align:right;}' +
+        'td{padding:10px 10px;border-bottom:1px solid #fce7f3;font-size:13px;vertical-align:top;}' +
+        '.totals{margin-left:auto;width:280px;margin-bottom:28px;}' +
+        '.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#666;border-bottom:1px solid #fce7f3;}' +
+        '.totals-total{display:flex;justify-content:space-between;padding:12px 14px;font-size:18px;font-weight:800;background:linear-gradient(135deg,#ec4899,#f97316);color:#fff;border-radius:8px;margin-top:8px;}' +
+        '.notes-block{padding:14px 16px;background:#fdf2f8;border-radius:8px;font-size:13px;color:#555;margin-bottom:14px;}' +
+        '.payment-block{padding:12px 16px;background:#fff7ed;border-radius:8px;font-size:13px;}' +
+        '.payment-block a{color:#f97316;font-weight:600;}' +
+        '.print-btn-wrap{margin-top:28px;text-align:center;}.print-btn{padding:12px 36px;background:linear-gradient(135deg,#ec4899,#f97316);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}' +
+        '@media print{.print-btn-wrap{display:none;}.sidebar,.totals-total{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+        '</style></head><body>' +
+        '<div class="sidebar">' +
+          '<div class="sidebar-logo">' + logoHtml + '</div>' +
+          '<div><div class="sidebar-label">From</div>' + senderBlock + '</div>' +
+          '<div class="sidebar-bill"><div class="sidebar-label">Bill to</div>' + clientBlock + '</div>' +
+        '</div>' +
+        '<div class="main">' +
+          '<div class="meta-block"><div class="inv-title">INVOICE<span class="status-pill">' + inv.status.toUpperCase() + '</span></div>' + metaBlock + '</div>' +
+          '<table><thead><tr><th>Description</th><th class="td-center">Qty</th><th class="td-right">Unit Price</th><th class="td-right">Total</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+          '<div class="totals">' + totalsHtml + '</div>' +
+          footerHtml + printBtn +
+        '</div>' +
+        '</body></html>';
+    }
+
+    // ─── SIMPLE ──────────────────────────────────────────────────
+    function _buildSimpleHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
+        'body{font-family:"Courier New",Courier,monospace;max-width:720px;margin:60px auto;color:#111;font-size:13px;line-height:1.8;background:#fff;}' +
+        '.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}' +
+        '.sender-name{font-size:16px;font-weight:700;margin:0 0 4px;font-family:"Courier New",Courier,monospace;}.sender p{margin:1px 0;color:#444;}.vat-line{color:#999!important;font-size:12px!important;}' +
+        '.inv-meta{text-align:right;}.inv-title{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;margin:0 0 6px;}' +
+        '.inv-num-line{color:#666;font-size:12px;}.due-line{font-weight:700;}' +
+        '.status-pill{display:inline-block;padding:1px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;border:1px solid #111;margin-left:8px;}' +
+        '.divider{border:none;border-top:2px solid #111;margin:24px 0;}' +
+        '.bill-to{margin-bottom:32px;}.bill-label{font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.1em;margin-bottom:6px;color:#666;}' +
+        '.client-name{font-size:14px;font-weight:700;}.bill-to p{margin:1px 0;}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:28px;font-family:"Courier New",Courier,monospace;}' +
+        'th{border-top:1px solid #111;border-bottom:1px solid #111;padding:8px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:700;}' +
+        '.td-center{text-align:center;}.td-right{text-align:right;}' +
+        'td{padding:8px 6px;border-bottom:1px dashed #ccc;font-size:13px;vertical-align:top;}' +
+        '.totals{margin-left:auto;width:260px;margin-bottom:32px;font-family:"Courier New",Courier,monospace;}' +
+        '.totals-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:#555;}' +
+        '.totals-total{display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:700;border-top:2px solid #111;border-bottom:2px solid #111;margin-top:6px;}' +
+        '.notes-block{padding:16px 0;border-top:1px dashed #ccc;font-size:13px;color:#444;margin-bottom:16px;}' +
+        '.payment-block{font-size:13px;color:#444;padding:12px 0;border-top:1px dashed #ccc;}' +
+        '.payment-block a{color:#111;font-weight:700;}' +
+        '.print-btn-wrap{margin-top:40px;text-align:center;}.print-btn{padding:10px 32px;background:#111;color:#fff;border:none;font-family:"Courier New",Courier,monospace;font-size:13px;font-weight:700;cursor:pointer;}' +
+        '@media print{.print-btn-wrap{display:none;}}' +
+        '</style></head><body>' +
+        '<div class="header">' +
+          '<div class="sender">' + logoHtml + senderBlock + '</div>' +
+          '<div class="inv-meta"><div class="inv-title">Invoice<span class="status-pill">' + inv.status.toUpperCase() + '</span></div>' + metaBlock + '</div>' +
+        '</div>' +
+        '<hr class="divider">' +
+        '<div class="bill-to"><div class="bill-label">Bill to:</div>' + clientBlock + '</div>' +
+        '<table><thead><tr><th>Description</th><th class="td-center">Qty</th><th class="td-right">Unit Price</th><th class="td-right">Total</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+        '<div class="totals">' + totalsHtml + '</div>' +
+        footerHtml + printBtn +
+        '</body></html>';
+    }
+
+    // ─── ELEGANT ────────────────────────────────────────────────
+    function _buildElegantHTML(inv, s, cur, logo, logoHtml, senderBlock, metaBlock, clientBlock, itemRows, totalsHtml, footerHtml, printBtn, badgeColor) {
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
+        '@import url(\'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap\');' +
+        'body{font-family:"Lato",Arial,sans-serif;max-width:780px;margin:40px auto;color:#2d2d2d;font-size:14px;line-height:1.7;background:#fafaf8;}' +
+        '.outer{background:#fff;border:1px solid #e8e0d0;padding:52px 56px;}' +
+        '.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;}' +
+        '.sender-name{font-family:"Playfair Display",Georgia,serif;font-size:22px;font-weight:700;color:#2d2d2d;margin:0 0 6px;}.sender p{margin:2px 0;color:#666;font-size:13px;font-weight:300;}.vat-line{color:#aaa!important;font-size:12px!important;}' +
+        '.inv-meta{text-align:right;}.inv-title{font-family:"Playfair Display",Georgia,serif;font-size:38px;font-weight:900;color:#2d2d2d;letter-spacing:-1px;margin:0 0 6px;}' +
+        '.gold-line{width:100%;height:2px;background:linear-gradient(90deg,#c9a84c,#e8d5a3,#c9a84c);margin:20px 0;}' +
+        '.inv-num-line{font-size:13px;color:#888;font-family:"Lato",sans-serif;font-weight:300;}.due-line{font-weight:700;color:#b8860b;}' +
+        '.status-pill{display:inline-block;padding:3px 10px;border-radius:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;background:transparent;color:#c9a84c;border:1px solid #c9a84c;margin-left:8px;}' +
+        '.bill-to{margin-bottom:32px;}.bill-label{font-size:10px;text-transform:uppercase;letter-spacing:.2em;color:#c9a84c;margin-bottom:8px;font-weight:700;}' +
+        '.client-name{font-family:"Playfair Display",Georgia,serif;font-size:16px;font-weight:700;margin-bottom:2px;}.bill-to p{margin:1px 0;font-size:13px;color:#555;font-weight:300;}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:28px;}' +
+        'th{border-top:1px solid #c9a84c;border-bottom:1px solid #c9a84c;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#c9a84c;text-align:left;font-weight:700;}' +
+        '.td-center{text-align:center;}.td-right{text-align:right;}' +
+        'td{padding:11px 12px;border-bottom:1px solid #f0ebe0;font-size:13px;vertical-align:top;font-weight:300;}' +
+        '.totals{margin-left:auto;width:280px;margin-bottom:32px;}' +
+        '.totals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#666;border-bottom:1px solid #f0ebe0;font-weight:300;}' +
+        '.totals-total{display:flex;justify-content:space-between;padding:14px 0;font-size:20px;font-weight:700;border-top:2px solid #c9a84c;margin-top:8px;font-family:"Playfair Display",Georgia,serif;color:#2d2d2d;}' +
+        '.notes-block{padding:16px 0;border-top:1px solid #f0ebe0;font-size:13px;color:#666;margin-bottom:16px;font-weight:300;}' +
+        '.payment-block{font-size:13px;color:#666;padding:12px 0;border-top:1px solid #f0ebe0;font-weight:300;}' +
+        '.payment-block a{color:#b8860b;font-weight:700;}' +
+        '.print-btn-wrap{margin-top:36px;text-align:center;}.print-btn{padding:12px 36px;background:#2d2d2d;color:#c9a84c;border:none;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;}' +
+        '@media print{.print-btn-wrap{display:none;}.outer{border:none;padding:20px;}}' +
+        '</style></head><body><div class="outer">' +
+        '<div class="header">' +
+          '<div class="sender">' + logoHtml + senderBlock + '</div>' +
+          '<div class="inv-meta"><div class="inv-title">Invoice<span class="status-pill">' + inv.status.toUpperCase() + '</span></div>' + metaBlock + '</div>' +
+        '</div>' +
+        '<div class="gold-line"></div>' +
+        '<div class="bill-to"><div class="bill-label">Bill to</div>' + clientBlock + '</div>' +
+        '<table><thead><tr><th>Description</th><th class="td-center">Qty</th><th class="td-right">Unit Price</th><th class="td-right">Total</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+        '<div class="totals">' + totalsHtml + '</div>' +
+        footerHtml +
+        '</div>' + printBtn +
         '</body></html>';
     }
 
