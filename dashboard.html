@@ -1113,14 +1113,6 @@
       </div>
     </div>
 
-    <!-- Canvas zone (empty space above content, height draggable) -->
-    <div id="canvas-zone" style="flex-shrink:0;height:0;min-height:0;background:var(--bg);"></div>
-
-    <!-- Horizontal resizer -->
-    <div id="h-resizer" style="flex-shrink:0;height:10px;cursor:row-resize;display:flex;align-items:center;justify-content:center;background:transparent;position:relative;z-index:10;" title="Drag to adjust workspace height">
-      <div id="h-resizer-grip" style="width:48px;height:4px;border-radius:4px;background:rgba(255,255,255,0.13);transition:background 0.15s;pointer-events:none;"></div>
-    </div>
-
     <!-- Content -->
     <div class="content">
 
@@ -3061,23 +3053,29 @@
       // Help tab: swap panels-container for panel-help as a flex sibling
       var ph = document.getElementById('panel-help');
       var pfb = document.getElementById('pro-float-bar');
+      // Tabs where the Unlock Pro bar should be hidden (it would block content)
+      var tabsHidingProBar = ['help', 'settings', 'upgrade'];
       if (tab === 'help') {
         if (pc) pc.style.display = 'none';
         if (pp) pp.style.display = 'none';
         if (ph) ph.style.display = 'block';
-        // Hide the Unlock Pro bar so it doesn't overlap Help content
-        if (pfb) pfb.dataset.hiddenByHelp = pfb.style.display;
-        if (pfb) pfb.style.display = 'none';
         renderAutoBackups();
         if (ph) ph.scrollTop = 0;
       } else {
         if (pc) pc.style.display = '';
         if (ph) ph.style.display = 'none';
         if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
-        // Restore Unlock Pro bar if it was hidden by Help tab
-        if (pfb && pfb.dataset.hiddenByHelp !== undefined) {
-          pfb.style.display = pfb.dataset.hiddenByHelp || 'flex';
-          delete pfb.dataset.hiddenByHelp;
+      }
+      // Hide or restore Unlock Pro bar depending on current tab
+      if (tabsHidingProBar.includes(tab)) {
+        if (pfb && pfb.dataset.hiddenByTab === undefined) {
+          pfb.dataset.hiddenByTab = pfb.style.display;
+          pfb.style.display = 'none';
+        }
+      } else {
+        if (pfb && pfb.dataset.hiddenByTab !== undefined) {
+          pfb.style.display = pfb.dataset.hiddenByTab || 'flex';
+          delete pfb.dataset.hiddenByTab;
         }
       }
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
