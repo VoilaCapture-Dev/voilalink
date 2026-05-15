@@ -3279,10 +3279,11 @@
             '<button class="wc-picker-btn" onclick="closeClockPicker()">Cancel</button>' +
           '</div>';
 
+        picker.addEventListener('click', function(e) { e.stopPropagation(); });
         document.body.appendChild(picker);
         setTimeout(function() {
           document.addEventListener('click', closeClockPicker, { once: true });
-        }, 0);
+        }, 150);
       };
 
       window.closeClockPicker = function() {
