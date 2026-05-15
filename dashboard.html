@@ -1517,6 +1517,39 @@
           <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
         </div>
 
+        <!-- SEO Settings -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">🔍 SEO Settings</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Control how your bio page appears in Google search results and when shared on social media.</div>
+
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Page Title</label>
+            <input class="form-input" id="settings-seo-title" type="text" maxlength="70"
+              oninput="updateSeoDescCount()"
+              placeholder="e.g. Boris | Creator, Designer &amp; Developer" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown as the tab title and Google headline. Keep under 60 characters for best results. Leave blank to use your name.</div>
+          </div>
+
+          <div style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <label style="font-size:12px;font-weight:600;">Meta Description</label>
+              <span id="seo-desc-count" style="font-size:11px;color:var(--text-muted);">0 / 160</span>
+            </div>
+            <textarea class="form-input" id="settings-seo-desc" rows="3" maxlength="160"
+              oninput="updateSeoDescCount()"
+              placeholder="e.g. Photographer &amp; content creator based in London. Check out my latest work and collaborations."
+              style="resize:vertical;min-height:72px;"></textarea>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">Shown under your link in Google results. Aim for 120–160 characters. Leave blank to use your bio.</div>
+          </div>
+
+          <div style="padding:12px 14px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+            💡 <strong style="color:var(--text-primary);">Preview:</strong> <span id="seo-preview-title" style="color:#818cf8;font-weight:600;"></span><br/>
+            <span id="seo-preview-desc" style="font-size:11px;margin-top:2px;display:inline-block;"></span>
+          </div>
+
+          <button class="btn-sm primary" onclick="saveSettings()">Save SEO settings</button>
+        </div>
+
         <!-- AI Auto-Reply -->
         <div id="auto-reply-section" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -3089,6 +3122,10 @@
       document.getElementById('settings-github').value    = currentProfile.github_url   || '';
       const footerCtaEl = document.getElementById('settings-footer-cta');
       if (footerCtaEl) footerCtaEl.value = currentProfile.footer_cta || '';
+      const seoTitleEl = document.getElementById('settings-seo-title');
+      if (seoTitleEl) seoTitleEl.value = currentProfile.seo_title || '';
+      const seoDescEl = document.getElementById('settings-seo-desc');
+      if (seoDescEl) { seoDescEl.value = currentProfile.seo_description || ''; updateSeoDescCount(); }
 
       // Load auto-reply settings
       const autoReplyEnabled = currentProfile.auto_reply_enabled || false;
@@ -3118,17 +3155,41 @@
       const youtube_url   = document.getElementById('settings-youtube').value.trim();
       const tiktok_url    = document.getElementById('settings-tiktok').value.trim();
       const github_url    = document.getElementById('settings-github').value.trim();
-      const footer_cta = (document.getElementById('settings-footer-cta')?.value.trim() || null);
+      const footer_cta  = (document.getElementById('settings-footer-cta')?.value.trim() || null);
+      const seo_title   = (document.getElementById('settings-seo-title')?.value.trim()   || null);
+      const seo_description = (document.getElementById('settings-seo-desc')?.value.trim() || null);
       try {
         await db.from('profiles').update({
           full_name: name, bio,
           twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url,
-          footer_cta
+          footer_cta, seo_title, seo_description
         }).eq('id', currentUser.id);
-        Object.assign(currentProfile, { full_name: name, bio, twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url, footer_cta });
+        Object.assign(currentProfile, { full_name: name, bio, twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url, footer_cta, seo_title, seo_description });
         renderHeader();
         toast('Settings saved ✓');
       } catch (e) { toast('Error: ' + e.message); }
+    }
+
+    // ── SEO preview helpers ────────────────────────────────────
+    function updateSeoDescCount() {
+      var el = document.getElementById('settings-seo-desc');
+      var counter = document.getElementById('seo-desc-count');
+      var prevDesc = document.getElementById('seo-preview-desc');
+      var prevTitle = document.getElementById('seo-preview-title');
+      if (!el) return;
+      var len = el.value.length;
+      if (counter) {
+        counter.textContent = len + ' / 160';
+        counter.style.color = len > 160 ? '#ef4444' : len > 130 ? '#f59e0b' : 'var(--text-muted)';
+      }
+      // Live preview
+      if (prevTitle) {
+        var titleEl = document.getElementById('settings-seo-title');
+        prevTitle.textContent = (titleEl && titleEl.value.trim()) || (currentProfile && (currentProfile.full_name || currentProfile.username) + ' | VoilaLink') || 'Your Name | VoilaLink';
+      }
+      if (prevDesc) {
+        prevDesc.textContent = el.value.trim() || (currentProfile && currentProfile.bio) || 'Your bio will appear here if you leave this blank.';
+      }
     }
 
     // Updates BOTH the Settings panel slider and the Quick Controls strip

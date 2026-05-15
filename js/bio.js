@@ -62,7 +62,20 @@ function renderBio(profile, links) {
   document.getElementById('bio-name').textContent     = profile.full_name || profile.username;
   document.getElementById('bio-handle').textContent   = '@' + profile.username;
   document.getElementById('bio-bio').textContent      = profile.bio || '';
-  document.title = (profile.full_name || profile.username) + ' — VoilaLink';
+  // ── SEO meta tags ─────────────────────────────────────────
+  const seoTitle = profile.seo_title
+    || (profile.full_name || profile.username) + ' | VoilaLink';
+  const seoDesc  = profile.seo_description
+    || profile.bio
+    || ('Check out ' + (profile.full_name || profile.username) + "'s links on VoilaLink");
+  const setMeta = (id, val) => { const el = document.getElementById(id); if (el) el.setAttribute('content', val); };
+  document.title = seoTitle;
+  setMeta('meta-description', seoDesc);
+  setMeta('og-title',         seoTitle);
+  setMeta('og-description',   seoDesc);
+  setMeta('og-url',           window.location.href);
+  setMeta('twitter-title',       seoTitle);
+  setMeta('twitter-description', seoDesc);
 
   // Apply custom font
   if (profile.font && profile.font !== 'inter') {
