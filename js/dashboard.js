@@ -123,6 +123,8 @@ async function loadLinks() {
     renderOnboarding();
     if (typeof initQuickControls === 'function') initQuickControls();
     loadReferralWidget();
+    // Ensure correct panel + preview state on first load
+    if (typeof showTab === 'function') showTab('links');
   } catch (e) {
     toast('Error loading links: ' + e.message);
   }
