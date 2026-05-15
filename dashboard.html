@@ -192,24 +192,24 @@
 
     /* ── Content area ─────────────────────────────────────── */
     .content {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      grid-template-rows: 1fr;
+      display: flex;
       flex: 1;
       min-height: 0;
       overflow: hidden;
     }
-    /* Full-width tabs (messages, outreach, etc.) collapse the right column */
-    .content.full-width { grid-template-columns: 1fr 0px; }
-    .content.full-width .preview-panel { overflow: hidden; visibility: hidden; }
+
+    /* ── Panels container (left column, scrollable) ───────── */
+    .panels-container {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
 
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
-      grid-column: 1; grid-row: 1;
       padding: 32px;
-      border-right: 1px solid var(--border);
       min-width: 0;
-      overflow-y: auto;
     }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -443,14 +443,12 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel ────────────────────────────────────── */
+    /* ── Preview panel (right column, always visible) ────── */
     .preview-panel {
-      grid-column: 2; grid-row: 1;
-      width: 100%;
-      padding: 0;
-      display: flex; flex-direction: column; align-items: center;
+      width: 300px;
+      flex-shrink: 0;
+      display: flex; flex-direction: column;
       overflow-y: auto;
-      height: 100%;
       background: var(--surface);
     }
     /* ── World Clock ─────────────────────────────────────── */
@@ -645,7 +643,6 @@
 
     /* ── Messages / Inbox ────────────────────────────────── */
     .messages-panel {
-      grid-column: 1; grid-row: 1;
       display: flex; height: 100%;
       max-width: none; padding: 0;
     }
@@ -1029,6 +1026,9 @@
 
     <!-- Content -->
     <div class="content">
+
+      <!-- ══ Left: all panels (scrollable) ═════════════════ -->
+      <div class="panels-container">
 
       <!-- ── Links panel ─────────────────────────────────── -->
       <div class="links-panel" id="panel-links">
@@ -1953,7 +1953,9 @@
         </div>
       </div>
 
-      <!-- ── Right panel (preview + clock) ────────────────── -->
+      </div><!-- /panels-container -->
+
+      <!-- ══ Right: clock + live preview (fixed) ════════════ -->
       <div class="preview-panel">
 
         <!-- World Clock -->
@@ -2793,10 +2795,10 @@
       sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
-      // Show/hide preview panel via grid class
+      // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
-      var ct = document.querySelector('.content');
-      if (ct) ct.classList.toggle('full-width', fullWidth.includes(tab));
+      var pp = document.querySelector('.preview-panel');
+      if (pp) pp.style.display = fullWidth.includes(tab) ? 'none' : 'flex';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
