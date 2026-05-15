@@ -2096,9 +2096,18 @@
 
         <!-- Auto-save History -->
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">🕐 Auto-save History</div>
+
+        <!-- Daily tier -->
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Daily snapshots &nbsp;·&nbsp; last 5</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+          <div id="auto-backup-daily"><div style="font-size:12px;color:var(--text-muted);">No daily saves yet.</div></div>
+        </div>
+
+        <!-- Monthly tier -->
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Monthly snapshots &nbsp;·&nbsp; last 12</div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;">
-          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">VoilaLink automatically saves a snapshot of your data once a day. You can restore any of the last 5 snapshots — handy if you make a mistake and need to roll back.</div>
-          <div id="auto-backup-list"><div style="font-size:12px;color:var(--text-muted);">No auto-saves yet — the first one runs a few seconds after you next log in, then daily.</div></div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">One snapshot kept per calendar month — gives you up to a year of monthly checkpoints to roll back to.</div>
+          <div id="auto-backup-monthly"><div style="font-size:12px;color:var(--text-muted);">No monthly saves yet.</div></div>
         </div>
 
         <!-- FAQ -->
@@ -5618,33 +5627,54 @@
       }
     }
 
-    // ── Auto-backup (daily, keeps last 5) ─────────────────
-    const AUTO_BACKUP_MAX = 5;
-    const AUTO_BACKUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 h
+    // ── Auto-backup: two-tier daily (×5) + monthly (×12) ──
+    const DAILY_MAX    = 5;
+    const MONTHLY_MAX  = 12;
+    const DAILY_INTERVAL = 24 * 60 * 60 * 1000; // 24 h in ms
 
     async function autoBackup() {
       try {
-        const lastRun = parseInt(localStorage.getItem('vl_last_auto_backup') || '0');
-        if (Date.now() - lastRun < AUTO_BACKUP_INTERVAL) return; // not due yet
+        // ── Daily tier ──────────────────────────────────────
+        const lastDaily = parseInt(localStorage.getItem('vl_last_auto_backup') || '0');
+        if (Date.now() - lastDaily < DAILY_INTERVAL) return; // not due yet
+
         const user = await getUser();
         if (!user) return;
         const backup = await buildBackupObject(user);
-        let history = [];
-        try { history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]'); } catch(e) {}
-        history.unshift(backup);
-        if (history.length > AUTO_BACKUP_MAX) history = history.slice(0, AUTO_BACKUP_MAX);
-        localStorage.setItem('vl_auto_backups', JSON.stringify(history));
+
+        // Save daily snapshot
+        let daily = [];
+        try { daily = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]'); } catch(e) {}
+        daily.unshift(backup);
+        if (daily.length > DAILY_MAX) daily = daily.slice(0, DAILY_MAX);
+        localStorage.setItem('vl_auto_backups', JSON.stringify(daily));
         localStorage.setItem('vl_last_auto_backup', Date.now().toString());
-        console.log('[VoilaLink] Auto-backup saved', backup.exported_at);
+
+        // ── Monthly tier ────────────────────────────────────
+        // Fire a monthly snapshot if we haven't taken one this calendar month
+        const now = new Date();
+        const thisMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const lastMonthKey = localStorage.getItem('vl_last_monthly_backup') || '';
+        if (thisMonthKey !== lastMonthKey) {
+          let monthly = [];
+          try { monthly = JSON.parse(localStorage.getItem('vl_monthly_backups') || '[]'); } catch(e) {}
+          monthly.unshift(backup);
+          if (monthly.length > MONTHLY_MAX) monthly = monthly.slice(0, MONTHLY_MAX);
+          localStorage.setItem('vl_monthly_backups', JSON.stringify(monthly));
+          localStorage.setItem('vl_last_monthly_backup', thisMonthKey);
+          console.log('[VoilaLink] Monthly backup saved', thisMonthKey);
+        }
+
+        console.log('[VoilaLink] Daily backup saved', backup.exported_at);
       } catch(e) {
         console.warn('[VoilaLink] Auto-backup failed', e);
       }
     }
 
-    // ── Auto-backup restore / download ────────────────────
-    async function restoreFromAutoBackup(index) {
+    // ── Shared restore / download (works for both tiers) ──
+    async function restoreFromAutoBackup(storageKey, index) {
       try {
-        const history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]');
+        const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
         const data = history[index];
         if (!data) { toast('Snapshot not found'); return; }
         const dt = new Date(data.exported_at).toLocaleString('en-GB');
@@ -5661,9 +5691,9 @@
       }
     }
 
-    function downloadAutoBackup(index) {
+    function downloadAutoBackup(storageKey, index) {
       try {
-        const history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]');
+        const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
         const backup = history[index];
         if (!backup) return;
         const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -5673,17 +5703,17 @@
         a.download = 'voilalink-auto-' + new Date(backup.exported_at).toISOString().slice(0, 10) + '.json';
         a.click();
         URL.revokeObjectURL(url);
-        toast('Auto-backup downloaded ✓');
+        toast('Backup downloaded ✓');
       } catch(e) { toast('Download failed'); }
     }
 
-    function renderAutoBackups() {
-      const el = document.getElementById('auto-backup-list');
+    function renderBackupTier(storageKey, containerId, emptyMsg, isLatestBadge) {
+      var el = document.getElementById(containerId);
       if (!el) return;
-      let history = [];
-      try { history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]'); } catch(e) {}
+      var history = [];
+      try { history = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
       if (!history.length) {
-        el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">No auto-saves yet — the first one runs 4 seconds after you next log in, then daily.</div>';
+        el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">' + emptyMsg + '</div>';
         return;
       }
       el.innerHTML = history.map(function(b, i) {
@@ -5691,15 +5721,22 @@
         var label = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })
                   + ' · ' + dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
         var n = (b.links || []).length;
-        var badge = i === 0 ? '<span style="font-size:10px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;">Latest</span>' : '';
+        var badge = (isLatestBadge && i === 0)
+          ? '<span style="font-size:10px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;">Latest</span>'
+          : '';
         return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;' + (i > 0 ? 'border-top:1px solid var(--border);' : '') + '">'
           + '<div><div style="font-size:13px;font-weight:600;">' + label + badge + '</div>'
           + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + n + ' link' + (n !== 1 ? 's' : '') + ' · v' + (b.version || '?') + '</div></div>'
           + '<div style="display:flex;gap:8px;">'
-          + '<button onclick="downloadAutoBackup(' + i + ')" title="Download as file" style="font-size:11px;padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;">⬇ Save</button>'
-          + '<button onclick="restoreFromAutoBackup(' + i + ')" style="font-size:11px;padding:5px 10px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:6px;color:#818cf8;cursor:pointer;">↩ Restore</button>'
+          + '<button onclick="downloadAutoBackup(\'' + storageKey + '\',' + i + ')" title="Download as file" style="font-size:11px;padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;">⬇ Save</button>'
+          + '<button onclick="restoreFromAutoBackup(\'' + storageKey + '\',' + i + ')" style="font-size:11px;padding:5px 10px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:6px;color:#818cf8;cursor:pointer;">↩ Restore</button>'
           + '</div></div>';
       }).join('');
+    }
+
+    function renderAutoBackups() {
+      renderBackupTier('vl_auto_backups',    'auto-backup-daily',   'No daily saves yet — first one runs a few seconds after you next log in, then every 24 h.', true);
+      renderBackupTier('vl_monthly_backups', 'auto-backup-monthly', 'No monthly saves yet — the first one will be taken on your next login this month.', false);
     }
 
     async function importSettings(input) {
