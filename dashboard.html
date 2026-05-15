@@ -120,8 +120,6 @@
     .main {
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -166,11 +164,10 @@
 
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
-      flex: 1; padding: 32px 32px 96px;
+      flex: 1; padding: 32px;
       border-right: 1px solid var(--border);
       max-width: 600px;
       min-width: 0;
-      overflow-y: auto;
     }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -776,8 +773,8 @@
     /* ── Pro floating bar ─────────────────────────────────── */
     #pro-float-bar {
       position: fixed;
-      bottom: 24px;
-      left: 50%;
+      bottom: 32px;
+      left: calc(240px + 50%);
       transform: translateX(-50%);
       z-index: 200;
       display: none; /* shown by JS for free users */
@@ -790,8 +787,7 @@
       backdrop-filter: blur(16px);
       box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(129,140,248,0.1);
       white-space: nowrap;
-      max-width: calc(100vw - 280px); /* stay clear of sidebar */
-      margin-left: 120px; /* shift right of sidebar */
+      max-width: 700px;
     }
     #pro-float-bar .pf-icon {
       width: 28px; height: 28px; border-radius: 8px;
