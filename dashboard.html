@@ -212,6 +212,11 @@
       padding: 32px;
       max-width: 680px;
       min-width: 0;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      align-self: flex-start;
+      margin-right: auto;
     }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -2124,7 +2129,10 @@
 
       <!-- ══ World Clock (floating in empty canvas) ════════ -->
       <div class="world-clock-panel" id="world-clock-widget">
-        <div class="wc-drag-hint">⠿ drag to move</div>
+        <div class="wc-drag-hint" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>⠿ drag to move</span>
+          <span onclick="popOutClock()" title="Pop out to separate window" style="cursor:pointer;font-size:11px;color:rgba(74,222,128,0.4);padding:0 2px;" onmouseover="this.style.color='#4ade80'" onmouseout="this.style.color='rgba(74,222,128,0.4)'">⤢</span>
+        </div>
         <div class="wc-grid">
           <div class="wc-zone">
             <div class="wc-time" id="wc-london">--:--</div>
@@ -3235,6 +3243,41 @@
       tick();
       setInterval(tick, 1000);
     })();
+
+    // ── Pop-out Clock Window ──────────────────────────────────
+    function popOutClock() {
+      var customs = [];
+      try { customs = JSON.parse(localStorage.getItem('wc_custom')) || []; } catch(e) {}
+      var zones = [
+        { id: 'london',  tz: 'Europe/London',    label: 'London' },
+        { id: 'newyork', tz: 'America/New_York',  label: 'New York' },
+        { id: 'tokyo',   tz: 'Asia/Tokyo',        label: 'Tokyo' },
+        { id: 'sydney',  tz: 'Australia/Sydney',  label: 'Sydney' }
+      ];
+      customs.forEach(function(c, i) { if (c) zones.push({ id: 'c'+(i+1), tz: c.tz, label: c.label }); });
+
+      var cols = zones.length > 4 ? 3 : 2;
+      var w = cols === 3 ? 360 : 260, h = zones.length > 4 ? 340 : 260;
+      var win = window.open('', 'VoilaClockPopout',
+        'width='+w+',height='+h+',resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
+      if (!win) { alert('Please allow pop-ups for this site to use the clock pop-out.'); return; }
+
+      var zonesJs = JSON.stringify(zones);
+      win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>World Clock</title>' +
+        '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+        '<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">' +
+        '<style>' +
+          'body{margin:0;background:#04060a;display:grid;grid-template-columns:repeat('+cols+',1fr);gap:6px;padding:10px;box-sizing:border-box;height:100vh;}' +
+          '.z{background:#080d08;border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:10px;display:flex;flex-direction:column;justify-content:center;}' +
+          '.t{font-family:"DM Mono",monospace;font-size:28px;font-weight:500;color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.7),0 0 20px rgba(74,222,128,0.3);letter-spacing:0.03em;line-height:1;}' +
+          '.c{font-family:"DM Mono",monospace;font-size:9px;color:#4ade80;text-transform:uppercase;letter-spacing:0.1em;margin-top:5px;opacity:0.7;}' +
+        '</style></head><body>');
+      zones.forEach(function(z) {
+        win.document.write('<div class="z"><div class="t" id="'+z.id+'">--:--</div><div class="c">'+z.label+'</div></div>');
+      });
+      win.document.write('<script>var zones='+zonesJs+';function tick(){zones.forEach(function(z){var el=document.getElementById(z.id);if(el)el.textContent=new Date().toLocaleTimeString("en-GB",{timeZone:z.tz,hour:"2-digit",minute:"2-digit",hour12:false});});}tick();setInterval(tick,1000);<\/script></body></html>');
+      win.document.close();
+    }
 
     // ── Draggable World Clock ─────────────────────────────────
     (function initDraggableClock() {
