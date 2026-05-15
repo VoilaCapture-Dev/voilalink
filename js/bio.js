@@ -65,12 +65,18 @@ function renderBio(profile, links) {
     return;
   }
 
-  links.forEach(link => {
+  links.forEach((link, index) => {
     const a = document.createElement('a');
-    a.className = 'link-card';
+    a.className = index === 0 ? 'link-card bio-link bio-link-featured' : 'link-card bio-link';
     a.href = '#';
     a.onclick = (e) => { e.preventDefault(); handleClick(link); };
-    a.innerHTML = `
+
+    const ytId = getYouTubeId(link.url);
+    const thumbHtml = ytId
+      ? `<img class="vl-yt-thumb" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">`
+      : '';
+
+    a.innerHTML = `${thumbHtml}
       <div class="link-icon" style="background:rgba(129,140,248,0.12);">${link.emoji || '🔗'}</div>
       <div class="link-text">
         <div class="link-title">${escHtml(link.title)}</div>
@@ -366,6 +372,12 @@ function escHtml(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
 
 // ── Chat widget ───────────────────────────────────────────────
