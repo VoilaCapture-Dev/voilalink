@@ -615,6 +615,29 @@
     }
     .toast.show { opacity: 1; }
 
+    /* ── Invoices ─────────────────────────────────────────────── */
+    .invoice-row {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 16px; background:var(--card);
+      border:1px solid var(--border); border-radius:14px;
+      margin-bottom:10px; transition:all 0.18s; cursor:pointer;
+    }
+    .invoice-row:hover { border-color:var(--border-accent); box-shadow:0 4px 20px var(--glow); }
+    .inv-badge {
+      font-family:'DM Mono',monospace; font-size:9px; font-weight:700;
+      padding:3px 9px; border-radius:99px; letter-spacing:0.08em;
+      text-transform:uppercase; flex-shrink:0;
+    }
+    .inv-badge.draft   { background:rgba(120,120,160,0.15); color:var(--text-muted); }
+    .inv-badge.sent    { background:rgba(129,140,248,0.15); color:var(--accent); }
+    .inv-badge.paid    { background:rgba(74,222,128,0.15);  color:#4ade80; }
+    .inv-badge.overdue { background:rgba(239,68,68,0.15);   color:#ef4444; }
+    .inv-item-row {
+      display:grid; grid-template-columns:1fr 70px 90px 80px 28px;
+      gap:6px; align-items:center; margin-bottom:6px;
+    }
+    .inv-item-row input { font-size:12px; }
+
     /* ── Planner ──────────────────────────────────────────────── */
     .week-grid {
       display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
@@ -762,6 +785,9 @@
     </a>
     <a class="nav-item" href="#" onclick="showTab('planner')" id="nav-planner">
       <span class="nav-item-icon">📅</span> Planner
+    </a>
+    <a class="nav-item" href="#" onclick="showTab('invoices')" id="nav-invoices">
+      <span class="nav-item-icon">🧾</span> Invoices
     </a>
 
     <div class="nav-section-label">Account</div>
@@ -1066,6 +1092,7 @@
             <div>✅ Full click analytics & visitor data</div>
             <div>✅ 🤖 AI Auto-Reply — replies visitors when you're away</div>
             <div>✅ 📅 Personal Planner — manage your week & tasks</div>
+            <div>✅ 🧾 Invoices — professional invoices with VAT & PDF</div>
             <div>✅ Priority support</div>
             <div>✅ Early access to new features</div>
           </div>
@@ -1416,6 +1443,47 @@
         </div>
       </div>
 
+      <!-- ── Invoices panel ───────────────────────────────────── -->
+      <div class="links-panel" id="panel-invoices" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🧾 Invoices</div>
+            <div class="panel-sub">Professional invoices — PDF ready, VAT included</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm ghost" onclick="openInvSettings()" style="font-size:12px;">⚙ Settings</button>
+            <button class="btn-sm primary" onclick="openNewInvoice()">+ New invoice</button>
+          </div>
+        </div>
+
+        <!-- Pro lock -->
+        <div id="invoices-pro-lock" style="display:none;text-align:center;padding:60px 20px;">
+          <div style="font-size:52px;margin-bottom:16px;">🧾</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:8px;">Invoice Templates</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6;">Create professional invoices with VAT, line items and PDF download. Available on Pro.</div>
+          <button class="btn-sm primary" onclick="showTab('upgrade')" style="padding:12px 28px;font-size:14px;">⭐ Upgrade to Pro →</button>
+        </div>
+
+        <!-- Invoice content -->
+        <div id="invoices-content" style="display:none;">
+          <!-- Setup prompt -->
+          <div id="inv-setup-prompt" style="display:none;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.07));border:1px solid rgba(129,140,248,0.3);border-radius:14px;padding:20px;margin-bottom:20px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:6px;">👋 Set up your invoice details first</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Add your business name, address and payment info — it pre-fills every invoice automatically.</div>
+            <button class="btn-sm primary" onclick="openInvSettings()" style="font-size:12px;">⚙ Set up now →</button>
+          </div>
+          <!-- List -->
+          <div id="inv-list"></div>
+          <!-- Empty state -->
+          <div id="inv-empty" style="display:none;text-align:center;padding:48px 20px;color:var(--text-muted);">
+            <div style="font-size:48px;margin-bottom:12px;">🧾</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">No invoices yet</div>
+            <div style="font-size:12px;margin-bottom:20px;">Create your first professional invoice in seconds</div>
+            <button class="btn-sm primary" onclick="openNewInvoice()">+ Create first invoice</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -1622,6 +1690,155 @@
     </div>
   </div>
 
+  <!-- ── Invoice Settings modal ──────────────────────────────── -->
+  <div class="modal-overlay" id="inv-settings-modal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-title">⚙ Invoice Settings</div>
+      <div class="modal-sub">Saved once — pre-fills every invoice automatically</div>
+      <button class="modal-close" onclick="closeInvSettings()">×</button>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Business / Your name *</label>
+          <input class="form-input" id="inv-s-business" type="text" placeholder="Boris Consulting Ltd" />
+        </div>
+        <div class="form-group" style="max-width:120px;">
+          <label class="form-label">Currency</label>
+          <select class="form-input" id="inv-s-currency" style="cursor:pointer;">
+            <option value="£">£ GBP</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="CHF">CHF</option>
+            <option value="AED">AED</option>
+            <option value="CAD">CAD</option>
+            <option value="AUD">AUD</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <textarea class="form-input" id="inv-s-address" rows="2" placeholder="123 High Street, London, W1A 1AA" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="inv-s-email" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="inv-s-phone" type="text" placeholder="+44 7700 000000" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">VAT Number (optional)</label>
+        <input class="form-input" id="inv-s-vat" type="text" placeholder="GB123456789" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment link (optional — PayPal, Stripe, bank details page etc.)</label>
+        <input class="form-input" id="inv-s-payment" type="url" placeholder="https://paypal.me/yourname" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeInvSettings()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveInvSettings()">Save settings →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── New Invoice modal ─────────────────────────────────────── -->
+  <div class="modal-overlay" id="inv-new-modal">
+    <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-title" id="inv-modal-title">New Invoice</div>
+      <div class="modal-sub">Fill in client details and add your line items</div>
+      <button class="modal-close" onclick="closeNewInvoice()">×</button>
+
+      <!-- Client -->
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin-bottom:10px;">Client details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Client name *</label>
+          <input class="form-input" id="inv-client-name" type="text" placeholder="John Smith / ABC Ltd" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client email</label>
+          <input class="form-input" id="inv-client-email" type="email" placeholder="client@example.com" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client address</label>
+        <input class="form-input" id="inv-client-address" type="text" placeholder="Client address (optional)" />
+      </div>
+
+      <!-- Invoice meta -->
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin:16px 0 10px;">Invoice details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Invoice number</label>
+          <input class="form-input" id="inv-number" type="text" placeholder="INV-001" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue date</label>
+          <input class="form-input" id="inv-issue-date" type="date" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due date</label>
+          <input class="form-input" id="inv-due-date" type="date" />
+        </div>
+      </div>
+
+      <!-- Line items -->
+      <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin:16px 0 8px;">Line items</div>
+      <div style="display:grid;grid-template-columns:1fr 70px 90px 80px 28px;gap:6px;margin-bottom:6px;">
+        <div style="font-size:10px;color:var(--text-muted);">Description</div>
+        <div style="font-size:10px;color:var(--text-muted);">Qty</div>
+        <div style="font-size:10px;color:var(--text-muted);">Unit price</div>
+        <div style="font-size:10px;color:var(--text-muted);">Total</div>
+        <div></div>
+      </div>
+      <div id="inv-items-container"></div>
+      <button onclick="addInvItem()" style="background:none;border:1px dashed rgba(129,140,248,0.3);border-radius:8px;color:var(--accent);font-size:11px;padding:7px 14px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;margin-bottom:14px;" onmouseover="this.style.background='rgba(129,140,248,0.05)'" onmouseout="this.style.background='none'">+ Add line item</button>
+
+      <!-- Totals -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <span style="color:var(--text-muted);">Subtotal</span>
+          <span id="inv-subtotal">£0.00</span>
+        </div>
+        <!-- VAT row -->
+        <div id="inv-vat-row" style="display:none;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <span style="color:var(--text-muted);">VAT (<span id="inv-vat-rate-label">20</span>%)</span>
+          <span id="inv-vat-amount">£0.00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;border-top:1px solid var(--border);padding-top:10px;margin-top:6px;">
+          <span>Total</span>
+          <span id="inv-total" style="color:var(--accent);">£0.00</span>
+        </div>
+      </div>
+
+      <!-- VAT toggle -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <input type="checkbox" id="inv-vat-toggle" onchange="calcInvTotals()" style="cursor:pointer;" />
+        <label for="inv-vat-toggle" style="font-size:12px;cursor:pointer;">Apply VAT</label>
+        <input class="form-input" id="inv-vat-rate" type="number" value="20" min="0" max="100" onchange="calcInvTotals()" oninput="calcInvTotals()" style="width:70px;font-size:12px;padding:6px 10px;" />
+        <span style="font-size:12px;color:var(--text-muted);">%</span>
+      </div>
+
+      <!-- Notes & payment link -->
+      <div class="form-group">
+        <label class="form-label">Notes (optional — payment terms, thank you message etc.)</label>
+        <textarea class="form-input" id="inv-notes" rows="2" placeholder="e.g. Payment due within 30 days. Thank you for your business!" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment link (optional)</label>
+        <input class="form-input" id="inv-payment-link" type="url" placeholder="https://paypal.me/yourname" />
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeNewInvoice()">Cancel</button>
+        <button class="btn-sm ghost" onclick="saveInvoice('draft')">Save as draft</button>
+        <button class="btn-sm primary" onclick="saveInvoice('sent')">Save & mark sent →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Task add modal ──────────────────────────────────────── -->
   <div class="modal-overlay" id="task-modal">
     <div class="modal" style="max-width:420px;">
@@ -1681,16 +1898,18 @@
       document.getElementById('panel-outreach').style.display  = tab === 'outreach'  ? 'block' : 'none';
       document.getElementById('panel-research').style.display  = tab === 'research'  ? 'block' : 'none';
       document.getElementById('panel-planner').style.display   = tab === 'planner'   ? 'block' : 'none';
+      document.getElementById('panel-invoices').style.display  = tab === 'invoices'  ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
-      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner' };
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); applyTrialToAnalytics(); }
       if (tab === 'settings')  loadSettings();
       if (tab === 'messages')  loadMessages();
       if (tab === 'outreach')  loadOutreachLog();
       if (tab === 'planner')   loadPlanner();
+      if (tab === 'invoices')  loadInvoices();
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -2276,6 +2495,359 @@
         more.onclick = showPlannerTab;
         container.appendChild(more);
       }
+    }
+
+    // ── Invoices ────────────────────────────────────────────────
+    var invoiceSettings = null;
+    var invoiceList     = [];
+
+    // ── Load invoices tab ──────────────────────────────────────
+    async function loadInvoices() {
+      const { access } = await getProAccess();
+      var lock    = document.getElementById('invoices-pro-lock');
+      var content = document.getElementById('invoices-content');
+      if (!access) {
+        if (lock)    lock.style.display    = 'block';
+        if (content) content.style.display = 'none';
+        return;
+      }
+      if (lock)    lock.style.display    = 'none';
+      if (content) content.style.display = 'block';
+
+      // Load settings
+      var s = await db.from('invoice_settings').select('*').eq('user_id', currentUser.id).single();
+      invoiceSettings = s.data;
+      var prompt = document.getElementById('inv-setup-prompt');
+      if (prompt) prompt.style.display = (!invoiceSettings || !invoiceSettings.business_name) ? 'block' : 'none';
+
+      // Load invoices
+      var inv = await db.from('invoices').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      var invData = inv.data || [];
+
+      if (invData.length > 0) {
+        // Load all items in one query
+        var itemsRes = await db.from('invoice_items').select('*').in('invoice_id', invData.map(function(i){ return i.id; }));
+        var allItems = itemsRes.data || [];
+        invData.forEach(function(invoice) {
+          var items = allItems.filter(function(it){ return it.invoice_id === invoice.id; });
+          var subtotal = items.reduce(function(sum, it){ return sum + (parseFloat(it.quantity) * parseFloat(it.unit_price)); }, 0);
+          var vat      = subtotal * (parseFloat(invoice.vat_rate || 0) / 100);
+          invoice._total = (subtotal + vat).toFixed(2);
+          invoice._items = items;
+        });
+      }
+      invoiceList = invData;
+      renderInvList();
+    }
+
+    // ── Render invoice list ────────────────────────────────────
+    function renderInvList() {
+      var list  = document.getElementById('inv-list');
+      var empty = document.getElementById('inv-empty');
+      if (!list) return;
+      if (invoiceList.length === 0) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      var cur = (invoiceSettings && invoiceSettings.currency) || '£';
+      list.innerHTML = invoiceList.map(function(inv) {
+        var sc = invStatusClass(inv);
+        var sl = sc === 'overdue' ? 'Overdue' : (inv.status.charAt(0).toUpperCase() + inv.status.slice(1));
+        var actionBtns = '';
+        if (inv.status === 'draft')   actionBtns += '<button onclick="event.stopPropagation();updateInvStatus(\'' + inv.id + '\',\'sent\')"  class="btn-sm ghost" style="font-size:10px;padding:4px 8px;">✉ Mark sent</button>';
+        if (inv.status !== 'paid')    actionBtns += '<button onclick="event.stopPropagation();updateInvStatus(\'' + inv.id + '\',\'paid\')"  class="btn-sm ghost" style="font-size:10px;padding:4px 8px;color:#4ade80;">✓ Mark paid</button>';
+        actionBtns += '<button onclick="event.stopPropagation();printInvoice(\'' + inv.id + '\')" class="btn-sm ghost" style="font-size:10px;padding:4px 8px;">🖨 PDF</button>';
+        actionBtns += '<button onclick="event.stopPropagation();deleteInvoice(\'' + inv.id + '\')" class="btn-sm ghost" style="font-size:10px;padding:4px 8px;color:var(--danger);">🗑</button>';
+        return '<div class="invoice-row" onclick="printInvoice(\'' + inv.id + '\')">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+              '<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--accent);">' + escHtml(inv.invoice_number) + '</span>' +
+              '<span class="inv-badge ' + sc + '">' + sl + '</span>' +
+            '</div>' +
+            '<div style="font-size:13px;font-weight:600;">' + escHtml(inv.client_name) + '</div>' +
+            (inv.due_date ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Due ' + invDisplayDate(inv.due_date) + '</div>' : '') +
+          '</div>' +
+          '<div style="text-align:right;flex-shrink:0;">' +
+            '<div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:16px;color:var(--accent);">' + cur + (inv._total || '0.00') + '</div>' +
+            '<div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end;flex-wrap:wrap;">' + actionBtns + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function invStatusClass(inv) {
+      if (inv.status === 'paid') return 'paid';
+      if (inv.status === 'sent' && inv.due_date && new Date(inv.due_date) < new Date()) return 'overdue';
+      if (inv.status === 'sent') return 'sent';
+      return 'draft';
+    }
+
+    function invDisplayDate(d) {
+      if (!d) return '';
+      var p = d.split('-');
+      return p[2] + ' ' + MONTH_NAMES[parseInt(p[1]) - 1] + ' ' + p[0];
+    }
+
+    // ── Invoice Settings ───────────────────────────────────────
+    function openInvSettings() {
+      var s = invoiceSettings || {};
+      document.getElementById('inv-s-business').value = s.business_name || '';
+      document.getElementById('inv-s-address').value  = s.address       || '';
+      document.getElementById('inv-s-email').value    = s.email         || '';
+      document.getElementById('inv-s-phone').value    = s.phone         || '';
+      document.getElementById('inv-s-vat').value      = s.vat_number    || '';
+      document.getElementById('inv-s-payment').value  = s.payment_link  || '';
+      var sel = document.getElementById('inv-s-currency');
+      if (sel) sel.value = s.currency || '£';
+      document.getElementById('inv-settings-modal').classList.add('open');
+    }
+    function closeInvSettings() {
+      document.getElementById('inv-settings-modal').classList.remove('open');
+    }
+    async function saveInvSettings() {
+      var biz = document.getElementById('inv-s-business').value.trim();
+      if (!biz) { toast('Please enter a business or your name'); return; }
+      var payload = {
+        user_id:      currentUser.id,
+        business_name:biz,
+        address:      document.getElementById('inv-s-address').value.trim()  || null,
+        email:        document.getElementById('inv-s-email').value.trim()     || null,
+        phone:        document.getElementById('inv-s-phone').value.trim()     || null,
+        vat_number:   document.getElementById('inv-s-vat').value.trim()      || null,
+        payment_link: document.getElementById('inv-s-payment').value.trim()  || null,
+        currency:     document.getElementById('inv-s-currency').value || '£'
+      };
+      var res = await db.from('invoice_settings').upsert(payload, { onConflict: 'user_id' });
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      invoiceSettings = payload;
+      var prompt = document.getElementById('inv-setup-prompt');
+      if (prompt) prompt.style.display = 'none';
+      closeInvSettings();
+      toast('Invoice settings saved ✓');
+    }
+    document.getElementById('inv-settings-modal').addEventListener('click', function(e){ if (e.target === this) closeInvSettings(); });
+
+    // ── New Invoice ────────────────────────────────────────────
+    var invLineItems = [];
+
+    function openNewInvoice() {
+      invLineItems = [{ description: '', quantity: 1, unit_price: '' }];
+      // Auto-generate invoice number
+      var num = (invoiceList.length + 1).toString().padStart(3, '0');
+      document.getElementById('inv-number').value       = 'INV-' + num;
+      document.getElementById('inv-issue-date').value   = getTodayStr();
+      document.getElementById('inv-due-date').value     = formatDate(addDays(new Date(), 30));
+      document.getElementById('inv-client-name').value  = '';
+      document.getElementById('inv-client-email').value = '';
+      document.getElementById('inv-client-address').value = '';
+      document.getElementById('inv-notes').value        = '';
+      document.getElementById('inv-payment-link').value = (invoiceSettings && invoiceSettings.payment_link) || '';
+      document.getElementById('inv-vat-toggle').checked = false;
+      document.getElementById('inv-vat-rate').value     = '20';
+      document.getElementById('inv-vat-row').style.display = 'none';
+      renderInvItems();
+      calcInvTotals();
+      document.getElementById('inv-new-modal').classList.add('open');
+    }
+    function closeNewInvoice() {
+      document.getElementById('inv-new-modal').classList.remove('open');
+    }
+    document.getElementById('inv-new-modal').addEventListener('click', function(e){ if (e.target === this) closeNewInvoice(); });
+
+    function addInvItem() {
+      invLineItems.push({ description: '', quantity: 1, unit_price: '' });
+      renderInvItems();
+    }
+    function removeInvItem(idx) {
+      invLineItems.splice(idx, 1);
+      renderInvItems();
+      calcInvTotals();
+    }
+    function renderInvItems() {
+      var cur = (invoiceSettings && invoiceSettings.currency) || '£';
+      var container = document.getElementById('inv-items-container');
+      if (!container) return;
+      container.innerHTML = '';
+      invLineItems.forEach(function(item, i) {
+        var row = document.createElement('div');
+        row.className = 'inv-item-row';
+        row.innerHTML =
+          '<input class="form-input inv-desc"  type="text"   value="' + escHtml(item.description) + '"  placeholder="Description" oninput="invLineItems[' + i + '].description=this.value" style="font-size:12px;" />' +
+          '<input class="form-input inv-qty"   type="number" value="' + item.quantity + '" min="0" placeholder="1" oninput="invLineItems[' + i + '].quantity=this.value;calcInvTotals()" style="font-size:12px;" />' +
+          '<input class="form-input inv-price" type="number" value="' + item.unit_price + '" min="0" step="0.01" placeholder="0.00" oninput="invLineItems[' + i + '].unit_price=this.value;calcInvTotals()" style="font-size:12px;" />' +
+          '<span class="inv-line-total" style="font-size:12px;color:var(--text-muted);text-align:right;">' + cur + '0.00</span>' +
+          '<button onclick="removeInvItem(' + i + ')" style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:14px;padding:0;">✕</button>';
+        container.appendChild(row);
+      });
+      calcInvTotals();
+    }
+
+    function calcInvTotals() {
+      var cur      = (invoiceSettings && invoiceSettings.currency) || '£';
+      var vatOn    = document.getElementById('inv-vat-toggle') && document.getElementById('inv-vat-toggle').checked;
+      var vatRate  = vatOn ? (parseFloat(document.getElementById('inv-vat-rate').value) || 0) : 0;
+      var subtotal = 0;
+      document.querySelectorAll('.inv-item-row').forEach(function(row, i) {
+        var qty   = parseFloat(row.querySelector('.inv-qty')  && row.querySelector('.inv-qty').value)   || 0;
+        var price = parseFloat(row.querySelector('.inv-price') && row.querySelector('.inv-price').value) || 0;
+        var line  = qty * price;
+        var lt    = row.querySelector('.inv-line-total');
+        if (lt) lt.textContent = cur + line.toFixed(2);
+        subtotal += line;
+      });
+      var vatAmt = subtotal * vatRate / 100;
+      var total  = subtotal + vatAmt;
+      var subEl  = document.getElementById('inv-subtotal');
+      var vatEl  = document.getElementById('inv-vat-amount');
+      var totEl  = document.getElementById('inv-total');
+      var vatRow = document.getElementById('inv-vat-row');
+      var vatLbl = document.getElementById('inv-vat-rate-label');
+      if (subEl) subEl.textContent = cur + subtotal.toFixed(2);
+      if (vatEl) vatEl.textContent = cur + vatAmt.toFixed(2);
+      if (totEl) totEl.textContent = cur + total.toFixed(2);
+      if (vatRow) vatRow.style.display = vatOn ? 'flex' : 'none';
+      if (vatLbl) vatLbl.textContent   = vatRate;
+    }
+
+    async function saveInvoice(status) {
+      var clientName = document.getElementById('inv-client-name').value.trim();
+      if (!clientName) { toast('Please enter a client name'); return; }
+      if (invLineItems.length === 0) { toast('Please add at least one line item'); return; }
+      var hasItems = invLineItems.some(function(it){ return it.description.trim() && parseFloat(it.unit_price) > 0; });
+      if (!hasItems) { toast('Please fill in at least one line item with a price'); return; }
+
+      var vatOn   = document.getElementById('inv-vat-toggle').checked;
+      var vatRate = vatOn ? (parseFloat(document.getElementById('inv-vat-rate').value) || 0) : 0;
+
+      var invPayload = {
+        user_id:        currentUser.id,
+        invoice_number: document.getElementById('inv-number').value.trim() || 'INV-001',
+        client_name:    clientName,
+        client_email:   document.getElementById('inv-client-email').value.trim()   || null,
+        client_address: document.getElementById('inv-client-address').value.trim() || null,
+        issue_date:     document.getElementById('inv-issue-date').value || getTodayStr(),
+        due_date:       document.getElementById('inv-due-date').value   || null,
+        notes:          document.getElementById('inv-notes').value.trim()        || null,
+        currency:       (invoiceSettings && invoiceSettings.currency) || '£',
+        vat_rate:       vatRate,
+        status:         status
+      };
+
+      try {
+        var res = await db.from('invoices').insert(invPayload).select().single();
+        if (res.error) throw res.error;
+        var invId = res.data.id;
+
+        // Insert line items
+        var validItems = invLineItems.filter(function(it){ return it.description.trim(); });
+        if (validItems.length > 0) {
+          var itemsPayload = validItems.map(function(it){ return {
+            invoice_id:  invId,
+            description: it.description.trim(),
+            quantity:    parseFloat(it.quantity)   || 1,
+            unit_price:  parseFloat(it.unit_price) || 0
+          }; });
+          await db.from('invoice_items').insert(itemsPayload);
+        }
+
+        closeNewInvoice();
+        toast('Invoice saved ✓');
+        await loadInvoices();
+      } catch(e) { toast('Error: ' + e.message); }
+    }
+
+    // ── Update status ──────────────────────────────────────────
+    async function updateInvStatus(id, status) {
+      await db.from('invoices').update({ status: status }).eq('id', id);
+      var inv = invoiceList.find(function(i){ return i.id === id; });
+      if (inv) inv.status = status;
+      renderInvList();
+      toast('Marked as ' + status + ' ✓');
+    }
+
+    // ── Delete invoice ─────────────────────────────────────────
+    async function deleteInvoice(id) {
+      if (!confirm('Delete this invoice? This cannot be undone.')) return;
+      await db.from('invoices').delete().eq('id', id);
+      invoiceList = invoiceList.filter(function(i){ return i.id !== id; });
+      renderInvList();
+      toast('Invoice deleted');
+    }
+
+    // ── Print / PDF ────────────────────────────────────────────
+    function printInvoice(id) {
+      var inv = invoiceList.find(function(i){ return i.id === id; });
+      if (!inv) { toast('Invoice not found'); return; }
+      var s   = invoiceSettings || {};
+      var cur = s.currency || '£';
+      var items = inv._items || [];
+      var subtotal = items.reduce(function(sum, it){ return sum + (parseFloat(it.quantity) * parseFloat(it.unit_price)); }, 0);
+      var vatRate  = parseFloat(inv.vat_rate || 0);
+      var vatAmt   = subtotal * vatRate / 100;
+      var total    = subtotal + vatAmt;
+
+      var itemRows = items.map(function(it){
+        return '<tr><td>' + escHtml(it.description) + '</td><td style="text-align:center;">' + it.quantity + '</td><td style="text-align:right;">' + cur + parseFloat(it.unit_price).toFixed(2) + '</td><td style="text-align:right;">' + cur + (parseFloat(it.quantity) * parseFloat(it.unit_price)).toFixed(2) + '</td></tr>';
+      }).join('');
+
+      var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ' + escHtml(inv.invoice_number) + '</title><style>' +
+        'body{font-family:Arial,sans-serif;max-width:780px;margin:40px auto;color:#111;font-size:14px;line-height:1.5;}' +
+        'h1{font-size:36px;font-weight:900;letter-spacing:-1px;color:#111;margin:0;}' +
+        '.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;border-bottom:3px solid #111;padding-bottom:24px;}' +
+        '.sender{max-width:50%}.sender h2{font-size:20px;font-weight:700;margin:0 0 6px;}' +
+        '.sender p{margin:2px 0;color:#444;font-size:13px;}' +
+        '.inv-meta{text-align:right}.inv-meta p{margin:2px 0;}' +
+        '.inv-meta .inv-num{font-size:13px;color:#555;font-family:monospace;}' +
+        '.client{margin-bottom:32px;}.client h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin:0 0 6px;}' +
+        '.client p{margin:2px 0;}' +
+        'table{width:100%;border-collapse:collapse;margin-bottom:24px;}' +
+        'th{background:#111;color:#fff;padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;}' +
+        'td{padding:10px 12px;border-bottom:1px solid #eee;font-size:13px;}' +
+        'tr:nth-child(even) td{background:#f9f9f9;}' +
+        '.totals{margin-left:auto;width:260px;}' +
+        '.totals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #eee;}' +
+        '.totals-total{display:flex;justify-content:space-between;padding:10px 0;font-size:17px;font-weight:700;border-top:3px solid #111;margin-top:6px;}' +
+        '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #eee;font-size:12px;color:#666;}' +
+        '.payment-link{margin-top:16px;padding:12px 16px;background:#f5f5f5;border-radius:8px;font-size:13px;}' +
+        '.payment-link a{color:#4f46e5;font-weight:700;}' +
+        '.status-badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-left:10px;}' +
+        '.badge-paid{background:#dcfce7;color:#16a34a;}.badge-sent{background:#e0e7ff;color:#4f46e5;}.badge-draft{background:#f3f4f6;color:#6b7280;}' +
+        '@media print{body{margin:0 20px;}button{display:none!important;}}' +
+        '</style></head><body>' +
+        '<div class="header"><div class="sender">' +
+          '<h2>' + escHtml(s.business_name || '') + '</h2>' +
+          (s.address ? '<p>' + escHtml(s.address).replace(/\n/g,'<br>') + '</p>' : '') +
+          (s.email   ? '<p>' + escHtml(s.email)   + '</p>' : '') +
+          (s.phone   ? '<p>' + escHtml(s.phone)   + '</p>' : '') +
+          (s.vat_number ? '<p style="color:#888;font-size:12px;">VAT No: ' + escHtml(s.vat_number) + '</p>' : '') +
+        '</div>' +
+        '<div class="inv-meta">' +
+          '<h1>INVOICE <span class="status-badge badge-' + inv.status + '">' + inv.status.toUpperCase() + '</span></h1>' +
+          '<p class="inv-num">' + escHtml(inv.invoice_number) + '</p>' +
+          '<p>Issued: ' + invDisplayDate(inv.issue_date) + '</p>' +
+          (inv.due_date ? '<p><strong>Due: ' + invDisplayDate(inv.due_date) + '</strong></p>' : '') +
+        '</div></div>' +
+        '<div class="client"><h3>Bill to</h3>' +
+          '<p><strong>' + escHtml(inv.client_name) + '</strong></p>' +
+          (inv.client_email   ? '<p>' + escHtml(inv.client_email)   + '</p>' : '') +
+          (inv.client_address ? '<p>' + escHtml(inv.client_address) + '</p>' : '') +
+        '</div>' +
+        '<table><thead><tr><th>Description</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Unit price</th><th style="text-align:right;">Total</th></tr></thead><tbody>' + itemRows + '</tbody></table>' +
+        '<div class="totals">' +
+          '<div class="totals-row"><span>Subtotal</span><span>' + cur + subtotal.toFixed(2) + '</span></div>' +
+          (vatRate > 0 ? '<div class="totals-row"><span>VAT (' + vatRate + '%)</span><span>' + cur + vatAmt.toFixed(2) + '</span></div>' : '') +
+          '<div class="totals-total"><span>Total</span><span>' + cur + total.toFixed(2) + '</span></div>' +
+        '</div>' +
+        (inv.notes ? '<div class="footer"><strong>Notes:</strong><br>' + escHtml(inv.notes) + '</div>' : '') +
+        (s.payment_link ? '<div class="payment-link">💳 <strong>Pay here:</strong> <a href="' + escHtml(s.payment_link) + '" target="_blank">' + escHtml(s.payment_link) + '</a></div>' : '') +
+        '<div style="margin-top:24px;text-align:center;"><button onclick="window.print()" style="padding:12px 32px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨 Save / Print PDF</button></div>' +
+        '</body></html>';
+
+      var win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
     }
 
     // ── Apply trial access to analytics & themes ──────────────
