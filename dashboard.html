@@ -2094,6 +2094,13 @@
           </div>
         </div>
 
+        <!-- Auto-save History -->
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">🕐 Auto-save History</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">VoilaLink automatically saves a snapshot of your data once a day. You can restore any of the last 5 snapshots — handy if you make a mistake and need to roll back.</div>
+          <div id="auto-backup-list"><div style="font-size:12px;color:var(--text-muted);">No auto-saves yet — the first one runs a few seconds after you next log in, then daily.</div></div>
+        </div>
+
         <!-- FAQ -->
         <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">❓ Frequently Asked Questions</div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
@@ -3000,6 +3007,7 @@
         // Hide the Unlock Pro bar so it doesn't overlap Help content
         if (pfb) pfb.dataset.hiddenByHelp = pfb.style.display;
         if (pfb) pfb.style.display = 'none';
+        renderAutoBackups();
       } else {
         if (pc) pc.style.display = '';
         if (ph) ph.style.display = 'none';
@@ -5526,43 +5534,81 @@
     }
 
     // ── Settings Export / Import ───────────────────────────
+
+    // Shared helper: fetch all user data from Supabase + localStorage
+    async function buildBackupObject(user) {
+      const [profileRes, linksRes, vcardRes, emailWidgetRes, tipJarRes, countdownsRes, pollsRes] = await Promise.all([
+        db.from('profiles').select('*').eq('id', user.id).single(),
+        db.from('links').select('*').eq('user_id', user.id).order('position', { ascending: true }),
+        db.from('vcard_settings').select('*').eq('user_id', user.id).single(),
+        db.from('email_widget').select('*').eq('user_id', user.id).single(),
+        db.from('tip_jar').select('*').eq('user_id', user.id).single(),
+        db.from('countdowns').select('*').eq('user_id', user.id),
+        db.from('polls').select('*').eq('user_id', user.id),
+      ]);
+      return {
+        voilalink_backup: true,
+        version: APP_VERSION,
+        exported_at: new Date().toISOString(),
+        profile:        profileRes.data    || {},
+        links:          linksRes.data      || [],
+        vcard_settings: vcardRes.data      || {},
+        email_widget:   emailWidgetRes.data|| {},
+        tip_jar:        tipJarRes.data     || {},
+        countdowns:     countdownsRes.data || [],
+        polls:          pollsRes.data      || [],
+        custom_clocks:  JSON.parse(localStorage.getItem('wc_custom') || '[]'),
+      };
+    }
+
+    // Shared helper: write a backup object to Supabase (used by both import and auto-restore)
+    async function applyBackupData(user, data) {
+      if (data.profile && Object.keys(data.profile).length) {
+        const { id, created_at, ...profileData } = data.profile;
+        await db.from('profiles').upsert({ ...profileData, id: user.id });
+      }
+      if (data.links && data.links.length) {
+        await db.from('links').delete().eq('user_id', user.id);
+        const links = data.links.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+        await db.from('links').insert(links);
+      }
+      if (data.vcard_settings && Object.keys(data.vcard_settings).length) {
+        const { id, ...vcardData } = data.vcard_settings;
+        await db.from('vcard_settings').upsert({ ...vcardData, user_id: user.id });
+      }
+      if (data.email_widget && Object.keys(data.email_widget).length) {
+        const { id, ...ewData } = data.email_widget;
+        await db.from('email_widget').upsert({ ...ewData, user_id: user.id });
+      }
+      if (data.tip_jar && Object.keys(data.tip_jar).length) {
+        const { id, ...tjData } = data.tip_jar;
+        await db.from('tip_jar').upsert({ ...tjData, user_id: user.id });
+      }
+      if (data.countdowns && data.countdowns.length) {
+        await db.from('countdowns').delete().eq('user_id', user.id);
+        const countdowns = data.countdowns.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+        await db.from('countdowns').insert(countdowns);
+      }
+      if (data.polls && data.polls.length) {
+        await db.from('polls').delete().eq('user_id', user.id);
+        const polls = data.polls.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+        await db.from('polls').insert(polls);
+      }
+      if (data.custom_clocks) {
+        localStorage.setItem('wc_custom', JSON.stringify(data.custom_clocks));
+      }
+    }
+
     async function exportSettings() {
       try {
         const user = await getUser();
         if (!user) { toast('Not signed in'); return; }
-
-        const [profileRes, linksRes, vcardRes, emailWidgetRes, tipJarRes, countdownsRes, pollsRes] = await Promise.all([
-          db.from('profiles').select('*').eq('id', user.id).single(),
-          db.from('links').select('*').eq('user_id', user.id).order('position', { ascending: true }),
-          db.from('vcard_settings').select('*').eq('user_id', user.id).single(),
-          db.from('email_widget').select('*').eq('user_id', user.id).single(),
-          db.from('tip_jar').select('*').eq('user_id', user.id).single(),
-          db.from('countdowns').select('*').eq('user_id', user.id),
-          db.from('polls').select('*').eq('user_id', user.id),
-        ]);
-
-        const customClocks = JSON.parse(localStorage.getItem('wc_custom') || '[]');
-
-        const backup = {
-          voilalink_backup: true,
-          version: APP_VERSION,
-          exported_at: new Date().toISOString(),
-          profile: profileRes.data || {},
-          links: linksRes.data || [],
-          vcard_settings: vcardRes.data || {},
-          email_widget: emailWidgetRes.data || {},
-          tip_jar: tipJarRes.data || {},
-          countdowns: countdownsRes.data || [],
-          polls: pollsRes.data || [],
-          custom_clocks: customClocks,
-        };
-
+        const backup = await buildBackupObject(user);
         const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        const dateStr = new Date().toISOString().slice(0, 10);
         a.href = url;
-        a.download = `voilalink-backup-${dateStr}.json`;
+        a.download = `voilalink-backup-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         toast('Backup downloaded ✓');
@@ -5572,77 +5618,102 @@
       }
     }
 
+    // ── Auto-backup (daily, keeps last 5) ─────────────────
+    const AUTO_BACKUP_MAX = 5;
+    const AUTO_BACKUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 h
+
+    async function autoBackup() {
+      try {
+        const lastRun = parseInt(localStorage.getItem('vl_last_auto_backup') || '0');
+        if (Date.now() - lastRun < AUTO_BACKUP_INTERVAL) return; // not due yet
+        const user = await getUser();
+        if (!user) return;
+        const backup = await buildBackupObject(user);
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]'); } catch(e) {}
+        history.unshift(backup);
+        if (history.length > AUTO_BACKUP_MAX) history = history.slice(0, AUTO_BACKUP_MAX);
+        localStorage.setItem('vl_auto_backups', JSON.stringify(history));
+        localStorage.setItem('vl_last_auto_backup', Date.now().toString());
+        console.log('[VoilaLink] Auto-backup saved', backup.exported_at);
+      } catch(e) {
+        console.warn('[VoilaLink] Auto-backup failed', e);
+      }
+    }
+
+    // ── Auto-backup restore / download ────────────────────
+    async function restoreFromAutoBackup(index) {
+      try {
+        const history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]');
+        const data = history[index];
+        if (!data) { toast('Snapshot not found'); return; }
+        const dt = new Date(data.exported_at).toLocaleString('en-GB');
+        const ok = confirm('Restore backup from ' + dt + '?\n\nThis will overwrite your current links and settings. This cannot be undone.');
+        if (!ok) return;
+        const user = await getUser();
+        if (!user) { toast('Not signed in'); return; }
+        await applyBackupData(user, data);
+        toast('Restored! Reloading...');
+        setTimeout(() => location.reload(), 1500);
+      } catch(e) {
+        console.error('Auto-restore error', e);
+        toast('Restore failed');
+      }
+    }
+
+    function downloadAutoBackup(index) {
+      try {
+        const history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]');
+        const backup = history[index];
+        if (!backup) return;
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'voilalink-auto-' + new Date(backup.exported_at).toISOString().slice(0, 10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Auto-backup downloaded ✓');
+      } catch(e) { toast('Download failed'); }
+    }
+
+    function renderAutoBackups() {
+      const el = document.getElementById('auto-backup-list');
+      if (!el) return;
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem('vl_auto_backups') || '[]'); } catch(e) {}
+      if (!history.length) {
+        el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">No auto-saves yet — the first one runs 4 seconds after you next log in, then daily.</div>';
+        return;
+      }
+      el.innerHTML = history.map(function(b, i) {
+        var dt = new Date(b.exported_at);
+        var label = dt.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })
+                  + ' · ' + dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+        var n = (b.links || []).length;
+        var badge = i === 0 ? '<span style="font-size:10px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle;">Latest</span>' : '';
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;' + (i > 0 ? 'border-top:1px solid var(--border);' : '') + '">'
+          + '<div><div style="font-size:13px;font-weight:600;">' + label + badge + '</div>'
+          + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + n + ' link' + (n !== 1 ? 's' : '') + ' · v' + (b.version || '?') + '</div></div>'
+          + '<div style="display:flex;gap:8px;">'
+          + '<button onclick="downloadAutoBackup(' + i + ')" title="Download as file" style="font-size:11px;padding:5px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;">⬇ Save</button>'
+          + '<button onclick="restoreFromAutoBackup(' + i + ')" style="font-size:11px;padding:5px 10px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:6px;color:#818cf8;cursor:pointer;">↩ Restore</button>'
+          + '</div></div>';
+      }).join('');
+    }
+
     async function importSettings(input) {
       const file = input.files[0];
       if (!file) return;
-      // Reset the input so the same file can be selected again later
       input.value = '';
-
       try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-
-        if (!data.voilalink_backup) {
-          toast('Import failed — invalid backup file');
-          return;
-        }
-
+        const data = JSON.parse(await file.text());
+        if (!data.voilalink_backup) { toast('Import failed — invalid backup file'); return; }
         const ok = confirm('This will overwrite your current settings. Continue?');
         if (!ok) return;
-
         const user = await getUser();
         if (!user) { toast('Not signed in'); return; }
-
-        // Upsert profile (exclude id, created_at)
-        if (data.profile && Object.keys(data.profile).length) {
-          const { id, created_at, ...profileData } = data.profile;
-          await db.from('profiles').upsert({ ...profileData, id: user.id });
-        }
-
-        // Delete + insert links
-        if (data.links && data.links.length) {
-          await db.from('links').delete().eq('user_id', user.id);
-          const links = data.links.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
-          await db.from('links').insert(links);
-        }
-
-        // Upsert vcard_settings
-        if (data.vcard_settings && Object.keys(data.vcard_settings).length) {
-          const { id, ...vcardData } = data.vcard_settings;
-          await db.from('vcard_settings').upsert({ ...vcardData, user_id: user.id });
-        }
-
-        // Upsert email_widget
-        if (data.email_widget && Object.keys(data.email_widget).length) {
-          const { id, ...ewData } = data.email_widget;
-          await db.from('email_widget').upsert({ ...ewData, user_id: user.id });
-        }
-
-        // Upsert tip_jar
-        if (data.tip_jar && Object.keys(data.tip_jar).length) {
-          const { id, ...tjData } = data.tip_jar;
-          await db.from('tip_jar').upsert({ ...tjData, user_id: user.id });
-        }
-
-        // Delete + insert countdowns
-        if (data.countdowns && data.countdowns.length) {
-          await db.from('countdowns').delete().eq('user_id', user.id);
-          const countdowns = data.countdowns.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
-          await db.from('countdowns').insert(countdowns);
-        }
-
-        // Delete + insert polls
-        if (data.polls && data.polls.length) {
-          await db.from('polls').delete().eq('user_id', user.id);
-          const polls = data.polls.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
-          await db.from('polls').insert(polls);
-        }
-
-        // Restore custom clocks
-        if (data.custom_clocks) {
-          localStorage.setItem('wc_custom', JSON.stringify(data.custom_clocks));
-        }
-
+        await applyBackupData(user, data);
         toast('Settings restored! Reloading...');
         setTimeout(() => location.reload(), 1500);
       } catch (e) {

@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderHeader();
   await loadLinks();
+  // Trigger daily auto-backup (non-blocking, 4s delay to let page settle)
+  setTimeout(() => { if (typeof autoBackup === 'function') autoBackup(); }, 4000);
 });
 
 // ── Username setup for OAuth users ───────────────────────────
