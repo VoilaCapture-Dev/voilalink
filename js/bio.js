@@ -125,6 +125,8 @@ function renderBio(profile, links) {
   const footerLink = document.getElementById('referral-footer');
   if (footerLink) {
     footerLink.href = 'https://voilalink.com/login.html?ref=' + encodeURIComponent(profile.username) + '&mode=signup';
+    const ctaSpan = document.getElementById('footer-cta-text');
+    if (ctaSpan) ctaSpan.textContent = profile.footer_cta || 'Create your free page →';
   }
 }
 

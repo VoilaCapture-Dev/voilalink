@@ -1251,6 +1251,16 @@
             <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">🐙 GitHub URL</label>
             <input id="settings-github" class="form-input" type="url" placeholder="https://github.com/yourhandle" />
           </div>
+              <!-- Footer CTA -->
+              <div class="form-group" style="margin-top:8px;">
+                <label class="form-label">Bio page footer text</label>
+                <input class="form-input" id="settings-footer-cta" type="text"
+                  placeholder="e.g. Join my team → or Start here →"
+                  maxlength="60" />
+                <div style="font-size:11px;color:var(--text-muted);margin-top:5px;">
+                  Shown at the bottom of your bio page. Leave blank for default: "Create your free page →"
+                </div>
+              </div>
           <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
         </div>
 
@@ -2578,6 +2588,8 @@
       document.getElementById('settings-youtube').value   = currentProfile.youtube_url  || '';
       document.getElementById('settings-tiktok').value    = currentProfile.tiktok_url   || '';
       document.getElementById('settings-github').value    = currentProfile.github_url   || '';
+      const footerCtaEl = document.getElementById('settings-footer-cta');
+      if (footerCtaEl) footerCtaEl.value = currentProfile.footer_cta || '';
 
       // Load auto-reply settings
       const autoReplyEnabled = currentProfile.auto_reply_enabled || false;
@@ -2607,12 +2619,14 @@
       const youtube_url   = document.getElementById('settings-youtube').value.trim();
       const tiktok_url    = document.getElementById('settings-tiktok').value.trim();
       const github_url    = document.getElementById('settings-github').value.trim();
+      const footer_cta = (document.getElementById('settings-footer-cta')?.value.trim() || null);
       try {
         await db.from('profiles').update({
           full_name: name, bio,
-          twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url
+          twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url,
+          footer_cta
         }).eq('id', currentUser.id);
-        Object.assign(currentProfile, { full_name: name, bio, twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url });
+        Object.assign(currentProfile, { full_name: name, bio, twitter_url, instagram_url, linkedin_url, youtube_url, tiktok_url, github_url, footer_cta });
         renderHeader();
         toast('Settings saved ✓');
       } catch (e) { toast('Error: ' + e.message); }
