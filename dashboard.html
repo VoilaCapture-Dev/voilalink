@@ -457,14 +457,14 @@
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
       position: absolute;
-      right: 316px; /* sits just left of the 300px preview panel */
-      top: 24px;
+      right: 316px;
+      top: 0;
       width: 230px;
       background: #04060a;
       border: 1px solid rgba(74,222,128,0.15);
       border-radius: 12px;
-      padding: 12px 12px 10px;
-      z-index: 2;
+      padding: 10px 10px 8px;
+      z-index: 10;
     }
     .wc-header {
       font-family: 'DM Mono', monospace; font-size: 8px;
@@ -1970,7 +1970,6 @@
 
       <!-- ══ World Clock (floating in empty canvas) ════════ -->
       <div class="world-clock-panel">
-        <div class="wc-header">World Clock</div>
         <div class="wc-grid">
           <div class="wc-zone">
             <div class="wc-time" id="wc-london">--:--</div>
