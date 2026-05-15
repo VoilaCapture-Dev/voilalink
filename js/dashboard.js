@@ -637,6 +637,12 @@ async function loadReferrerStats(userId) {
 
 // ── Creator Research ──────────────────────────────────────────
 async function researchCreators() {
+  // Pro gate — AI API call
+  if (typeof getProAccess === 'function') {
+    const { access } = await getProAccess();
+    if (!access) { toast('⭐ Creator Research requires Pro — upgrade to use AI-powered discovery'); return; }
+  }
+
   const niche    = document.getElementById('res-niche').value.trim();
   const platform = document.getElementById('res-platform').value;
   const minF     = document.getElementById('res-min').value;
@@ -732,6 +738,12 @@ function useCreatorForOutreach(name, platform, niche, profileUrl, notes) {
 let lastOutreachMessage = '';
 
 async function generateOutreach() {
+  // Pro gate — AI API call
+  if (typeof getProAccess === 'function') {
+    const { access } = await getProAccess();
+    if (!access) { toast('⭐ AI Outreach requires Pro — upgrade to generate AI messages'); return; }
+  }
+
   const name     = document.getElementById('out-name').value.trim();
   const platform = document.getElementById('out-platform').value;
   const niche    = document.getElementById('out-niche').value.trim();

@@ -1106,14 +1106,6 @@
             </div>
         </div>
 
-        <div id="analytics-upgrade-notice" style="margin-top:20px;padding:14px 16px;background:rgba(129,140,248,0.05);border:1px solid var(--border-accent);border-radius:12px;display:flex;align-items:center;gap:12px;">
-          <div style="font-size:20px;">📊</div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Analytics requires Pro</div>
-            <div style="font-size:11px;color:var(--text-muted);">See full click history and visitor locations — £3.99/mo</div>
-          </div>
-          <button class="btn-sm primary" style="white-space:nowrap;" onclick="showTab('upgrade')">Upgrade</button>
-        </div>
       </div>
 
       <!-- ── Upgrade panel ────────────────────────────────── -->
@@ -1130,11 +1122,9 @@
           <div style="font-size:13px;font-weight:700;margin-bottom:14px;color:var(--accent);">✦ What's included in Pro</div>
           <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
             <div>✅ Unlimited links (Free = 5 max)</div>
-            <div>✅ All themes including Galaxy & Sunset</div>
-            <div>✅ Full click analytics & visitor data</div>
             <div>✅ 🤖 AI Auto-Reply — replies visitors when you're away</div>
-            <div>✅ 📅 Personal Planner — manage your week & tasks</div>
-            <div>✅ 🧾 Invoices — professional invoices with VAT & PDF</div>
+            <div>✅ 🔍 Creator Research — AI-powered influencer discovery</div>
+            <div>✅ ✍️ AI Outreach — generate personalised outreach messages</div>
             <div>✅ Priority support</div>
             <div>✅ Early access to new features</div>
           </div>
@@ -1438,28 +1428,8 @@
           </div>
         </div>
 
-        <!-- Pro lock -->
-        <div id="planner-pro-lock" style="display:none;text-align:center;padding:60px 20px;">
-          <div style="font-size:52px;margin-bottom:16px;">📅</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:8px;">Personal Planner</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6;">Plan your week, track meetings and tasks — all in one place. No paper needed. Available on Pro.</div>
-          <button class="btn-sm primary" onclick="showTab('upgrade')" style="padding:12px 28px;font-size:14px;">⭐ Upgrade to Pro →</button>
-        </div>
-
         <!-- Planner content -->
-        <div id="planner-content" style="display:none;">
-
-          <!-- Trial banner (shown for free users during trial) -->
-          <div id="planner-trial-banner" style="display:none;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.07));border:1px solid rgba(129,140,248,0.3);border-radius:12px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-size:18px;">⏳</span>
-              <div>
-                <div style="font-size:12px;font-weight:700;">Free trial — <span id="planner-trial-days">7</span> day(s) remaining</div>
-                <div style="font-size:11px;color:var(--text-muted);">Upgrade to Pro to keep access after your trial ends</div>
-              </div>
-            </div>
-            <button class="btn-sm primary" onclick="showTab('upgrade')" style="font-size:11px;white-space:nowrap;flex-shrink:0;">Upgrade to Pro →</button>
-          </div>
+        <div id="planner-content" style="display:block;">
 
           <!-- Week navigation -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
@@ -1498,16 +1468,8 @@
           </div>
         </div>
 
-        <!-- Pro lock -->
-        <div id="invoices-pro-lock" style="display:none;text-align:center;padding:60px 20px;">
-          <div style="font-size:52px;margin-bottom:16px;">🧾</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:8px;">Invoice Templates</div>
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:320px;margin-left:auto;margin-right:auto;line-height:1.6;">Create professional invoices with VAT, line items and PDF download. Available on Pro.</div>
-          <button class="btn-sm primary" onclick="showTab('upgrade')" style="padding:12px 28px;font-size:14px;">⭐ Upgrade to Pro →</button>
-        </div>
-
         <!-- Invoice content -->
-        <div id="invoices-content" style="display:none;">
+        <div id="invoices-content" style="display:block;">
           <!-- Setup prompt -->
           <div id="inv-setup-prompt" style="display:none;background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(167,139,250,0.07));border:1px solid rgba(129,140,248,0.3);border-radius:14px;padding:20px;margin-bottom:20px;">
             <div style="font-size:14px;font-weight:700;margin-bottom:6px;">👋 Set up your invoice details first</div>
@@ -2538,7 +2500,7 @@
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
-      if (tab === 'analytics') { loadAnalytics(); applyTrialToAnalytics(); }
+      if (tab === 'analytics') { loadAnalytics(); }
       if (tab === 'settings')  loadSettings();
       if (tab === 'messages')  loadMessages();
       if (tab === 'outreach')  loadOutreachLog();
@@ -2904,32 +2866,6 @@
     // ── Load full planner tab ──────────────────────────────────
     async function loadPlanner() {
       if (!currentUser) return;
-      const { access, trialDaysLeft } = await getProAccess();
-      const lock    = document.getElementById('planner-pro-lock');
-      const content = document.getElementById('planner-content');
-      const banner  = document.getElementById('planner-trial-banner');
-
-      if (!access) {
-        if (lock)    lock.style.display    = 'block';
-        if (content) content.style.display = 'none';
-        if (banner)  banner.style.display  = 'none';
-        return;
-      }
-      if (lock)    lock.style.display    = 'none';
-      if (content) content.style.display = 'block';
-
-      // Show trial banner for non-Pro users
-      if (banner) {
-        if (trialDaysLeft !== null) {
-          banner.style.display = 'flex';
-          const isPro = currentProfile && currentProfile.is_pro;
-          if (!isPro) {
-            document.getElementById('planner-trial-days').textContent = trialDaysLeft;
-          }
-        } else {
-          banner.style.display = 'none';
-        }
-      }
 
       const weekStart = formatDate(plannerWeekStart);
       const weekEnd   = formatDate(addDays(plannerWeekStart, 6));
@@ -3093,8 +3029,6 @@
     async function loadWidgetTasks() {
       const widget = document.getElementById('planner-widget');
       if (!widget) return;
-      const { access } = await getProAccess();
-      if (!access) { widget.style.display = 'none'; return; }
       widget.style.display = 'block';
 
       const today  = getTodayStr();
@@ -3143,17 +3077,6 @@
 
     // ── Load invoices tab ──────────────────────────────────────
     async function loadInvoices() {
-      const { access } = await getProAccess();
-      var lock    = document.getElementById('invoices-pro-lock');
-      var content = document.getElementById('invoices-content');
-      if (!access) {
-        if (lock)    lock.style.display    = 'block';
-        if (content) content.style.display = 'none';
-        return;
-      }
-      if (lock)    lock.style.display    = 'none';
-      if (content) content.style.display = 'block';
-
       // Load settings
       var s = await db.from('invoice_settings').select('*').eq('user_id', currentUser.id).single();
       invoiceSettings = s.data;
@@ -4491,13 +4414,6 @@
     }
 
     document.getElementById('growth-modal').addEventListener('click', function(e){ if (e.target === this) closeGrowthModal(); });
-
-    // ── Apply trial access to analytics & themes ──────────────
-    async function applyTrialToAnalytics() {
-      const { access } = await getProAccess();
-      var notice = document.getElementById('analytics-upgrade-notice');
-      if (notice) notice.style.display = access ? 'none' : 'flex';
-    }
 
     // ── Boot: sync notification buttons as soon as DOM is ready ──
     syncNotifButtons();
