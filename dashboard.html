@@ -2036,7 +2036,7 @@
       </div>
 
       <!-- ── Help & About panel ────────────────────────────── -->
-      <div class="panel" id="panel-help" style="display:none;padding:32px;max-width:680px;">
+      <div class="links-panel" id="panel-help" style="display:none;">
 
         <!-- Version info -->
         <div class="panel-header">
@@ -3243,7 +3243,10 @@
 
       // Load saved position or use default (top-right of viewport)
       var saved = null;
-      try { saved = JSON.parse(localStorage.getItem('wc_position')); } catch(e) {}
+      try {
+        var raw = localStorage.getItem('wc_position');
+        if (raw) saved = JSON.parse(raw);
+      } catch(e) { localStorage.removeItem('wc_position'); }
 
       function applyPosition(left, top) {
         // Keep within viewport
@@ -3253,11 +3256,16 @@
         panel.style.top  = Math.max(8, Math.min(top,  maxT)) + 'px';
       }
 
-      if (saved) {
-        applyPosition(saved.left, saved.top);
+      // Clear any stale position saved when clock was absolute-positioned
+      var isSavedValid = saved && saved.left > 0 && saved.left < window.innerWidth
+                               && saved.top  > 0 && saved.top  < window.innerHeight;
+      if (isSavedValid) {
+        panel.style.left = saved.left + 'px';
+        panel.style.top  = saved.top  + 'px';
       } else {
-        // Default: right side, vertically centered-ish
-        applyPosition(window.innerWidth - 254, 180);
+        // Default: upper-right, clear of sidebar + preview panel
+        panel.style.right = '320px';
+        panel.style.top   = '80px';
       }
 
       var dragging = false, ox = 0, oy = 0;
