@@ -1057,6 +1057,9 @@
     <a class="nav-item-full" href="#" onclick="showTab('upgrade')">
       <span>⭐</span> Upgrade to Pro
     </a>
+    <a class="nav-item-full" href="#" onclick="showTab('help')">
+      <span style="font-size:15px;">❓</span> Help &amp; About
+    </a>
     <a class="nav-item-full" href="#" onclick="signOut()">
       <span>🚪</span> Sign out
     </a>
@@ -2022,6 +2025,91 @@
         </div>
       </div>
 
+      <!-- ── Help & About panel ────────────────────────────── -->
+      <div class="panel" id="panel-help" style="display:none;padding:32px;max-width:680px;">
+
+        <!-- Version info -->
+        <div class="panel-header">
+          <div class="panel-title">Help &amp; About</div>
+        </div>
+
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">VoilaLink</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Version 1.1.0 · May 2026</div>
+          </div>
+          <div style="font-size:11px;color:#4ade80;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:4px 12px;">Up to date</div>
+        </div>
+
+        <!-- What's new -->
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">🆕 What's new in v1.1.0</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--text-muted);line-height:1.9;">
+            <li>World Clock widget with 4 fixed cities + 2 custom slots</li>
+            <li>Settings backup &amp; restore (export / import JSON)</li>
+            <li>Version update notifications with backup prompt</li>
+            <li>Help &amp; About page</li>
+          </ul>
+        </div>
+
+        <!-- Backup & Restore -->
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">💾 Backup &amp; Restore</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Download a full backup of your links, settings, and preferences as a <code style="background:rgba(129,140,248,0.1);padding:1px 6px;border-radius:4px;font-size:12px;">.json</code> file. You can restore it at any time.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+            <button onclick="exportSettings()" class="btn-sm primary">⬇ Download Backup</button>
+            <button onclick="document.getElementById('backup-file-input').click()" class="btn-sm ghost">⬆ Restore from Backup</button>
+            <input type="file" id="backup-file-input" accept=".json" style="display:none;" onchange="importSettings(this)">
+          </div>
+
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">How to restore your backup:</div>
+          <ol style="margin:0;padding-left:18px;font-size:12px;color:var(--text-muted);line-height:2;">
+            <li>Click <strong>Restore from Backup</strong> above</li>
+            <li>Select your <code style="background:rgba(129,140,248,0.1);padding:1px 5px;border-radius:4px;">voilalink-backup-YYYY-MM-DD.json</code> file</li>
+            <li>Confirm the prompt — your settings will be overwritten with the backup</li>
+            <li>The page will reload automatically with all your data restored</li>
+          </ol>
+
+          <div style="margin-top:14px;padding:10px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;font-size:12px;color:#fbbf24;">
+            ⚠ Restoring a backup will overwrite your current links and settings. This cannot be undone. Always download a fresh backup first.
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;">❓ Frequently Asked Questions</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">How do I change my username?</div>
+            <div style="font-size:12px;color:var(--text-muted);">Go to Settings → update your username field → Save</div>
+          </div>
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Will my links work if I'm on the free plan?</div>
+            <div style="font-size:12px;color:var(--text-muted);">Yes, all links are always live on your bio page regardless of plan</div>
+          </div>
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">What happens when my trial ends?</div>
+            <div style="font-size:12px;color:var(--text-muted);">Pro features lock but your links and profile stay live. You can upgrade at any time.</div>
+          </div>
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Can I use VoilaLink on mobile?</div>
+            <div style="font-size:12px;color:var(--text-muted);">Yes, the dashboard has a mobile view and your bio page is fully responsive</div>
+          </div>
+          <div style="padding:14px 18px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px;">How do I add my bio page to my Instagram?</div>
+            <div style="font-size:12px;color:var(--text-muted);">Copy your voilalink.com/username link from the top of the dashboard and paste it in your Instagram bio</div>
+          </div>
+        </div>
+
+        <!-- Support -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">Need help?</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Suggest a feature or report a bug</div>
+          </div>
+          <button onclick="showTab('feedback')" class="btn-sm ghost">Open Feedback →</button>
+        </div>
+      </div>
+
       </div><!-- /panels-container -->
 
       <!-- ══ World Clock (floating in empty canvas) ════════ -->
@@ -2845,6 +2933,9 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
+    const APP_VERSION = '1.1.0';
+    const APP_VERSION_DATE = 'May 2026';
+
     // ── Tab navigation ─────────────────────────────────────
     function showTab(tab) {
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -2873,13 +2964,14 @@
       sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
+      sp('panel-help',       tab === 'help'       ? 'block' : 'none');
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
       var pc = document.querySelector('.panels-container');
       var isFullWidth = fullWidth.includes(tab);
       if (pp) pp.style.display = isFullWidth ? 'none' : 'flex';
-      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
+      const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices', help:'Help & About' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
       if (tab === 'themes')    { initFontPicker(); }
@@ -5226,6 +5318,152 @@
       } catch(e) { console.error('Export error', e); }
     }
 
+    // ── Settings Export / Import ───────────────────────────
+    async function exportSettings() {
+      try {
+        const user = await getUser();
+        if (!user) { toast('Not signed in'); return; }
+
+        const [profileRes, linksRes, vcardRes, emailWidgetRes, tipJarRes, countdownsRes, pollsRes] = await Promise.all([
+          db.from('profiles').select('*').eq('id', user.id).single(),
+          db.from('links').select('*').eq('user_id', user.id).order('position', { ascending: true }),
+          db.from('vcard_settings').select('*').eq('user_id', user.id).single(),
+          db.from('email_widget').select('*').eq('user_id', user.id).single(),
+          db.from('tip_jar').select('*').eq('user_id', user.id).single(),
+          db.from('countdowns').select('*').eq('user_id', user.id),
+          db.from('polls').select('*').eq('user_id', user.id),
+        ]);
+
+        const customClocks = JSON.parse(localStorage.getItem('wc_custom') || '[]');
+
+        const backup = {
+          voilalink_backup: true,
+          version: APP_VERSION,
+          exported_at: new Date().toISOString(),
+          profile: profileRes.data || {},
+          links: linksRes.data || [],
+          vcard_settings: vcardRes.data || {},
+          email_widget: emailWidgetRes.data || {},
+          tip_jar: tipJarRes.data || {},
+          countdowns: countdownsRes.data || [],
+          polls: pollsRes.data || [],
+          custom_clocks: customClocks,
+        };
+
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `voilalink-backup-${dateStr}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Backup downloaded ✓');
+      } catch (e) {
+        console.error('Export error', e);
+        toast('Backup failed');
+      }
+    }
+
+    async function importSettings(input) {
+      const file = input.files[0];
+      if (!file) return;
+      // Reset the input so the same file can be selected again later
+      input.value = '';
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (!data.voilalink_backup) {
+          toast('Import failed — invalid backup file');
+          return;
+        }
+
+        const ok = confirm('This will overwrite your current settings. Continue?');
+        if (!ok) return;
+
+        const user = await getUser();
+        if (!user) { toast('Not signed in'); return; }
+
+        // Upsert profile (exclude id, created_at)
+        if (data.profile && Object.keys(data.profile).length) {
+          const { id, created_at, ...profileData } = data.profile;
+          await db.from('profiles').upsert({ ...profileData, id: user.id });
+        }
+
+        // Delete + insert links
+        if (data.links && data.links.length) {
+          await db.from('links').delete().eq('user_id', user.id);
+          const links = data.links.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+          await db.from('links').insert(links);
+        }
+
+        // Upsert vcard_settings
+        if (data.vcard_settings && Object.keys(data.vcard_settings).length) {
+          const { id, ...vcardData } = data.vcard_settings;
+          await db.from('vcard_settings').upsert({ ...vcardData, user_id: user.id });
+        }
+
+        // Upsert email_widget
+        if (data.email_widget && Object.keys(data.email_widget).length) {
+          const { id, ...ewData } = data.email_widget;
+          await db.from('email_widget').upsert({ ...ewData, user_id: user.id });
+        }
+
+        // Upsert tip_jar
+        if (data.tip_jar && Object.keys(data.tip_jar).length) {
+          const { id, ...tjData } = data.tip_jar;
+          await db.from('tip_jar').upsert({ ...tjData, user_id: user.id });
+        }
+
+        // Delete + insert countdowns
+        if (data.countdowns && data.countdowns.length) {
+          await db.from('countdowns').delete().eq('user_id', user.id);
+          const countdowns = data.countdowns.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+          await db.from('countdowns').insert(countdowns);
+        }
+
+        // Delete + insert polls
+        if (data.polls && data.polls.length) {
+          await db.from('polls').delete().eq('user_id', user.id);
+          const polls = data.polls.map(({ id, ...rest }) => ({ ...rest, user_id: user.id }));
+          await db.from('polls').insert(polls);
+        }
+
+        // Restore custom clocks
+        if (data.custom_clocks) {
+          localStorage.setItem('wc_custom', JSON.stringify(data.custom_clocks));
+        }
+
+        toast('Settings restored! Reloading...');
+        setTimeout(() => location.reload(), 1500);
+      } catch (e) {
+        console.error('Import error', e);
+        toast('Import failed — invalid backup file');
+      }
+    }
+
+    // ── Version check modal ────────────────────────────────
+    function checkVersionModal() {
+      var stored = localStorage.getItem('vl_version');
+      if (stored !== APP_VERSION) {
+        if (stored !== null) { // don't show on first ever visit, only on updates
+          document.getElementById('version-modal').style.display = 'flex';
+        }
+        localStorage.setItem('vl_version', APP_VERSION);
+      }
+    }
+
+    function dismissVersionModal() {
+      document.getElementById('version-modal').style.display = 'none';
+    }
+
+    // Call version check after page load
+    document.addEventListener('DOMContentLoaded', function() {
+      checkVersionModal();
+    });
+
     // ── Toast ──────────────────────────────────────────────
     function toast(msg) {
       const t = document.getElementById('toast');
@@ -5235,6 +5473,19 @@
       toast._t = setTimeout(() => t.classList.remove('show'), 2000);
     }
   </script>
+
+  <!-- ── Version update modal ──────────────────────────────── -->
+  <div id="version-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:#0f1117;border:1px solid rgba(129,140,248,0.3);border-radius:16px;padding:28px 32px;max-width:420px;width:90%;text-align:center;">
+      <div style="font-size:28px;margin-bottom:8px;">🎉</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:6px;">VoilaLink has been updated!</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">You're now on <strong style="color:#818cf8;">v1.1.0</strong> (May 2026). Before you continue, we recommend downloading a backup of your settings.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="exportSettings().then(()=>dismissVersionModal())" style="background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;">⬇ Download Backup</button>
+        <button onclick="dismissVersionModal()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;">Skip for now</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobile bottom navigation -->
   <nav class="mobile-nav">
