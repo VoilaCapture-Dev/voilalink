@@ -1553,7 +1553,10 @@
             <div class="panel-title">📈 Growth</div>
             <div class="panel-sub">Track your follower counts week over week</div>
           </div>
-          <button class="btn-sm primary" onclick="openGrowthModal()">+ Update counts</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm ghost" onclick="openGrowthSettings()" style="font-size:12px;">⚙ My accounts</button>
+            <button class="btn-sm primary" onclick="openGrowthModal()">+ Update counts</button>
+          </div>
         </div>
 
         <!-- Summary cards -->
@@ -1787,6 +1790,50 @@
     </div>
   </div>
 
+  <!-- ── Growth Settings modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="growth-settings-modal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-title">⚙ My Social Accounts</div>
+      <div class="modal-sub">Paste your profile URLs — shown as quick links when you update counts</div>
+      <button class="modal-close" onclick="closeGrowthSettings()">×</button>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:8px;">
+        <div class="form-group">
+          <label class="form-label">▶️ YouTube channel URL</label>
+          <input class="form-input" id="gs-youtube" type="url" placeholder="https://youtube.com/@yourchannel" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">📸 Instagram profile URL</label>
+          <input class="form-input" id="gs-instagram" type="url" placeholder="https://instagram.com/yourhandle" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">👤 Facebook page URL</label>
+          <input class="form-input" id="gs-facebook" type="url" placeholder="https://facebook.com/yourpage" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🎵 TikTok profile URL</label>
+          <input class="form-input" id="gs-tiktok" type="url" placeholder="https://tiktok.com/@yourhandle" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🐦 Twitter / X profile URL</label>
+          <input class="form-input" id="gs-twitter" type="url" placeholder="https://x.com/yourhandle" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">💼 LinkedIn profile URL</label>
+          <input class="form-input" id="gs-linkedin" type="url" placeholder="https://linkedin.com/in/yourname" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🌐 Other (website, podcast etc.)</label>
+          <input class="form-input" id="gs-other" type="url" placeholder="https://yoursite.com" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Leave blank any platform you don't use</div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeGrowthSettings()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveGrowthSettings()">Save accounts →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Growth modal ────────────────────────────────────────── -->
   <div class="modal-overlay" id="growth-modal">
     <div class="modal" style="max-width:440px;">
@@ -1796,41 +1843,41 @@
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">▶️</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">YouTube</label>
-          <input class="form-input" id="g-youtube" type="number" min="0" placeholder="Subscribers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">YouTube <a id="glink-youtube" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-youtube" type="number" min="0" placeholder="Subscribers" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">📸</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">Instagram</label>
-          <input class="form-input" id="g-instagram" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Instagram <a id="glink-instagram" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-instagram" type="number" min="0" placeholder="Followers" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">👤</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">Facebook</label>
-          <input class="form-input" id="g-facebook" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Facebook <a id="glink-facebook" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-facebook" type="number" min="0" placeholder="Followers" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">🎵</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">TikTok</label>
-          <input class="form-input" id="g-tiktok" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">TikTok <a id="glink-tiktok" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-tiktok" type="number" min="0" placeholder="Followers" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">🐦</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">Twitter / X</label>
-          <input class="form-input" id="g-twitter" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Twitter / X <a id="glink-twitter" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-twitter" type="number" min="0" placeholder="Followers" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">💼</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">LinkedIn</label>
-          <input class="form-input" id="g-linkedin" type="number" min="0" placeholder="Connections" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">LinkedIn <a id="glink-linkedin" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-linkedin" type="number" min="0" placeholder="Connections" style="width:130px;font-size:13px;" />
         </div>
         <div class="form-row" style="align-items:center;">
           <div style="width:28px;text-align:center;font-size:18px;">🌐</div>
-          <label style="flex:1;font-size:13px;color:var(--text-primary);">Other</label>
-          <input class="form-input" id="g-other" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Other <a id="glink-other" href="#" target="_blank" style="display:none;font-size:10px;color:var(--accent);text-decoration:none;margin-left:6px;">↗ open</a></label>
+          <input class="form-input" id="g-other" type="number" min="0" placeholder="Followers" style="width:130px;font-size:13px;" />
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Leave blank any platform you don't use</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Leave blank any platform you don't use · <span style="cursor:pointer;color:var(--accent);" onclick="closeGrowthModal();openGrowthSettings();">⚙ Edit my account URLs</span></div>
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeGrowthModal()">Cancel</button>
         <button class="btn-sm primary" onclick="saveGrowthCounts()">Save counts →</button>
@@ -3568,7 +3615,8 @@
     }
 
     // ── Growth tracker ─────────────────────────────────────────
-    var growthData = []; // all rows from social_stats
+    var growthData     = []; // all rows from social_stats
+    var growthSettings = {}; // saved profile URLs
     var GROWTH_PLATFORMS = [
       { key: 'youtube',   label: 'YouTube',    icon: '▶️',  field: 'g-youtube'   },
       { key: 'instagram', label: 'Instagram',  icon: '📸',  field: 'g-instagram' },
@@ -3581,6 +3629,10 @@
 
     async function loadGrowth() {
       if (!currentUser) return;
+      // Load settings (profile URLs) from profiles column or localStorage fallback
+      var stored = localStorage.getItem('growth_settings_' + currentUser.id);
+      growthSettings = stored ? JSON.parse(stored) : {};
+
       var res = await db.from('social_stats')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -3588,6 +3640,33 @@
       growthData = res.data || [];
       renderGrowth();
     }
+
+    function openGrowthSettings() {
+      GROWTH_PLATFORMS.forEach(function(p) {
+        var el = document.getElementById('gs-' + p.key);
+        if (el) el.value = growthSettings[p.key] || '';
+      });
+      document.getElementById('growth-settings-modal').classList.add('open');
+    }
+
+    function closeGrowthSettings() {
+      document.getElementById('growth-settings-modal').classList.remove('open');
+    }
+
+    function saveGrowthSettings() {
+      var settings = {};
+      GROWTH_PLATFORMS.forEach(function(p) {
+        var el = document.getElementById('gs-' + p.key);
+        if (el && el.value.trim()) settings[p.key] = el.value.trim();
+      });
+      growthSettings = settings;
+      localStorage.setItem('growth_settings_' + currentUser.id, JSON.stringify(settings));
+      closeGrowthSettings();
+      toast('Accounts saved ✓');
+      renderGrowth();
+    }
+
+    document.getElementById('growth-settings-modal').addEventListener('click', function(e){ if (e.target === this) closeGrowthSettings(); });
 
     function renderGrowth() {
       var empty    = document.getElementById('growth-empty');
@@ -3639,6 +3718,11 @@
           diffHtml = '<div style="font-size:13px;color:' + color2 + ';font-weight:700;margin-top:4px;">' + arrow2 + ' ' + Math.abs(diff).toLocaleString() + ' all time</div>';
         }
 
+        var profileUrl = growthSettings[p.key] || '';
+        var linkHtml = profileUrl
+          ? '<a href="' + profileUrl + '" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;margin-top:6px;display:inline-block;">↗ Open profile</a>'
+          : '<span style="font-size:10px;color:var(--text-muted);margin-top:6px;display:inline-block;cursor:pointer;" onclick="openGrowthSettings()">+ Add URL</span>';
+
         cards += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">' +
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
             '<span style="font-size:18px;">' + p.icon + '</span>' +
@@ -3646,6 +3730,7 @@
           '</div>' +
           '<div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">' + latestCount.toLocaleString() + '</div>' +
           diffHtml +
+          linkHtml +
         '</div>';
       });
 
@@ -3689,11 +3774,22 @@
     }
 
     function openGrowthModal() {
-      // Pre-fill with latest known counts
+      // Pre-fill with latest known counts + show open-profile links
       GROWTH_PLATFORMS.forEach(function(p) {
         var entries = growthData.filter(function(r){ return r.platform === p.key; });
         var el = document.getElementById(p.field);
         if (el) el.value = entries.length > 0 ? entries[0].follower_count : '';
+        // Update open link
+        var linkEl = document.getElementById('glink-' + p.key);
+        if (linkEl) {
+          var url = growthSettings[p.key] || '';
+          if (url) {
+            linkEl.href = url;
+            linkEl.style.display = 'inline';
+          } else {
+            linkEl.style.display = 'none';
+          }
+        }
       });
       document.getElementById('growth-modal').classList.add('open');
     }
