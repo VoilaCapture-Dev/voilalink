@@ -2694,25 +2694,27 @@
           if ((i.getAttribute('onclick') || '').includes("'" + tab + "'")) i.classList.add('active');
         });
       }
-      document.getElementById('panel-links').style.display     = tab === 'links'     ? 'block' : 'none';
-      document.getElementById('panel-themes').style.display    = tab === 'themes'    ? 'block' : 'none';
-      document.getElementById('panel-analytics').style.display = tab === 'analytics' ? 'block' : 'none';
-      document.getElementById('panel-settings').style.display  = tab === 'settings'  ? 'block' : 'none';
-      document.getElementById('panel-feedback').style.display  = tab === 'feedback'  ? 'block' : 'none';
-      document.getElementById('panel-upgrade').style.display   = tab === 'upgrade'   ? 'block' : 'none';
-      document.getElementById('panel-messages').style.display  = tab === 'messages'  ? 'flex'  : 'none';
-      document.getElementById('panel-outreach').style.display  = tab === 'outreach'  ? 'block' : 'none';
-      document.getElementById('panel-research').style.display  = tab === 'research'  ? 'block' : 'none';
-      document.getElementById('panel-planner').style.display   = tab === 'planner'   ? 'block' : 'none';
-      document.getElementById('panel-invoices').style.display  = tab === 'invoices'  ? 'block' : 'none';
-      document.getElementById('panel-growth').style.display      = tab === 'growth'      ? 'block' : 'none';
-      document.getElementById('panel-countdowns').style.display  = tab === 'countdowns'  ? 'block' : 'none';
-      document.getElementById('panel-polls').style.display       = tab === 'polls'       ? 'block' : 'none';
-      document.getElementById('panel-vcard').style.display       = tab === 'vcard'       ? 'block' : 'none';
-      document.getElementById('panel-email').style.display      = tab === 'email'       ? 'block' : 'none';
-      // Hide preview panel on full-width tabs
+      function sp(id, val) { var el = document.getElementById(id); if (el) el.style.display = val; }
+      sp('panel-links',      tab === 'links'      ? 'block' : 'none');
+      sp('panel-themes',     tab === 'themes'     ? 'block' : 'none');
+      sp('panel-analytics',  tab === 'analytics'  ? 'block' : 'none');
+      sp('panel-settings',   tab === 'settings'   ? 'block' : 'none');
+      sp('panel-feedback',   tab === 'feedback'   ? 'block' : 'none');
+      sp('panel-upgrade',    tab === 'upgrade'    ? 'block' : 'none');
+      sp('panel-messages',   tab === 'messages'   ? 'flex'  : 'none');
+      sp('panel-outreach',   tab === 'outreach'   ? 'block' : 'none');
+      sp('panel-research',   tab === 'research'   ? 'block' : 'none');
+      sp('panel-planner',    tab === 'planner'    ? 'block' : 'none');
+      sp('panel-invoices',   tab === 'invoices'   ? 'block' : 'none');
+      sp('panel-growth',     tab === 'growth'     ? 'block' : 'none');
+      sp('panel-countdowns', tab === 'countdowns' ? 'block' : 'none');
+      sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
+      sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
+      sp('panel-email',      tab === 'email'      ? 'block' : 'none');
+      // Always show/hide preview panel — never crashes
       const fullWidth = ['messages','outreach','research','planner'];
-      document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : 'flex';
+      var pp = document.querySelector('.preview-panel');
+      if (pp) pp.style.display = fullWidth.includes(tab) ? 'none' : 'flex';
       const titles = { links:'My Links', themes:'Themes', analytics:'Analytics', settings:'Settings', feedback:'Suggest a Feature', upgrade:'Upgrade to Pro', messages:'Messages', outreach:'AI Outreach', research:'Creator Research', planner:'My Planner', invoices:'Invoices' };
       document.getElementById('topbar-title').textContent = titles[tab] || 'My Links';
       if (tab === 'analytics') { loadAnalytics(); }
