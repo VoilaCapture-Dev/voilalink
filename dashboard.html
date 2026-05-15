@@ -805,6 +805,9 @@
     <a class="nav-item" href="#" onclick="showTab('invoices')" id="nav-invoices">
       <span class="nav-item-icon">🧾</span> Invoices
     </a>
+    <a class="nav-item" href="#" onclick="showTab('growth')" id="nav-growth">
+      <span class="nav-item-icon">📈</span> Growth
+    </a>
 
     <div class="nav-section-label">Account</div>
     <a class="nav-item" href="#" onclick="showTab('settings')">
@@ -1543,6 +1546,41 @@
         </div>
       </div>
 
+      <!-- ── Growth panel ──────────────────────────────────── -->
+      <div class="links-panel" id="panel-growth" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">📈 Growth</div>
+            <div class="panel-sub">Track your follower counts week over week</div>
+          </div>
+          <button class="btn-sm primary" onclick="openGrowthModal()">+ Update counts</button>
+        </div>
+
+        <!-- Summary cards -->
+        <div id="growth-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+        <!-- Weekly summary bar -->
+        <div id="growth-weekly-bar" style="display:none;background:linear-gradient(135deg,rgba(129,140,248,0.08),rgba(167,139,250,0.05));border:1px solid rgba(129,140,248,0.2);border-radius:14px;padding:16px 20px;margin-bottom:20px;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:8px;">This week's total growth</div>
+          <div id="growth-weekly-total" style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--accent);">+0</div>
+          <div id="growth-weekly-sub" style="font-size:12px;color:var(--text-muted);margin-top:4px;">across all platforms</div>
+        </div>
+
+        <!-- History table -->
+        <div id="growth-history" style="display:none;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:10px;">History</div>
+          <div id="growth-history-list"></div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="growth-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+          <div style="font-size:52px;margin-bottom:16px;">📈</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">Start tracking your growth</div>
+          <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Enter your follower counts once a week — VoilaLink shows you how much you've grown.</div>
+          <button class="btn-sm primary" onclick="openGrowthModal()" style="padding:12px 28px;font-size:14px;">+ Add my first counts →</button>
+        </div>
+      </div>
+
       <!-- ── Messages panel ────────────────────────────────── -->
       <div class="messages-panel" id="panel-messages" style="display:none;">
 
@@ -1745,6 +1783,57 @@
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Growth modal ────────────────────────────────────────── -->
+  <div class="modal-overlay" id="growth-modal">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-title">📈 Update counts</div>
+      <div class="modal-sub">Enter today's numbers — we'll track the change</div>
+      <button class="modal-close" onclick="closeGrowthModal()">×</button>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">▶️</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">YouTube</label>
+          <input class="form-input" id="g-youtube" type="number" min="0" placeholder="Subscribers" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">📸</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Instagram</label>
+          <input class="form-input" id="g-instagram" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">👤</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Facebook</label>
+          <input class="form-input" id="g-facebook" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">🎵</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">TikTok</label>
+          <input class="form-input" id="g-tiktok" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">🐦</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Twitter / X</label>
+          <input class="form-input" id="g-twitter" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">💼</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">LinkedIn</label>
+          <input class="form-input" id="g-linkedin" type="number" min="0" placeholder="Connections" style="width:140px;font-size:13px;" />
+        </div>
+        <div class="form-row" style="align-items:center;">
+          <div style="width:28px;text-align:center;font-size:18px;">🌐</div>
+          <label style="flex:1;font-size:13px;color:var(--text-primary);">Other</label>
+          <input class="form-input" id="g-other" type="number" min="0" placeholder="Followers" style="width:140px;font-size:13px;" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Leave blank any platform you don't use</div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeGrowthModal()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveGrowthCounts()">Save counts →</button>
       </div>
     </div>
   </div>
@@ -2076,6 +2165,7 @@
       document.getElementById('panel-research').style.display  = tab === 'research'  ? 'block' : 'none';
       document.getElementById('panel-planner').style.display   = tab === 'planner'   ? 'block' : 'none';
       document.getElementById('panel-invoices').style.display  = tab === 'invoices'  ? 'block' : 'none';
+      document.getElementById('panel-growth').style.display    = tab === 'growth'    ? 'block' : 'none';
       // Hide preview panel on full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       document.querySelector('.preview-panel').style.display = fullWidth.includes(tab) ? 'none' : '';
@@ -2087,6 +2177,7 @@
       if (tab === 'outreach')  loadOutreachLog();
       if (tab === 'planner')   loadPlanner();
       if (tab === 'invoices')  loadInvoices();
+      if (tab === 'growth')    loadGrowth();
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -3475,6 +3566,160 @@
         '</div>' + printBtn +
         '</body></html>';
     }
+
+    // ── Growth tracker ─────────────────────────────────────────
+    var growthData = []; // all rows from social_stats
+    var GROWTH_PLATFORMS = [
+      { key: 'youtube',   label: 'YouTube',    icon: '▶️',  field: 'g-youtube'   },
+      { key: 'instagram', label: 'Instagram',  icon: '📸',  field: 'g-instagram' },
+      { key: 'facebook',  label: 'Facebook',   icon: '👤',  field: 'g-facebook'  },
+      { key: 'tiktok',    label: 'TikTok',     icon: '🎵',  field: 'g-tiktok'    },
+      { key: 'twitter',   label: 'Twitter / X',icon: '🐦',  field: 'g-twitter'   },
+      { key: 'linkedin',  label: 'LinkedIn',   icon: '💼',  field: 'g-linkedin'  },
+      { key: 'other',     label: 'Other',      icon: '🌐',  field: 'g-other'     }
+    ];
+
+    async function loadGrowth() {
+      if (!currentUser) return;
+      var res = await db.from('social_stats')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('recorded_at', { ascending: false });
+      growthData = res.data || [];
+      renderGrowth();
+    }
+
+    function renderGrowth() {
+      var empty    = document.getElementById('growth-empty');
+      var grid     = document.getElementById('growth-stats-grid');
+      var weekBar  = document.getElementById('growth-weekly-bar');
+      var histDiv  = document.getElementById('growth-history');
+
+      if (growthData.length === 0) {
+        if (empty)   empty.style.display   = 'block';
+        if (grid)    grid.style.display    = 'none';
+        if (weekBar) weekBar.style.display = 'none';
+        if (histDiv) histDiv.style.display = 'none';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      if (grid)  grid.style.display  = 'grid';
+
+      var now      = new Date();
+      var weekAgo  = new Date(now - 7 * 24 * 60 * 60 * 1000);
+      var totalGrowth = 0;
+      var hasWeekData = false;
+      var cards = '';
+
+      GROWTH_PLATFORMS.forEach(function(p) {
+        // Latest entry for this platform
+        var entries = growthData.filter(function(r){ return r.platform === p.key; });
+        if (entries.length === 0) return;
+
+        var latest = entries[0]; // already sorted desc
+        var latestCount = latest.follower_count;
+
+        // Find entry closest to 7 days ago
+        var oldEntry = entries.find(function(r){ return new Date(r.recorded_at) <= weekAgo; });
+        var diff = null;
+        var diffHtml = '';
+        if (oldEntry) {
+          diff = latestCount - oldEntry.follower_count;
+          totalGrowth += diff;
+          hasWeekData = true;
+          var color = diff > 0 ? '#4ade80' : diff < 0 ? '#ef4444' : 'var(--text-muted)';
+          var arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+          diffHtml = '<div style="font-size:13px;color:' + color + ';font-weight:700;margin-top:4px;">' + arrow + ' ' + Math.abs(diff).toLocaleString() + ' this week</div>';
+        } else if (entries.length > 1) {
+          diff = latestCount - entries[entries.length - 1].follower_count;
+          totalGrowth += diff;
+          hasWeekData = true;
+          var color2 = diff > 0 ? '#4ade80' : diff < 0 ? '#ef4444' : 'var(--text-muted)';
+          var arrow2 = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
+          diffHtml = '<div style="font-size:13px;color:' + color2 + ';font-weight:700;margin-top:4px;">' + arrow2 + ' ' + Math.abs(diff).toLocaleString() + ' all time</div>';
+        }
+
+        cards += '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+            '<span style="font-size:18px;">' + p.icon + '</span>' +
+            '<span style="font-size:12px;color:var(--text-muted);font-family:\'DM Mono\',monospace;">' + p.label + '</span>' +
+          '</div>' +
+          '<div style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:22px;color:var(--text-primary);">' + latestCount.toLocaleString() + '</div>' +
+          diffHtml +
+        '</div>';
+      });
+
+      if (grid) grid.innerHTML = cards || '<div style="color:var(--text-muted);font-size:13px;">No data yet</div>';
+
+      // Weekly total bar
+      if (weekBar) {
+        weekBar.style.display = hasWeekData ? 'block' : 'none';
+        var totalEl = document.getElementById('growth-weekly-total');
+        var subEl   = document.getElementById('growth-weekly-sub');
+        if (totalEl) {
+          var sign = totalGrowth >= 0 ? '+' : '';
+          totalEl.textContent = sign + totalGrowth.toLocaleString();
+          totalEl.style.color = totalGrowth >= 0 ? 'var(--accent)' : '#ef4444';
+        }
+        if (subEl) subEl.textContent = 'across all platforms vs last week';
+      }
+
+      // History
+      if (histDiv) {
+        var histList = document.getElementById('growth-history-list');
+        if (histList && growthData.length > 0) {
+          histDiv.style.display = 'block';
+          // Group by date, show last 10 entries
+          var shown = growthData.slice(0, 10);
+          histList.innerHTML = shown.map(function(r) {
+            var p = GROWTH_PLATFORMS.find(function(pl){ return pl.key === r.platform; });
+            var icon = p ? p.icon : '🌐';
+            var label = p ? p.label : r.platform;
+            var d = new Date(r.recorded_at);
+            var dateStr = d.getDate() + ' ' + MONTH_NAMES[d.getMonth()] + ' ' + d.getFullYear();
+            return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">' +
+              '<span style="font-size:16px;">' + icon + '</span>' +
+              '<span style="flex:1;font-size:13px;color:var(--text-primary);">' + label + '</span>' +
+              '<span style="font-family:\'DM Mono\',monospace;font-size:12px;color:var(--accent);">' + r.follower_count.toLocaleString() + '</span>' +
+              '<span style="font-size:11px;color:var(--text-muted);min-width:90px;text-align:right;">' + dateStr + '</span>' +
+            '</div>';
+          }).join('');
+        }
+      }
+    }
+
+    function openGrowthModal() {
+      // Pre-fill with latest known counts
+      GROWTH_PLATFORMS.forEach(function(p) {
+        var entries = growthData.filter(function(r){ return r.platform === p.key; });
+        var el = document.getElementById(p.field);
+        if (el) el.value = entries.length > 0 ? entries[0].follower_count : '';
+      });
+      document.getElementById('growth-modal').classList.add('open');
+    }
+
+    function closeGrowthModal() {
+      document.getElementById('growth-modal').classList.remove('open');
+    }
+
+    async function saveGrowthCounts() {
+      var rows = [];
+      GROWTH_PLATFORMS.forEach(function(p) {
+        var el  = document.getElementById(p.field);
+        var val = el ? parseInt(el.value) : NaN;
+        if (!isNaN(val) && val >= 0) {
+          rows.push({ user_id: currentUser.id, platform: p.key, follower_count: val });
+        }
+      });
+      if (rows.length === 0) { toast('Please enter at least one count'); return; }
+      var res = await db.from('social_stats').insert(rows);
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      closeGrowthModal();
+      toast('Growth counts saved ✓');
+      await loadGrowth();
+    }
+
+    document.getElementById('growth-modal').addEventListener('click', function(e){ if (e.target === this) closeGrowthModal(); });
 
     // ── Apply trial access to analytics & themes ──────────────
     async function applyTrialToAnalytics() {
