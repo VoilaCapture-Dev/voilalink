@@ -2189,10 +2189,11 @@
       </div>
 
       <!-- ══ Right: live preview (fixed) ═════════════════════ -->
-      <div id="preview-resizer" style="position:absolute;top:0;bottom:0;width:12px;cursor:col-resize;z-index:10;right:294px;display:flex;align-items:center;justify-content:center;" title="Drag to resize preview">
-        <div id="preview-resizer-grip" style="width:3px;height:40px;border-radius:3px;background:rgba(255,255,255,0.12);transition:background 0.15s;"></div>
-      </div>
       <div class="preview-panel">
+        <!-- Drag handle on the left edge of the preview panel -->
+        <div id="preview-resizer" title="Drag to resize" style="position:absolute;left:-7px;top:0;bottom:0;width:14px;cursor:col-resize;z-index:20;display:flex;align-items:center;justify-content:center;">
+          <div id="preview-resizer-grip" style="width:4px;height:48px;border-radius:4px;background:rgba(255,255,255,0.15);transition:background 0.15s;pointer-events:none;"></div>
+        </div>
 
         <!-- Preview body (scrollable) -->
         <div class="preview-panel-body">
@@ -5630,10 +5631,55 @@
         a.download = `voilalink-backup-${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        // Record that user downloaded a local backup
+        localStorage.setItem('vl_last_local_backup', Date.now().toString());
+        dismissLocalBackupBanner();
         toast('Backup downloaded ✓');
       } catch (e) {
         console.error('Export error', e);
         toast('Backup failed');
+      }
+    }
+
+    // ── Local backup reminder banner ──────────────────────────
+    const LOCAL_BACKUP_REMINDER_DAYS = 7;
+
+    function checkLocalBackupReminder() {
+      var last = parseInt(localStorage.getItem('vl_last_local_backup') || '0');
+      var daysSince = (Date.now() - last) / (1000 * 60 * 60 * 24);
+      // Show banner if never backed up locally, or it's been 7+ days
+      if (last === 0 || daysSince >= LOCAL_BACKUP_REMINDER_DAYS) {
+        showLocalBackupBanner(last === 0 ? null : Math.floor(daysSince));
+      }
+    }
+
+    function showLocalBackupBanner(daysSince) {
+      if (document.getElementById('local-backup-banner')) return; // already showing
+      var msg = daysSince === null
+        ? "You haven't saved a local backup file yet."
+        : 'Your last local backup was ' + daysSince + ' day' + (daysSince !== 1 ? 's' : '') + ' ago.';
+      var banner = document.createElement('div');
+      banner.id = 'local-backup-banner';
+      banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateX(120px);'
+        + 'background:#13131a;border:1px solid rgba(251,191,36,0.35);border-radius:12px;'
+        + 'padding:12px 16px;z-index:5000;display:flex;align-items:center;gap:12px;'
+        + 'box-shadow:0 8px 32px rgba(0,0,0,0.5);max-width:460px;width:90%;font-size:12px;';
+      banner.innerHTML = '<span style="font-size:18px;flex-shrink:0;">💾</span>'
+        + '<div style="flex:1;"><div style="font-weight:600;color:#fbbf24;margin-bottom:2px;">Local backup recommended</div>'
+        + '<div style="color:var(--text-muted);">' + msg + ' Save a copy to your computer for extra safety.</div></div>'
+        + '<div style="display:flex;gap:8px;flex-shrink:0;">'
+        + '<button onclick="exportSettings()" style="font-size:11px;padding:6px 12px;background:linear-gradient(135deg,#818cf8,#a78bfa);border:none;border-radius:7px;color:#fff;cursor:pointer;font-weight:600;white-space:nowrap;">⬇ Save now</button>'
+        + '<button onclick="dismissLocalBackupBanner(true)" style="font-size:11px;padding:6px 10px;background:none;border:1px solid var(--border);border-radius:7px;color:var(--text-muted);cursor:pointer;white-space:nowrap;">Remind later</button>'
+        + '</div>';
+      document.body.appendChild(banner);
+    }
+
+    function dismissLocalBackupBanner(snooze) {
+      var b = document.getElementById('local-backup-banner');
+      if (b) b.remove();
+      if (snooze) {
+        // Snooze for 3 days before reminding again
+        localStorage.setItem('vl_last_local_backup', (Date.now() - (LOCAL_BACKUP_REMINDER_DAYS - 3) * 24 * 60 * 60 * 1000).toString());
       }
     }
 
@@ -5676,6 +5722,8 @@
         }
 
         console.log('[VoilaLink] Daily backup saved', backup.exported_at);
+        // Prompt for local file backup if overdue
+        checkLocalBackupReminder();
       } catch(e) {
         console.warn('[VoilaLink] Auto-backup failed', e);
       }
@@ -5861,15 +5909,13 @@
       var savedW = parseInt(localStorage.getItem('vl_preview_width') || '0');
       if (savedW >= 220 && savedW <= 600) {
         preview.style.width = savedW + 'px';
-        resizer.style.right = (savedW - 6) + 'px';
       }
 
-      // Hover highlight on the grip bar
       resizer.addEventListener('mouseenter', function() {
         if (grip) grip.style.background = '#818cf8';
       });
       resizer.addEventListener('mouseleave', function() {
-        if (!resizing && grip) grip.style.background = 'rgba(255,255,255,0.12)';
+        if (!resizing && grip) grip.style.background = 'rgba(255,255,255,0.15)';
       });
 
       var resizing = false, startX = 0, startW = 0;
@@ -5884,15 +5930,14 @@
       });
       document.addEventListener('mousemove', function(e) {
         if (!resizing) return;
-        var delta = startX - e.clientX;   // drag left = wider preview
+        var delta = startX - e.clientX;  // drag left = wider
         var newW  = Math.max(220, Math.min(600, startW + delta));
         preview.style.width = newW + 'px';
-        resizer.style.right = (newW - 6) + 'px';
       });
       document.addEventListener('mouseup', function() {
         if (!resizing) return;
         resizing = false;
-        if (grip) grip.style.background = 'rgba(255,255,255,0.12)';
+        if (grip) grip.style.background = 'rgba(255,255,255,0.15)';
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         localStorage.setItem('vl_preview_width', parseInt(preview.style.width));
