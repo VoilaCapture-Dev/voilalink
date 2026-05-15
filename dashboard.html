@@ -120,7 +120,8 @@
     .main {
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -161,7 +162,7 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
-    .content { display: flex; gap: 0; flex: 1; min-height: 0; }
+    .content { display: flex; gap: 0; flex: 1; min-height: 0; overflow: hidden; }
 
     /* ── Links panel ──────────────────────────────────────── */
     .links-panel {
