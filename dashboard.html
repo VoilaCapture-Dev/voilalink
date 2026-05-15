@@ -2040,8 +2040,10 @@
         </div>
       </div>
 
-      <!-- ── Help & About panel ────────────────────────────── -->
-      <div class="links-panel" id="panel-help" style="display:none;">
+      </div><!-- /panels-container -->
+
+      <!-- ── Help & About panel (absolute, overlays content area) ── -->
+      <div id="panel-help" style="display:none;position:absolute;left:0;top:0;bottom:0;right:300px;overflow-y:auto;padding:32px;background:var(--bg);z-index:5;box-sizing:border-box;">
 
         <!-- Version info -->
         <div class="panel-header">
@@ -2124,8 +2126,6 @@
           <button onclick="showTab('feedback')" class="btn-sm ghost">Open Feedback →</button>
         </div>
       </div>
-
-      </div><!-- /panels-container -->
 
       <!-- ══ World Clock (floating in empty canvas) ════════ -->
       <div class="world-clock-panel" id="world-clock-widget">
@@ -3269,8 +3269,8 @@
         '<style>' +
           'body{margin:0;background:#04060a;display:grid;grid-template-columns:repeat('+cols+',1fr);gap:6px;padding:10px;box-sizing:border-box;height:100vh;}' +
           '.z{background:#080d08;border:1px solid rgba(74,222,128,0.15);border-radius:8px;padding:10px;display:flex;flex-direction:column;justify-content:center;}' +
-          '.t{font-family:"DM Mono",monospace;font-size:28px;font-weight:500;color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.7),0 0 20px rgba(74,222,128,0.3);letter-spacing:0.03em;line-height:1;}' +
-          '.c{font-family:"DM Mono",monospace;font-size:9px;color:#4ade80;text-transform:uppercase;letter-spacing:0.1em;margin-top:5px;opacity:0.7;}' +
+          '.t{font-family:"DM Mono",monospace;font-size:32px;font-weight:500;color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.7),0 0 20px rgba(74,222,128,0.3);letter-spacing:0.03em;line-height:1;}' +
+          '.c{font-family:"DM Mono",monospace;font-size:13px;color:#4ade80;text-transform:uppercase;letter-spacing:0.1em;margin-top:5px;opacity:0.9;}' +
         '</style></head><body>');
       zones.forEach(function(z) {
         win.document.write('<div class="z"><div class="t" id="'+z.id+'">--:--</div><div class="c">'+z.label+'</div></div>');
