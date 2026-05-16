@@ -207,6 +207,8 @@
     /* ── Panels container (grid col 1 — left, scrollable) ─── */
     /* Grid cell has definite height → overflow-y:auto works.   */
     .panels-container {
+      grid-column: 1;    /* explicitly left — never auto-swapped */
+      grid-row: 1;
       overflow-y: auto;
       overflow-x: hidden;
       min-height: 0;
@@ -470,6 +472,8 @@
     /* ── Preview panel (grid col 2 — right, 300px) ──────── */
     /* Grid cell controls size; panel scrolls its own content. */
     .preview-panel {
+      grid-column: 2;    /* explicitly right — never auto-swapped */
+      grid-row: 1;
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
