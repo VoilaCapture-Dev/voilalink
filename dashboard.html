@@ -5186,23 +5186,20 @@
     // ── Shared Calendar ────────────────────────────────────────
     var calendarList = [];
 
-    // Diagnostic: use elementFromPoint to find the REAL topmost element at click position
+    // Diagnostic: show button rects + computed pointer-events
     var _calDiagListener = null;
     function _attachCalDiag() {
       if (_calDiagListener) document.removeEventListener('click', _calDiagListener, true);
       _calDiagListener = function(e) {
-        var x = Math.round(e.clientX), y = Math.round(e.clientY);
-        // Check what element is actually at click position AND at button positions
-        var atClick  = document.elementFromPoint(x, y);
-        var btn1     = document.getElementById('cal-new-btn');
-        var btn2     = document.getElementById('cal-first-btn');
-        var r1       = btn1 ? btn1.getBoundingClientRect() : null;
-        var r2       = btn2 ? btn2.getBoundingClientRect() : null;
-        var atBtn1   = r1 ? document.elementFromPoint(Math.round(r1.left+r1.width/2), Math.round(r1.top+r1.height/2)) : null;
-        var atBtn2   = r2 ? document.elementFromPoint(Math.round(r2.left+r2.width/2), Math.round(r2.top+r2.height/2)) : null;
-        function elName(el) { return el ? (el.tagName+(el.id?'#'+el.id:'')+(el.className?'.'+String(el.className).split(' ')[0]:'')) : 'null'; }
-        var calPE = window.getComputedStyle(document.getElementById('panel-calendar')||document.body).pointerEvents;
-        toast('atClick:'+elName(atClick)+' btn1center:'+elName(atBtn1)+' btn2center:'+elName(atBtn2)+' calPE:'+calPE);
+        var btn1 = document.getElementById('cal-new-btn');
+        var btn2 = document.getElementById('cal-first-btn');
+        var r1   = btn1 ? btn1.getBoundingClientRect() : null;
+        var r2   = btn2 ? btn2.getBoundingClientRect() : null;
+        var pe1  = btn1 ? window.getComputedStyle(btn1).pointerEvents : '?';
+        var pe2  = btn2 ? window.getComputedStyle(btn2).pointerEvents : '?';
+        var r1s  = r1 ? Math.round(r1.left)+','+Math.round(r1.top)+' '+Math.round(r1.width)+'x'+Math.round(r1.height) : 'null';
+        var r2s  = r2 ? Math.round(r2.left)+','+Math.round(r2.top)+' '+Math.round(r2.width)+'x'+Math.round(r2.height) : 'null';
+        toast('btn1:'+r1s+' pe:'+pe1+' | btn2:'+r2s+' pe:'+pe2);
       };
       document.addEventListener('click', _calDiagListener, true);
     }
