@@ -195,25 +195,23 @@
       display: flex;
       flex: 1;
       min-height: 0;
-      position: relative;
+      overflow: hidden;
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
-    /* position:absolute with top/bottom:0 gives a definite height
-       that overflow-y:auto can scroll — no flex-height ambiguity */
+    /* flex:1 + min-height:0 is the reliable cross-browser pattern
+       for a scrollable flex child — no absolute positioning needed */
     .panels-container {
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      right: 316px; /* 300px preview + 16px scrollbar gap */
-      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      overflow-y: scroll;   /* always visible scrollbar */
       overflow-x: hidden;
     }
 
-    /* ── Help panel (same absolute fill as panels-container) ── */
+    /* ── Help panel (full-width when preview is hidden) ────── */
     #panel-help {
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      right: 316px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -461,11 +459,11 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, always visible) ────── */
+    /* ── Preview panel (right column, flex item) ─────────── */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
+      flex-shrink: 0;
       width: 300px;
+      position: relative;          /* for the drag-resizer child */
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
@@ -919,13 +917,13 @@
         display: none !important;
       }
       .content {
-        position: relative;
-        overflow-y: auto;
+        overflow: visible;
+        min-height: 0;
       }
       .panels-container, #panel-help {
-        position: relative;
-        right: 0;
         overflow-y: visible;
+        overflow-x: visible;
+        min-height: auto;
       }
       .messages-panel {
         height: 100%;
@@ -2089,7 +2087,7 @@
       </div><!-- /panels-container -->
 
       <!-- ── Help & About panel (absolute, overlays content area) ── -->
-      <div id="panel-help" style="display:none;flex:1;overflow-y:auto;padding:32px;background:var(--bg);min-height:0;">
+      <div id="panel-help" style="display:none;padding:32px;background:var(--bg);">
 
         <!-- Version info -->
         <div class="panel-header">
@@ -6027,13 +6025,11 @@
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
-      var panels = document.querySelector('.panels-container');
-      var help   = document.getElementById('panel-help');
       function setPreviewWidth(w) {
+        /* With flex layout the preview is a flex item — just set width.
+           panels-container is flex:1 so it auto-fills the remaining space. */
         preview.style.width = w + 'px';
-        var r = (w + 16) + 'px';
-        if (panels) panels.style.right = r;
-        if (help)   help.style.right   = r;
+        preview.style.flexShrink = '0'; // prevent flex from overriding
       }
 
       // Restore saved width
