@@ -114,24 +114,75 @@ function renderBio(profile, links) {
   }
 
   activeLinks.forEach((link, index) => {
-    const a = document.createElement('a');
-    a.className = index === 0 ? 'link-card bio-link bio-link-featured' : 'link-card bio-link';
-    a.href = '#';
-    a.onclick = (e) => { e.preventDefault(); handleClick(link); };
+    const isGated   = link.gate_type && link.gate_type !== 'none' && link.gate_action_url;
+    const storageKey = `vl_gate_${link.id}`;
+    const isUnlocked = isGated ? localStorage.getItem(storageKey) === '1' : true;
 
-    const ytId = getYouTubeId(link.url);
-    const thumbHtml = ytId
-      ? `<img class="vl-yt-thumb" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">`
-      : '';
+    if (isGated && !isUnlocked) {
+      // ── Locked card ───────────────────────────────────────
+      const gateLabels = {
+        instagram_follow:  { action: 'Follow on Instagram', icon: '📸' },
+        twitter_follow:    { action: 'Follow on Twitter/X', icon: '𝕏' },
+        tiktok_follow:     { action: 'Follow on TikTok',    icon: '🎵' },
+        youtube_subscribe: { action: 'Subscribe on YouTube',icon: '▶️' },
+        facebook_follow:   { action: 'Follow on Facebook',  icon: '📘' },
+        email_signup:      { action: 'Join email list',     icon: '✉️' },
+      };
+      const lbl = gateLabels[link.gate_type] || { action: 'Complete action', icon: '🔒' };
 
-    a.innerHTML = `${thumbHtml}
-      <div class="link-icon" style="background:rgba(129,140,248,0.12);">${link.emoji || '🔗'}</div>
-      <div class="link-text">
-        <div class="link-title">${escHtml(link.title)}</div>
-        ${link.description ? `<div class="link-desc">${escHtml(link.description)}</div>` : ''}
-      </div>
-      <div class="link-arrow">→</div>`;
-    container.appendChild(a);
+      const card = document.createElement('div');
+      card.className = 'link-card bio-link';
+      card.id = `gate-card-${link.id}`;
+      card.style.cssText = 'flex-direction:column;align-items:stretch;gap:0;cursor:default;';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;padding:0 0 12px 0;">
+          <div class="link-icon" style="background:rgba(129,140,248,0.12);flex-shrink:0;">🔒</div>
+          <div class="link-text" style="flex:1;">
+            <div class="link-title">${escHtml(link.title)}</div>
+            <div class="link-desc" style="color:var(--text-muted);font-size:12px;">Unlock by completing an action below</div>
+          </div>
+        </div>
+        <div id="gate-step1-${link.id}" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:4px 0;">
+            ${lbl.icon} To unlock this link, please ${lbl.action.toLowerCase()} first
+          </div>
+          <a href="${escHtml(link.gate_action_url)}" target="_blank" rel="noopener noreferrer"
+            id="gate-go-${link.id}"
+            onclick="document.getElementById('gate-step2-${link.id}').style.display='flex';this.style.opacity='0.6';"
+            style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none;transition:opacity 0.15s;">
+            ${lbl.icon} ${escHtml(lbl.action)} →
+          </a>
+          <div id="gate-step2-${link.id}" style="display:none;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;color:var(--text-muted);text-align:center;">Done? Tap below to unlock the link:</div>
+            <button onclick="unlockGatedLink('${link.id}','${encodeURIComponent(link.url)}')"
+              style="padding:10px;background:rgba(129,140,248,0.15);border:1px solid var(--accent);border-radius:12px;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;"
+              onmouseover="this.style.background='rgba(129,140,248,0.25)'" onmouseout="this.style.background='rgba(129,140,248,0.15)'">
+              ✓ I did it — unlock this link
+            </button>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    } else {
+      // ── Normal (or already unlocked) card ─────────────────
+      const a = document.createElement('a');
+      a.className = index === 0 ? 'link-card bio-link bio-link-featured' : 'link-card bio-link';
+      a.href = '#';
+      a.onclick = (e) => { e.preventDefault(); handleClick(link); };
+
+      const ytId = getYouTubeId(link.url);
+      const thumbHtml = ytId
+        ? `<img class="vl-yt-thumb" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">`
+        : '';
+
+      a.innerHTML = `${thumbHtml}
+        <div class="link-icon" style="background:rgba(129,140,248,0.12);">${link.emoji || '🔗'}</div>
+        <div class="link-text">
+          <div class="link-title">${escHtml(link.title)}</div>
+          ${link.description ? `<div class="link-desc">${escHtml(link.description)}</div>` : ''}
+        </div>
+        <div class="link-arrow">→</div>`;
+      container.appendChild(a);
+    }
   });
 
   // Update footer link to include referral code
@@ -381,6 +432,30 @@ async function handleClick(link) {
   trackClick(link.id, window._pageReferrer).catch(() => {});
   // Open link
   window.open(link.url, '_blank', 'noopener,noreferrer');
+}
+
+// ── Gate unlock ──────────────────────────────────────────────
+function unlockGatedLink(linkId, encodedUrl) {
+  // Persist unlock in localStorage
+  localStorage.setItem(`vl_gate_${linkId}`, '1');
+
+  // Swap the locked card for a success flash, then open the link
+  const card = document.getElementById(`gate-card-${linkId}`);
+  if (card) {
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="link-icon" style="background:rgba(74,222,128,0.15);flex-shrink:0;">✅</div>
+        <div class="link-text">
+          <div class="link-title" style="color:#4ade80;">Unlocked! Opening…</div>
+          <div class="link-desc" style="font-size:11px;color:var(--text-muted);">This link is now permanently unlocked for you</div>
+        </div>
+      </div>`;
+    card.style.cursor = 'default';
+  }
+
+  // Open the destination URL
+  const url = decodeURIComponent(encodedUrl);
+  setTimeout(() => window.open(url, '_blank', 'noopener,noreferrer'), 400);
 }
 
 // ── Themes ───────────────────────────────────────────────────

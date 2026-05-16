@@ -2492,6 +2492,35 @@
               </div>
             </div>
 
+      <!-- Gate -->
+      <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:600;color:#475569;">🔒 Gate this link</label>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="link-gate-toggle" style="opacity:0;width:0;height:0;" onchange="toggleGateFields()">
+            <span onclick="document.getElementById('link-gate-toggle').click()" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s;"></span>
+          </label>
+        </div>
+        <div id="gate-fields" style="display:none;gap:12px;flex-direction:column;">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Require visitor to…</label>
+            <select id="link-gate-type" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;background:#fff;">
+              <option value="instagram_follow">Follow on Instagram</option>
+              <option value="twitter_follow">Follow on Twitter/X</option>
+              <option value="tiktok_follow">Follow on TikTok</option>
+              <option value="youtube_subscribe">Subscribe on YouTube</option>
+              <option value="facebook_follow">Follow on Facebook</option>
+              <option value="email_signup">Join email list</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Your profile / signup URL</label>
+            <input type="url" id="link-gate-action-url" placeholder="https://instagram.com/yourname" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;">
+          </div>
+          <p style="margin:0;font-size:11px;color:#94a3b8;">Visitor taps the action button → completes the action → taps "I did it" → link unlocks. Honour system — no API needed.</p>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>

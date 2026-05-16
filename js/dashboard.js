@@ -320,6 +320,18 @@ function openModal() {
   if (startEl2) startEl2.value = '';
   if (endEl2)   endEl2.value   = '';
 
+  // Reset gate fields
+  const gateToggle2  = document.getElementById('link-gate-toggle');
+  const gateFields2  = document.getElementById('gate-fields');
+  const gateSpan2    = gateToggle2 && gateToggle2.nextElementSibling;
+  const gateTypeEl2  = document.getElementById('link-gate-type');
+  const gateUrlEl2   = document.getElementById('link-gate-action-url');
+  if (gateToggle2)  gateToggle2.checked = false;
+  if (gateFields2)  gateFields2.style.display = 'none';
+  if (gateSpan2)    gateSpan2.style.background = '#cbd5e1';
+  if (gateTypeEl2)  gateTypeEl2.value = 'instagram_follow';
+  if (gateUrlEl2)   gateUrlEl2.value  = '';
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -348,6 +360,19 @@ function openEditModal(id) {
   const endEl   = document.getElementById('link-end-at');
   if (startEl) startEl.value = toLocal(link.start_at);
   if (endEl)   endEl.value   = toLocal(link.end_at);
+
+  // Gate fields
+  const hasGate     = !!(link.gate_type && link.gate_type !== 'none');
+  const gateToggle  = document.getElementById('link-gate-toggle');
+  const gateFields  = document.getElementById('gate-fields');
+  const gateSpan    = gateToggle && gateToggle.nextElementSibling;
+  const gateTypeEl  = document.getElementById('link-gate-type');
+  const gateUrlEl   = document.getElementById('link-gate-action-url');
+  if (gateToggle) gateToggle.checked = hasGate;
+  if (gateFields) gateFields.style.display = hasGate ? 'flex' : 'none';
+  if (gateSpan)   gateSpan.style.background = hasGate ? '#6366f1' : '#cbd5e1';
+  if (gateTypeEl) gateTypeEl.value = link.gate_type || 'instagram_follow';
+  if (gateUrlEl)  gateUrlEl.value  = link.gate_action_url || '';
 
   document.getElementById('modal').classList.add('open');
 }
@@ -378,6 +403,14 @@ function toggleScheduleFields() {
   if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
 }
 
+function toggleGateFields() {
+  const cb   = document.getElementById('link-gate-toggle');
+  const wrap = document.getElementById('gate-fields');
+  const span = cb && cb.nextElementSibling;
+  if (wrap) wrap.style.display = cb.checked ? 'flex' : 'none';
+  if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+}
+
 async function saveLink() {
   const url   = document.getElementById('input-url').value.trim();
   const title = document.getElementById('input-title').value.trim();
@@ -401,10 +434,17 @@ async function saveLink() {
   // Convert datetime-local to UTC ISO string (or null)
   const toISO = val => (val && schedEnabled) ? new Date(val).toISOString() : null;
 
+  // Gate fields
+  const gateEnabled    = document.getElementById('link-gate-toggle')?.checked;
+  const gateTypeVal    = document.getElementById('link-gate-type')?.value  || 'instagram_follow';
+  const gateActionUrl  = document.getElementById('link-gate-action-url')?.value.trim() || null;
+  const gateType       = (gateEnabled && gateActionUrl) ? gateTypeVal : 'none';
+  const gateUrl        = (gateEnabled && gateActionUrl) ? gateActionUrl : null;
+
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     if (editingId) {
-      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal) });
+      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl });
       const idx = allLinks.findIndex(l => l.id === editingId);
       if (idx !== -1) allLinks[idx] = updated;
       toast('Link updated ✓');
@@ -417,7 +457,9 @@ async function saveLink() {
         position: maxPos + 1,
         enabled: true,
         start_at: toISO(startVal),
-        end_at: toISO(endVal)
+        end_at: toISO(endVal),
+        gate_type: gateType,
+        gate_action_url: gateUrl
       });
       allLinks.push(newLink);
       toast('Link added ✓');
