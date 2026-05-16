@@ -201,9 +201,10 @@
     /* ── Panels container (left column, scrollable) ───────── */
     .panels-container {
       position: absolute;
-      top: 0; left: 0; bottom: 0;
-      right: 316px; /* 300px preview + 16px scrollbar gap */
-      overflow-y: scroll; /* always-visible scrollbar so Settings can scroll */
+      top: 0; left: 0;
+      right: 316px; /* 300px preview + 16px gap */
+      max-height: calc(100vh - 72px); /* 100vh always definite; 72px = topbar */
+      overflow-y: auto;
       overflow-x: hidden;
     }
 
@@ -5911,20 +5912,8 @@
       document.getElementById('version-modal').style.display = 'none';
     }
 
-    // Set an explicit pixel height on .content so that the absolute
-    // panels-container's "bottom:0" resolves against a definite size —
-    // without this the containing-block height is "auto" and overflow
-    // never triggers no matter what overflow-y value is set.
-    function fixContentHeight() {
-      var tb = document.querySelector('.topbar');
-      var ct = document.querySelector('.content');
-      if (tb && ct) ct.style.height = (window.innerHeight - tb.offsetHeight) + 'px';
-    }
-    window.addEventListener('resize', fixContentHeight);
-
     // Call version check after page load
     document.addEventListener('DOMContentLoaded', function() {
-      fixContentHeight();
       checkVersionModal();
       initPreviewResizer();
       initHorizontalResizer();
