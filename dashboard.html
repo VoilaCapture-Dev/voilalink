@@ -150,8 +150,7 @@
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
       height: 100vh;
-      overflow-y: auto;      /* .main is the scroll container */
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -161,7 +160,6 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       flex-shrink: 0;
-      position: sticky; top: 0;   /* stays visible as .main scrolls */
       z-index: 5;
     }
     .topbar-left { display: flex; flex-direction: column; gap: 2px; }
@@ -194,20 +192,24 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
+    /* Grid gives panels-container a definite height so overflow-y:auto works.  */
+    /* Column 1 = settings (1fr), Column 2 = preview (300px).                  */
     .content {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      grid-template-rows: 1fr;
       flex: 1;
-      min-height: calc(100vh - 72px); /* ensures absolute children (help panel) have room */
+      min-height: 0;
       position: relative;
+      overflow: hidden;
     }
 
-    /* ── Panels container (left column) ──────────────────── */
-    /* flex:1 fills the space beside the sticky preview panel.   */
-    /* No overflow — content grows naturally; .main scrolls.     */
+    /* ── Panels container (grid col 1 — left, scrollable) ─── */
+    /* Grid cell has definite height → overflow-y:auto works.   */
     .panels-container {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -465,16 +467,9 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, sticky) ────────────── */
-    /* sticky + align-self:flex-start means it stays in view   */
-    /* while .main scrolls, without needing absolute pos.      */
+    /* ── Preview panel (grid col 2 — right, 300px) ──────── */
+    /* Grid cell controls size; panel scrolls its own content. */
     .preview-panel {
-      position: sticky;
-      top: 72px;                  /* sit just below the sticky topbar */
-      align-self: flex-start;     /* required for sticky in flex container */
-      width: 300px;
-      flex-shrink: 0;
-      height: calc(100vh - 72px);
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
@@ -928,8 +923,9 @@
         display: none !important;
       }
       .content {
-        position: relative;
-        min-height: 0;
+        grid-template-columns: 1fr;  /* single column on mobile */
+        overflow-y: auto;
+        overflow-x: hidden;
       }
       #panel-help {
         position: relative;
@@ -6039,7 +6035,9 @@
       var panels = document.querySelector('.panels-container');
       function setPreviewWidth(w) {
         preview.style.width = w + 'px';
-        /* panels-container is flex:1 so it auto-adjusts — no right offset needed */
+        /* Update the grid column so panels-container auto-fills remaining space */
+        var content = document.querySelector('.content');
+        if (content) content.style.gridTemplateColumns = '1fr ' + w + 'px';
       }
 
       // Restore saved width
