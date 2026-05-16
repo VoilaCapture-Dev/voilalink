@@ -147,9 +147,11 @@
 
     /* ── Main ─────────────────────────────────────────────── */
     .main {
-      margin-left: 240px; flex: 1;
-      display: flex; flex-direction: column;
-      height: 100vh; overflow: hidden;
+      margin-left: 240px;
+      display: grid;
+      grid-template-rows: auto 1fr;  /* topbar=auto, content=remaining */
+      height: 100vh;
+      overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -191,20 +193,23 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
+    /* CSS Grid gives children a TRULY definite height (from the
+       grid row) so overflow-y:auto reliably triggers on them.   */
     .content {
-      display: flex;
-      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 300px; /* panels | preview */
+      overflow: hidden;
       min-height: 0;
-      position: relative;
+      position: relative; /* for #panel-help absolute overlay */
     }
 
-    /* ── Panels container (left column, scrollable) ───────── */
+    /* ── Panels container (left grid column, scrollable) ───── */
+    /* Grid gives this cell a definite height = content area height.
+       overflow-y:auto now reliably creates a scrollable region.   */
     .panels-container {
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      right: 316px; /* 300px preview + 16px scrollbar gap */
-      overflow-y: scroll; /* always-visible scrollbar so Settings can scroll */
+      overflow-y: auto;
       overflow-x: hidden;
+      min-width: 0; /* prevent grid blowout from wide content */
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -462,15 +467,14 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, absolute) ──────────── */
+    /* ── Preview panel (right grid column) ───────────────── */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 300px;
+      position: relative; /* for the drag-resizer child */
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
       border-left: 1px solid var(--border);
+      min-width: 0;
     }
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
@@ -920,12 +924,15 @@
         display: none !important;
       }
       .content {
-        position: relative;
+        grid-template-columns: 1fr; /* single column on mobile */
         overflow-y: auto;
       }
-      .panels-container, #panel-help {
+      .panels-container {
+        overflow-y: visible;
+      }
+      #panel-help {
         position: relative;
-        right: 0;
+        top: auto; left: auto; right: auto; bottom: auto;
         overflow-y: visible;
       }
       .messages-panel {
@@ -5911,25 +5918,11 @@
       document.getElementById('version-modal').style.display = 'none';
     }
 
-    // ── Fix panels-container scroll height ───────────────────
-    // position:absolute top/bottom relies on the containing block
-    // having a "definite" height. Some browsers won't resolve it
-    // from flex, so we set it explicitly with real pixel values.
-    function syncPanelsHeight() {
-      var topbar = document.querySelector('.topbar');
-      var pc     = document.querySelector('.panels-container');
-      if (!topbar || !pc) return;
-      var h = window.innerHeight - topbar.offsetHeight;
-      pc.style.height = h + 'px';
-    }
-    window.addEventListener('resize', syncPanelsHeight);
-
     // Call version check after page load
     document.addEventListener('DOMContentLoaded', function() {
       checkVersionModal();
       initPreviewResizer();
       initHorizontalResizer();
-      syncPanelsHeight();
     });
 
     // ── Horizontal canvas/content resizer ─────────────────────
@@ -6042,12 +6035,10 @@
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
-      var panels = document.querySelector('.panels-container');
+      var contentEl = document.querySelector('.content');
       function setPreviewWidth(w) {
-        preview.style.width = w + 'px';
-        var r = (w + 16) + 'px';
-        if (panels) panels.style.right = r;
-        /* panel-help always stays right:0 (preview is hidden on that tab) */
+        /* Grid layout: adjust the column sizes on .content */
+        if (contentEl) contentEl.style.gridTemplateColumns = '1fr ' + w + 'px';
       }
 
       // Restore saved width
