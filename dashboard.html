@@ -1108,6 +1108,9 @@
       <a class="nav-item" href="#" onclick="showTab('email')">
         <span class="nav-item-icon">📧</span>Email List
       </a>
+        <a class="nav-item" onclick="showTab('pixels')">
+          <span>📡</span><span>Pixels</span>
+        </a>
     </div>
 
     <div class="nav-section-label">Account</div>
@@ -1626,24 +1629,6 @@
           <span id="notif-status" style="font-size:11px;margin-left:10px;display:none;color:#4ade80;">✓ Notifications enabled</span>
         </div>
 
-        <!-- Pixel Tracking -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">📡 Tracking &amp; Pixels</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Paste your pixel IDs below — they fire automatically on every bio page visit for retargeting ads.</div>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">🟦 Meta (Facebook) Pixel ID</label>
-            <input id="settings-meta-pixel" class="form-input" type="text" placeholder="e.g. 1234567890123456" />
-          </div>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">🎵 TikTok Pixel ID</label>
-            <input id="settings-tiktok-pixel" class="form-input" type="text" placeholder="e.g. CXXXXXXXXXXXXXXXXX" />
-          </div>
-          <div style="margin-bottom:16px;">
-            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">📊 Google Analytics 4 Measurement ID</label>
-            <input id="settings-ga4-id" class="form-input" type="text" placeholder="e.g. G-XXXXXXXXXX" />
-          </div>
-          <button class="btn-sm primary" onclick="savePixelSettingsFromUI()">Save pixels</button>
-        </div>
 
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Account</div>
@@ -1995,6 +1980,39 @@
           <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">No polls yet</div>
           <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Ask your audience what they want, or let them submit questions — all from your bio page.</div>
           <button class="btn-sm primary" onclick="openPollModal()" style="padding:12px 28px;font-size:14px;">+ Create first poll →</button>
+        </div>
+      </div>
+
+      <!-- ── Pixels panel ─────────────────────────────────────── -->
+      <div class="links-panel" id="panel-pixels" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">📡 Tracking & Pixels</div>
+            <div class="panel-sub">Fire pixels on every bio page visit for retargeting ads</div>
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">Paste your pixel IDs below. They fire automatically whenever anyone visits your bio page at <span style="color:var(--accent);font-family:'DM Mono',monospace;">voilalink.com/boris</span> — no code needed on your side.</div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">🟦 Meta (Facebook) Pixel ID</label>
+            <input id="px-meta" class="form-input" type="text" placeholder="e.g. 1234567890123456" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Find it in Meta Events Manager → your pixel → Settings</div>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">🎵 TikTok Pixel ID</label>
+            <input id="px-tiktok" class="form-input" type="text" placeholder="e.g. CXXXXXXXXXXXXXXXXX" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Find it in TikTok Ads Manager → Assets → Events → Web Events</div>
+          </div>
+          <div style="margin-bottom:24px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">📊 Google Analytics 4 Measurement ID</label>
+            <input id="px-ga4" class="form-input" type="text" placeholder="e.g. G-XXXXXXXXXX" />
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Find it in GA4 → Admin → Data Streams → your stream → Measurement ID</div>
+          </div>
+          <button class="btn-sm primary" onclick="savePixelSettingsFromUI()">Save pixels →</button>
+        </div>
+        <div style="background:rgba(129,140,248,0.06);border:1px solid rgba(129,140,248,0.2);border-radius:12px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:6px;">💡 How it works</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">Every visitor to your bio page triggers a <strong style="color:var(--text-primary);">PageView</strong> event on whichever pixels you've configured. Use this to build retargeting audiences in Meta Ads, TikTok Ads, or Google Ads — no developer needed.</div>
         </div>
       </div>
 
@@ -3223,6 +3241,7 @@
       sp('panel-polls',      tab === 'polls'      ? 'block' : 'none');
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
+      sp('panel-pixels',     tab === 'pixels'     ? 'block' : 'none');
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
@@ -3269,6 +3288,7 @@
       if (tab === 'polls')       loadPolls();
       if (tab === 'vcard') { loadVCardSettings(); }
       if (tab === 'email') { loadEmailPanel(); }
+      if (tab === 'pixels') { loadPixelSettingsUI(); }
     }
 
     // Programmatic navigation to planner (from widget button)
@@ -3319,7 +3339,6 @@
           updateNotifUI('default');
         }
       }
-      loadPixelSettingsUI();
     }
 
     async function saveSettings() {
@@ -6415,9 +6434,9 @@
       try {
         var px = await getPixelSettings(currentUser.id);
         if (!px) return;
-        var m = document.getElementById('settings-meta-pixel');
-        var t = document.getElementById('settings-tiktok-pixel');
-        var g = document.getElementById('settings-ga4-id');
+        var m = document.getElementById('px-meta');
+        var t = document.getElementById('px-tiktok');
+        var g = document.getElementById('px-ga4');
         if (m) m.value = px.meta_pixel_id || '';
         if (t) t.value = px.tiktok_pixel_id || '';
         if (g) g.value = px.ga_id || '';
@@ -6426,9 +6445,9 @@
 
     async function savePixelSettingsFromUI() {
       if (!currentUser) return;
-      var meta = (document.getElementById('settings-meta-pixel').value || '').trim();
-      var tiktok = (document.getElementById('settings-tiktok-pixel').value || '').trim();
-      var ga = (document.getElementById('settings-ga4-id').value || '').trim();
+      var meta = (document.getElementById('px-meta').value || '').trim();
+      var tiktok = (document.getElementById('px-tiktok').value || '').trim();
+      var ga = (document.getElementById('px-ga4').value || '').trim();
       try {
         await savePixelSettings(currentUser.id, {
           meta_pixel_id: meta || null,
