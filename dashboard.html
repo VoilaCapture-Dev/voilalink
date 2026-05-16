@@ -5911,11 +5911,25 @@
       document.getElementById('version-modal').style.display = 'none';
     }
 
+    // ── Fix panels-container scroll height ───────────────────
+    // position:absolute top/bottom relies on the containing block
+    // having a "definite" height. Some browsers won't resolve it
+    // from flex, so we set it explicitly with real pixel values.
+    function syncPanelsHeight() {
+      var topbar = document.querySelector('.topbar');
+      var pc     = document.querySelector('.panels-container');
+      if (!topbar || !pc) return;
+      var h = window.innerHeight - topbar.offsetHeight;
+      pc.style.height = h + 'px';
+    }
+    window.addEventListener('resize', syncPanelsHeight);
+
     // Call version check after page load
     document.addEventListener('DOMContentLoaded', function() {
       checkVersionModal();
       initPreviewResizer();
       initHorizontalResizer();
+      syncPanelsHeight();
     });
 
     // ── Horizontal canvas/content resizer ─────────────────────
