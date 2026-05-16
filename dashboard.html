@@ -210,9 +210,12 @@
       z-index: 5;
       /* NO overflow here — overflow on fixed+scroller routes clicks to container */
     }
-    /* Inner scroll wrapper: keeps scrolling but lets clicks reach child elements */
+    /* Inner scroll wrapper: absolutely fills the fixed container so height is
+       always definite, and keeps overflow on a non-fixed scroller so Chrome's
+       compositor doesn't intercept pointer events on child buttons. */
     .panels-inner {
-      height: 100%;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
       overflow-y: auto;
       overflow-x: hidden;
     }
