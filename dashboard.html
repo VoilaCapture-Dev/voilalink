@@ -1626,6 +1626,25 @@
           <span id="notif-status" style="font-size:11px;margin-left:10px;display:none;color:#4ade80;">✓ Notifications enabled</span>
         </div>
 
+        <!-- Pixel Tracking -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">📡 Tracking &amp; Pixels</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Paste your pixel IDs below — they fire automatically on every bio page visit for retargeting ads.</div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">🟦 Meta (Facebook) Pixel ID</label>
+            <input id="settings-meta-pixel" class="form-input" type="text" placeholder="e.g. 1234567890123456" />
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">🎵 TikTok Pixel ID</label>
+            <input id="settings-tiktok-pixel" class="form-input" type="text" placeholder="e.g. CXXXXXXXXXXXXXXXXX" />
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">📊 Google Analytics 4 Measurement ID</label>
+            <input id="settings-ga4-id" class="form-input" type="text" placeholder="e.g. G-XXXXXXXXXX" />
+          </div>
+          <button class="btn-sm primary" onclick="savePixelSettingsFromUI()">Save pixels</button>
+        </div>
+
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Account</div>
           <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);" onclick="signOut()">Sign out</button>
@@ -3300,6 +3319,7 @@
           updateNotifUI('default');
         }
       }
+      loadPixelSettingsUI();
     }
 
     async function saveSettings() {
@@ -6387,6 +6407,38 @@
         document.body.style.userSelect = '';
         localStorage.setItem('vl_preview_width', parseInt(preview.style.width));
       });
+    }
+
+    // ── Pixel Tracking ─────────────────────────────────────
+    async function loadPixelSettingsUI() {
+      if (!currentUser) return;
+      try {
+        var px = await getPixelSettings(currentUser.id);
+        if (!px) return;
+        var m = document.getElementById('settings-meta-pixel');
+        var t = document.getElementById('settings-tiktok-pixel');
+        var g = document.getElementById('settings-ga4-id');
+        if (m) m.value = px.meta_pixel_id || '';
+        if (t) t.value = px.tiktok_pixel_id || '';
+        if (g) g.value = px.ga_id || '';
+      } catch(e) { /* table may not exist yet */ }
+    }
+
+    async function savePixelSettingsFromUI() {
+      if (!currentUser) return;
+      var meta = (document.getElementById('settings-meta-pixel').value || '').trim();
+      var tiktok = (document.getElementById('settings-tiktok-pixel').value || '').trim();
+      var ga = (document.getElementById('settings-ga4-id').value || '').trim();
+      try {
+        await savePixelSettings(currentUser.id, {
+          meta_pixel_id: meta || null,
+          tiktok_pixel_id: tiktok || null,
+          ga_id: ga || null
+        });
+        toast('Pixel settings saved ✓');
+      } catch(e) {
+        toast('Error saving pixels: ' + e.message);
+      }
     }
 
     // ── Toast ──────────────────────────────────────────────

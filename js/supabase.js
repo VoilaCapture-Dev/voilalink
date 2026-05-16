@@ -287,3 +287,28 @@ async function getReferrerStats(userId) {
   if (error) throw error;
   return data || [];
 }
+
+async function getPixelSettings(userId) {
+  const { data } = await db
+    .from('pixel_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  return data || null;
+}
+
+async function savePixelSettings(userId, settings) {
+  const { error } = await db
+    .from('pixel_settings')
+    .upsert({ user_id: userId, ...settings }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
+
+async function getPublicPixelSettings(userId) {
+  const { data } = await db
+    .from('pixel_settings')
+    .select('meta_pixel_id, tiktok_pixel_id, ga_id')
+    .eq('user_id', userId)
+    .single();
+  return data || null;
+}

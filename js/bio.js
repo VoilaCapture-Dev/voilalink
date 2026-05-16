@@ -23,8 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const countdowns = await getPublicCountdowns(profile.id);
     const polls      = await getPublicPolls(profile.id);
     const calEvents  = await getPublicCalendarEvents(profile.id);
+    const pixels     = await getPublicPixelSettings(profile.id);
     renderBio(profile, links);
     if (calEvents  && calEvents.length > 0)  renderCalendar(calEvents);
+    if (pixels) injectPixels(pixels);
     if (countdowns && countdowns.length > 0) renderCountdowns(countdowns);
     if (polls && polls.length > 0) renderPolls(polls);
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
@@ -873,5 +875,52 @@ function toggleVisitorTheme() {
     applyTheme(_creatorTheme);
     localStorage.setItem('vl_visitor_theme', 'dark');
     if (btn) btn.textContent = '🌙';
+  }
+}
+
+// ── Pixel injection ───────────────────────────────────────────
+function injectPixels(px) {
+  // Meta (Facebook) Pixel
+  if (px.meta_pixel_id) {
+    (function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js'));
+    window.fbq('init', px.meta_pixel_id);
+    window.fbq('track', 'PageView');
+  }
+
+  // TikTok Pixel
+  if (px.tiktok_pixel_id) {
+    (function(w,d,t){
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];
+      ttq.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];
+      ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
+      for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
+      ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};
+      ttq.load=function(e,n){var i='https://analytics.tiktok.com/i18n/pixel/events.js';
+      ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;
+      ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement('script');
+      o.type='text/javascript';o.async=!0;o.src=i+'?sdkid='+e+'&lib='+t;
+      var s=document.getElementsByTagName('script')[0];s.parentNode.insertBefore(o,s)};
+      ttq.load(px.tiktok_pixel_id);ttq.page();
+    }(window,document,'ttq'));
+  }
+
+  // Google Analytics 4
+  if (px.ga_id) {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + px.ga_id;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', px.ga_id);
   }
 }
