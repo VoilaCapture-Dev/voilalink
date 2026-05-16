@@ -196,30 +196,24 @@
       flex: 1;
       min-height: 0;
       overflow: hidden;
-      position: relative;   /* containing block for #panel-help overlay */
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
-    /* flex:1 + min-height:0 gives a definite cross-axis height
-       that overflow-y:scroll can scroll against */
+    /* flex:1 + min-height:0 is the reliable cross-browser pattern
+       for a scrollable flex child — no absolute positioning needed */
     .panels-container {
       flex: 1;
       min-height: 0;
-      height: 100%;           /* belt-and-suspenders: explicit cross height */
-      overflow-y: scroll;     /* always-visible scrollbar */
+      overflow-y: scroll;   /* always visible scrollbar */
       overflow-x: hidden;
     }
 
-    /* ── Help panel — absolute overlay of the full content area */
-    /* right:0 fills all the way to the edge (preview is hidden  */
-    /* on this tab) so no content is cut off on either side.     */
+    /* ── Help panel (full-width when preview is hidden) ────── */
     #panel-help {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      z-index: 2;
-      background: var(--bg); /* cover flex items behind when shown */
     }
 
     /* ── Links panel ──────────────────────────────────────── */
@@ -923,20 +917,13 @@
         display: none !important;
       }
       .content {
-        overflow-y: auto;
-        overflow-x: hidden;
+        overflow: visible;
+        min-height: 0;
       }
-      .panels-container {
-        height: auto;
+      .panels-container, #panel-help {
         overflow-y: visible;
         overflow-x: visible;
-      }
-      #panel-help {
-        position: relative;
-        top: auto; left: auto; right: auto; bottom: auto;
-        overflow-y: visible;
-        overflow-x: visible;
-        z-index: auto;
+        min-height: auto;
       }
       .messages-panel {
         height: 100%;
