@@ -1975,14 +1975,14 @@
             <div class="panel-title">📅 Shared Calendar</div>
             <div class="panel-sub">Show upcoming events, streams and office hours on your bio page</div>
           </div>
-          <button class="btn-sm primary" onclick="openCalendarModal()">+ New event</button>
+          <button class="btn-sm primary" id="cal-new-btn">+ New event</button>
         </div>
         <div id="calendar-list"></div>
         <div id="calendar-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-muted);">
           <div style="font-size:52px;margin-bottom:16px;">📅</div>
           <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">No events yet</div>
           <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Add your upcoming live streams, office hours, product launches or any event — visitors see them live on your bio page.</div>
-          <button class="btn-sm primary" onclick="openCalendarModal()" style="padding:12px 28px;font-size:14px;">+ Add first event →</button>
+          <button class="btn-sm primary" id="cal-first-btn" style="padding:12px 28px;font-size:14px;">+ Add first event →</button>
         </div>
       </div>
 
@@ -5187,6 +5187,11 @@
 
     async function loadCalendarEvents() {
       if (!currentUser) return;
+      // Wire up panel buttons via addEventListener so onclick attr scope never matters
+      var calNewBtn   = document.getElementById('cal-new-btn');
+      var calFirstBtn = document.getElementById('cal-first-btn');
+      if (calNewBtn)   { calNewBtn.onclick   = function(){ openCalendarModal(); }; }
+      if (calFirstBtn) { calFirstBtn.onclick = function(){ openCalendarModal(); }; }
       var res = await db.from('calendar_events').select('*').eq('user_id', currentUser.id).order('event_date', { ascending: true });
       calendarList = res.data || [];
       renderCalendarEvents();
