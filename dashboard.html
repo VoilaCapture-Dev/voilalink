@@ -150,8 +150,7 @@
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
       height: 100vh;
-      overflow-y: auto;      /* .main scrolls; panels-container grows naturally */
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -161,7 +160,6 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       flex-shrink: 0;
-      position: sticky; top: 0; /* stays visible as .main scrolls */
       z-index: 5;
     }
     .topbar-left { display: flex; flex-direction: column; gap: 2px; }
@@ -194,19 +192,22 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
+    /* Explicit calc height gives absolutely-positioned children  */
+    /* a definite box height → overflow-y:auto actually scrolls. */
     .content {
-      display: flex;
-      flex: 1;
       position: relative;
+      flex: 1; min-height: 0;
+      height: calc(100vh - 72px); /* 72px = topbar height */
+      overflow: hidden;
     }
 
-    /* ── Panels container (left, natural flow) ────────────── */
-    /* flex:1 grows with content. padding-right reserves space  */
-    /* for the fixed preview panel. .main scrolls the page.    */
+    /* ── Panels container (left column, scrollable) ─────────── */
     .panels-container {
-      flex: 1;
-      min-width: 0;
-      padding-right: 316px; /* 300px preview + 16px gap */
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      right: 316px; /* 300px preview + 16px gap */
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -464,20 +465,15 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (fixed to right of viewport) ─────── */
-    /* position:fixed is independent of flex/grid layout —      */
-    /* always pinned to the right edge, can never be swapped.   */
+    /* ── Preview panel (right column, absolute) ──────────── */
     .preview-panel {
-      position: fixed;
-      top: 72px;                  /* below topbar */
-      right: 0;
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
       width: 300px;
-      height: calc(100vh - 72px);
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
       border-left: 1px solid var(--border);
-      z-index: 4;
     }
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
@@ -926,8 +922,14 @@
       .preview-panel {
         display: none !important;
       }
+      .content {
+        height: calc(100vh - 60px); /* smaller topbar on mobile */
+        overflow-y: auto;
+      }
       .panels-container {
-        padding-right: 0; /* no gap needed on mobile — preview is hidden */
+        position: relative;
+        right: 0;
+        overflow-y: visible;
       }
       #panel-help {
         position: relative;
@@ -6037,8 +6039,7 @@
       var panels = document.querySelector('.panels-container');
       function setPreviewWidth(w) {
         preview.style.width = w + 'px';
-        /* preview is position:fixed so panels-container needs padding-right to match */
-        if (panels) panels.style.paddingRight = (w + 16) + 'px';
+        if (panels) panels.style.right = (w + 16) + 'px';
       }
 
       // Restore saved width
