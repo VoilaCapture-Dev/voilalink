@@ -389,6 +389,8 @@
       padding: 32px;
       width: 100%; max-width: 480px;
       position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     .modal-title {
       font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px;
@@ -994,6 +996,9 @@
     #pro-float-bar .pf-top {
       display: flex; align-items: center; justify-content: space-between;
       cursor: grab; user-select: none;
+      padding-bottom: 8px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid rgba(129,140,248,0.15);
     }
     #pro-float-bar .pf-top:active { cursor: grabbing; }
     #pro-float-bar .pf-title {
@@ -2337,7 +2342,7 @@
   <!-- ── Pro floating upsell bar ─────────────────────────── -->
   <div id="pro-float-bar">
     <div class="pf-top">
-      <div class="pf-title"><span style="opacity:0.35;margin-right:4px;font-size:10px;">⠿</span>⭐ Unlock Pro</div>
+      <div class="pf-title"><span style="opacity:0.45;margin-right:5px;font-size:11px;" title="Drag to move">⠿⠿</span>⭐ Unlock Pro</div>
       <button class="pf-dismiss" onclick="dismissProBar()" title="Dismiss">✕</button>
     </div>
     <div class="pf-features">
