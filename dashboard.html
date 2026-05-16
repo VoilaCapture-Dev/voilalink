@@ -5196,31 +5196,7 @@
     // ── Shared Calendar ────────────────────────────────────────
     var calendarList = [];
 
-    // Diagnostic: show button rects + computed pointer-events
-    var _calDiagListener = null;
-    function _attachCalDiag() {
-      if (_calDiagListener) document.removeEventListener('click', _calDiagListener, true);
-      _calDiagListener = function(e) {
-        var btn1 = document.getElementById('cal-new-btn');
-        var btn2 = document.getElementById('cal-first-btn');
-        var r1   = btn1 ? btn1.getBoundingClientRect() : null;
-        var r2   = btn2 ? btn2.getBoundingClientRect() : null;
-        var pe1  = btn1 ? window.getComputedStyle(btn1).pointerEvents : '?';
-        var pe2  = btn2 ? window.getComputedStyle(btn2).pointerEvents : '?';
-        var r1s  = r1 ? Math.round(r1.left)+','+Math.round(r1.top)+' '+Math.round(r1.width)+'x'+Math.round(r1.height) : 'null';
-        var r2s  = r2 ? Math.round(r2.left)+','+Math.round(r2.top)+' '+Math.round(r2.width)+'x'+Math.round(r2.height) : 'null';
-        toast('btn1:'+r1s+' pe:'+pe1+' | btn2:'+r2s+' pe:'+pe2);
-      };
-      document.addEventListener('click', _calDiagListener, true);
-    }
-
     async function loadCalendarEvents() {
-      // Wire buttons first — before any early return — so they always work
-      var calNewBtn   = document.getElementById('cal-new-btn');
-      var calFirstBtn = document.getElementById('cal-first-btn');
-      if (calNewBtn)   { calNewBtn.onclick   = function(){ openCalendarModal(); }; }
-      if (calFirstBtn) { calFirstBtn.onclick = function(){ openCalendarModal(); }; }
-      _attachCalDiag(); // diagnostic: find what element intercepts clicks
       if (!currentUser) return;
       var res = await db.from('calendar_events').select('*').eq('user_id', currentUser.id).order('event_date', { ascending: true });
       calendarList = res.data || [];
@@ -6206,6 +6182,47 @@
       checkVersionModal();
       initPreviewResizer();
       initHorizontalResizer();
+
+      // ── Click relay: fix Chrome compositor-scroller hit-test interception ──
+      // panels-inner is position:absolute + overflow:auto inside a position:fixed
+      // parent. Chrome promotes it to a compositor layer and routes all pointer
+      // events to panels-inner rather than its children. We detect clicks whose
+      // event.target is panels-inner itself (not a child) and re-dispatch to the
+      // real interactive element found via document.elementsFromPoint(), which
+      // uses the layout tree (not compositor layers) to enumerate elements at a point.
+      (function() {
+        var pi = document.querySelector('.panels-inner');
+        if (!pi) return;
+        pi.addEventListener('click', function(e) {
+          if (e.target !== pi) return; // already reached a real child — nothing to relay
+          var els = document.elementsFromPoint(e.clientX, e.clientY);
+          for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el === pi) continue;
+            // Walk up from el to find the nearest interactive ancestor within panels-inner
+            var cur = el;
+            while (cur && cur !== pi) {
+              var tag = cur.tagName;
+              if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' ||
+                  tag === 'TEXTAREA' || tag === 'A' ||
+                  cur.getAttribute('onclick') ||
+                  cur.getAttribute('role') === 'button') {
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                  cur.focus();
+                } else {
+                  cur.dispatchEvent(new MouseEvent('click', {
+                    bubbles: true, cancelable: true,
+                    clientX: e.clientX, clientY: e.clientY,
+                    view: window
+                  }));
+                }
+                return;
+              }
+              cur = cur.parentElement;
+            }
+          }
+        }, false);
+      })();
     });
 
     // ── Horizontal canvas/content resizer ─────────────────────
