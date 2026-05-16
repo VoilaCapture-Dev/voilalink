@@ -199,20 +199,11 @@
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
-    /* flex:none + explicit width (not flex-basis) keeps % reliable */
     .panels-container {
-      flex: none;
-      width: calc(100% - 316px); /* 300px preview + 16px scrollbar gap */
+      flex: 1;
+      margin-right: 316px; /* keeps scrollbar visible beside absolute preview */
       min-width: 0;
       min-height: 0;
-      overflow-y: auto;
-    }
-
-    /* ── Help panel (flex sibling, same width as panels-container) ── */
-    #panel-help {
-      flex: none;
-      width: calc(100% - 316px);
-      min-width: 0;
       overflow-y: auto;
     }
 
@@ -921,7 +912,7 @@
         overflow-y: auto;
       }
       .panels-container {
-        width: 100%;
+        margin-right: 0;
         overflow-y: visible;
       }
       .messages-panel {
@@ -2086,7 +2077,7 @@
       </div><!-- /panels-container -->
 
       <!-- ── Help & About panel (absolute, overlays content area) ── -->
-      <div id="panel-help" style="display:none;padding:32px;background:var(--bg);min-height:0;">
+      <div id="panel-help" style="display:none;flex:1;overflow-y:auto;padding:32px;background:var(--bg);min-height:0;">
 
         <!-- Version info -->
         <div class="panel-header">
@@ -6024,13 +6015,8 @@
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
-      var panels  = document.querySelector('.panels-container');
-      var help    = document.getElementById('panel-help');
       function setPreviewWidth(w) {
         preview.style.width = w + 'px';
-        var gap = 'calc(100% - ' + (w + 16) + 'px)';
-        if (panels) panels.style.width = gap;
-        if (help)   help.style.width   = gap;
       }
 
       // Restore saved width
