@@ -5186,15 +5186,17 @@
     // ── Shared Calendar ────────────────────────────────────────
     var calendarList = [];
 
-    // Diagnostic: capture-phase listener to reveal what element intercepts clicks on calendar panel
+    // Diagnostic: capture-phase listener to reveal scroll/position mismatch
     var _calDiagListener = null;
     function _attachCalDiag() {
       if (_calDiagListener) document.removeEventListener('click', _calDiagListener, true);
       _calDiagListener = function(e) {
         var t = e.target;
-        var info = (t.tagName || '?') + (t.id ? '#'+t.id : '') + (t.className ? '.'+String(t.className).replace(/\s+/g,'.') : '');
-        var rect = t.getBoundingClientRect();
-        toast('CLICK HIT: ' + info + ' @' + Math.round(rect.left)+','+Math.round(rect.top));
+        var info = (t.tagName||'?') + (t.id ? '#'+t.id : '') + (t.className ? '.'+String(t.className).split(' ')[0] : '');
+        var pc = document.querySelector('.panels-container');
+        var scrollTop = pc ? Math.round(pc.scrollTop) : '?';
+        var rect = document.getElementById('panel-calendar') ? document.getElementById('panel-calendar').getBoundingClientRect() : {top:'?',left:'?'};
+        toast('HIT:' + info + ' click@'+Math.round(e.clientX)+','+Math.round(e.clientY) + ' pcScroll:'+scrollTop + ' cal@'+Math.round(rect.left)+','+Math.round(rect.top));
       };
       document.addEventListener('click', _calDiagListener, true);
     }
