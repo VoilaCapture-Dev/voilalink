@@ -5186,12 +5186,26 @@
     // ── Shared Calendar ────────────────────────────────────────
     var calendarList = [];
 
+    // Diagnostic: capture-phase listener to reveal what element intercepts clicks on calendar panel
+    var _calDiagListener = null;
+    function _attachCalDiag() {
+      if (_calDiagListener) document.removeEventListener('click', _calDiagListener, true);
+      _calDiagListener = function(e) {
+        var t = e.target;
+        var info = (t.tagName || '?') + (t.id ? '#'+t.id : '') + (t.className ? '.'+String(t.className).replace(/\s+/g,'.') : '');
+        var rect = t.getBoundingClientRect();
+        toast('CLICK HIT: ' + info + ' @' + Math.round(rect.left)+','+Math.round(rect.top));
+      };
+      document.addEventListener('click', _calDiagListener, true);
+    }
+
     async function loadCalendarEvents() {
       // Wire buttons first — before any early return — so they always work
       var calNewBtn   = document.getElementById('cal-new-btn');
       var calFirstBtn = document.getElementById('cal-first-btn');
       if (calNewBtn)   { calNewBtn.onclick   = function(){ openCalendarModal(); }; }
       if (calFirstBtn) { calFirstBtn.onclick = function(){ openCalendarModal(); }; }
+      _attachCalDiag(); // diagnostic: find what element intercepts clicks
       if (!currentUser) return;
       var res = await db.from('calendar_events').select('*').eq('user_id', currentUser.id).order('event_date', { ascending: true });
       calendarList = res.data || [];
