@@ -207,9 +207,14 @@
       left: 240px;  /* right of sidebar */
       right: 316px; /* 300px preview + 16px gap */
       bottom: 0;
+      z-index: 5;
+      /* NO overflow here — overflow on fixed+scroller routes clicks to container */
+    }
+    /* Inner scroll wrapper: keeps scrolling but lets clicks reach child elements */
+    .panels-inner {
+      height: 100%;
       overflow-y: auto;
       overflow-x: hidden;
-      z-index: 5;   /* above preview-panel (z-index:4) so buttons receive clicks */
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -1155,6 +1160,7 @@
 
       <!-- ══ Left: all panels (scrollable) ═════════════════ -->
       <div class="panels-container">
+      <div class="panels-inner">
 
       <!-- ── Links panel ─────────────────────────────────── -->
       <div class="links-panel" id="panel-links">
@@ -2129,6 +2135,7 @@
         </div>
       </div>
 
+      </div><!-- /panels-inner -->
       </div><!-- /panels-container -->
 
       <!-- ── Help & About panel (absolute, overlays content area) ── -->
