@@ -2609,8 +2609,12 @@
         <input class="form-input" id="cal-title" type="text" placeholder="e.g. Live stream, Office Hours, Product Launch" maxlength="100" />
       </div>
       <div class="form-group">
-        <label class="form-label">Date & time *</label>
-        <input class="form-input" id="cal-date" type="datetime-local" />
+        <label class="form-label">Date *</label>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" id="cal-date" type="date" style="flex:1;" />
+          <input class="form-input" id="cal-time" type="time" style="width:120px;" placeholder="Time (optional)" />
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Time is optional — defaults to 9:00 AM if left blank</div>
       </div>
       <div class="form-group">
         <label class="form-label">Description (optional)</label>
@@ -5250,10 +5254,12 @@
         document.getElementById('cal-enabled').checked   = ev ? ev.is_enabled : true;
         if (ev && ev.event_date) {
           var d = new Date(ev.event_date);
-          var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
-          document.getElementById('cal-date').value = local;
+          var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString();
+          document.getElementById('cal-date').value = local.slice(0, 10);
+          document.getElementById('cal-time').value = local.slice(11, 16);
         } else {
           document.getElementById('cal-date').value = '';
+          document.getElementById('cal-time').value = '';
         }
         document.getElementById('calendar-modal').classList.add('open');
       } catch(e) {
@@ -5267,11 +5273,11 @@
 
     async function saveCalendarEvent() {
       var title   = document.getElementById('cal-title').value.trim();
-      var dateRaw = document.getElementById('cal-date').value;
+      var dateVal = document.getElementById('cal-date').value;
+      var timeVal = document.getElementById('cal-time').value || '09:00';
       if (!title)   { toast('Please enter a title'); return; }
-      if (!dateRaw) { toast('Please select a date and time'); return; }
-      // Accept date-only (YYYY-MM-DD) by defaulting time to 09:00
-      var dateStr = dateRaw.length === 10 ? dateRaw + 'T09:00' : dateRaw;
+      if (!dateVal) { toast('Please select a date'); return; }
+      var dateStr = dateVal + 'T' + timeVal;
       var id = document.getElementById('cal-id').value;
       var payload = {
         user_id:     currentUser.id,
