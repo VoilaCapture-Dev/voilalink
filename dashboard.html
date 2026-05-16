@@ -149,7 +149,9 @@
     .main {
       margin-left: 240px; flex: 1;
       display: flex; flex-direction: column;
-      height: 100vh; overflow: hidden;
+      height: 100vh;
+      overflow-y: auto;      /* .main is the scroll container */
+      overflow-x: hidden;
     }
 
     /* ── Top bar ──────────────────────────────────────────── */
@@ -159,6 +161,7 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       flex-shrink: 0;
+      position: sticky; top: 0;   /* stays visible as .main scrolls */
       z-index: 5;
     }
     .topbar-left { display: flex; flex-direction: column; gap: 2px; }
@@ -194,18 +197,17 @@
     .content {
       display: flex;
       flex: 1;
-      min-height: 0;
+      min-height: calc(100vh - 72px); /* ensures absolute children (help panel) have room */
       position: relative;
     }
 
-    /* ── Panels container (left column, scrollable) ───────── */
+    /* ── Panels container (left column) ──────────────────── */
+    /* flex:1 fills the space beside the sticky preview panel.   */
+    /* No overflow — content grows naturally; .main scrolls.     */
     .panels-container {
-      position: absolute;
-      top: 0; left: 0;
-      right: 316px; /* 300px preview + 16px gap */
-      max-height: calc(100vh - 72px); /* 100vh always definite; 72px = topbar */
-      overflow-y: auto;
-      overflow-x: hidden;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -463,11 +465,16 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, absolute) ──────────── */
+    /* ── Preview panel (right column, sticky) ────────────── */
+    /* sticky + align-self:flex-start means it stays in view   */
+    /* while .main scrolls, without needing absolute pos.      */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
+      position: sticky;
+      top: 72px;                  /* sit just below the sticky topbar */
+      align-self: flex-start;     /* required for sticky in flex container */
       width: 300px;
+      flex-shrink: 0;
+      height: calc(100vh - 72px);
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
@@ -922,9 +929,9 @@
       }
       .content {
         position: relative;
-        overflow-y: auto;
+        min-height: 0;
       }
-      .panels-container, #panel-help {
+      #panel-help {
         position: relative;
         right: 0;
         overflow-y: visible;
@@ -6032,9 +6039,7 @@
       var panels = document.querySelector('.panels-container');
       function setPreviewWidth(w) {
         preview.style.width = w + 'px';
-        var r = (w + 16) + 'px';
-        if (panels) panels.style.right = r;
-        /* panel-help always stays right:0 (preview is hidden on that tab) */
+        /* panels-container is flex:1 so it auto-adjusts — no right offset needed */
       }
 
       // Restore saved width
