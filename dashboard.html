@@ -199,12 +199,23 @@
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
+    /* position:absolute with top/bottom:0 gives a definite height
+       that overflow-y:auto can scroll — no flex-height ambiguity */
     .panels-container {
-      flex: 1;
-      margin-right: 316px; /* keeps scrollbar visible beside absolute preview */
-      min-width: 0;
-      min-height: 0;
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      right: 316px; /* 300px preview + 16px scrollbar gap */
       overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* ── Help panel (same absolute fill as panels-container) ── */
+    #panel-help {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      right: 316px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     /* ── Links panel ──────────────────────────────────────── */
@@ -911,8 +922,9 @@
         position: relative;
         overflow-y: auto;
       }
-      .panels-container {
-        margin-right: 0;
+      .panels-container, #panel-help {
+        position: relative;
+        right: 0;
         overflow-y: visible;
       }
       .messages-panel {
@@ -6015,8 +6027,13 @@
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
+      var panels = document.querySelector('.panels-container');
+      var help   = document.getElementById('panel-help');
       function setPreviewWidth(w) {
         preview.style.width = w + 'px';
+        var r = (w + 16) + 'px';
+        if (panels) panels.style.right = r;
+        if (help)   help.style.right   = r;
       }
 
       // Restore saved width
