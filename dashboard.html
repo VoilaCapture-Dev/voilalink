@@ -198,13 +198,15 @@
     }
 
     /* ── Panels container (left column, scrollable) ─────────── */
-    /* height set directly using viewport units — always definite, */
-    /* no parent propagation needed. overflow-y:auto will work.   */
+    /* position:fixed anchors to viewport — height from top+bottom  */
+    /* is ALWAYS definite. overflow-y:auto will scroll. No parent   */
+    /* height resolution needed at all.                             */
     .panels-container {
-      position: absolute;
-      top: 0; left: 0;
+      position: fixed;
+      top: 72px;    /* below topbar */
+      left: 240px;  /* right of sidebar */
       right: 316px; /* 300px preview + 16px gap */
-      height: calc(100vh - 72px); /* 72px = topbar height */
+      bottom: 0;
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -464,16 +466,17 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, absolute) ──────────── */
+    /* ── Preview panel (right column, fixed) ─────────────── */
     .preview-panel {
-      position: absolute;
-      top: 0; right: 0;
+      position: fixed;
+      top: 72px; right: 0;
+      bottom: 0;
       width: 300px;
-      height: calc(100vh - 72px); /* same as panels-container */
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
       border-left: 1px solid var(--border);
+      z-index: 4;
     }
     /* ── World Clock (floating in empty canvas) ─────────── */
     .world-clock-panel {
@@ -922,14 +925,13 @@
       .preview-panel {
         display: none !important;
       }
-      .content {
-        height: calc(100vh - 60px); /* smaller topbar on mobile */
-        overflow-y: auto;
-      }
       .panels-container {
         position: relative;
-        right: 0;
+        top: auto; left: auto; right: auto; bottom: auto;
         overflow-y: visible;
+      }
+      .content {
+        overflow-y: auto;
       }
       #panel-help {
         position: relative;
