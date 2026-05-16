@@ -120,15 +120,7 @@ function renderBio(profile, links) {
 
     if (isGated && !isUnlocked) {
       // ── Locked card ───────────────────────────────────────
-      const gateLabels = {
-        instagram_follow:  { action: 'Follow on Instagram', icon: '📸' },
-        twitter_follow:    { action: 'Follow on Twitter/X', icon: '𝕏' },
-        tiktok_follow:     { action: 'Follow on TikTok',    icon: '🎵' },
-        youtube_subscribe: { action: 'Subscribe on YouTube',icon: '▶️' },
-        facebook_follow:   { action: 'Follow on Facebook',  icon: '📘' },
-        email_signup:      { action: 'Join email list',     icon: '✉️' },
-      };
-      const lbl = gateLabels[link.gate_type] || { action: 'Complete action', icon: '🔒' };
+      const lbl = { action: link.gate_type, icon: '🔒' };
 
       const card = document.createElement('div');
       card.className = 'link-card bio-link';

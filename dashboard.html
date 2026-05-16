@@ -2508,15 +2508,9 @@
         </div>
         <div id="gate-fields" style="display:none;gap:12px;flex-direction:column;">
           <div>
-            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Require visitor to…</label>
-            <select id="link-gate-type" style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;background:#fff;">
-              <option value="instagram_follow">Follow on Instagram</option>
-              <option value="twitter_follow">Follow on Twitter/X</option>
-              <option value="tiktok_follow">Follow on TikTok</option>
-              <option value="youtube_subscribe">Subscribe on YouTube</option>
-              <option value="facebook_follow">Follow on Facebook</option>
-              <option value="email_signup">Join email list</option>
-            </select>
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Require visitor to… (type anything)</label>
+            <input type="text" id="link-gate-type" placeholder="e.g. Follow me on Instagram" maxlength="80"
+              style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;">
           </div>
           <div>
             <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Your profile / signup URL</label>

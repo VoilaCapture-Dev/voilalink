@@ -329,7 +329,7 @@ function openModal() {
   if (gateToggle2)  gateToggle2.checked = false;
   if (gateFields2)  gateFields2.style.display = 'none';
   if (gateSpan2)    gateSpan2.style.background = '#cbd5e1';
-  if (gateTypeEl2)  gateTypeEl2.value = 'instagram_follow';
+  if (gateTypeEl2)  gateTypeEl2.value = '';
   if (gateUrlEl2)   gateUrlEl2.value  = '';
 
   document.getElementById('modal').classList.add('open');
@@ -436,10 +436,10 @@ async function saveLink() {
 
   // Gate fields
   const gateEnabled    = document.getElementById('link-gate-toggle')?.checked;
-  const gateTypeVal    = document.getElementById('link-gate-type')?.value  || 'instagram_follow';
+  const gateTypeVal    = document.getElementById('link-gate-type')?.value.trim() || '';
   const gateActionUrl  = document.getElementById('link-gate-action-url')?.value.trim() || null;
-  const gateType       = (gateEnabled && gateActionUrl) ? gateTypeVal : 'none';
-  const gateUrl        = (gateEnabled && gateActionUrl) ? gateActionUrl : null;
+  const gateType       = (gateEnabled && gateTypeVal && gateActionUrl) ? gateTypeVal : 'none';
+  const gateUrl        = (gateEnabled && gateTypeVal && gateActionUrl) ? gateActionUrl : null;
 
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
