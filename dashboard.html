@@ -536,12 +536,17 @@
       letter-spacing: 0.03em;
       line-height: 1;
     }
+    .wc-date {
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      color: rgba(74,222,128,0.55);
+      letter-spacing: 0.05em; margin-top: 2px;
+    }
     .wc-city {
       font-family: 'DM Mono', monospace; font-size: 9px;
       color: #4ade80;
       text-shadow: 0 0 6px rgba(74,222,128,0.6);
       text-transform: uppercase;
-      letter-spacing: 0.1em; margin-top: 5px;
+      letter-spacing: 0.1em; margin-top: 4px;
       opacity: 0.75;
     }
     .wc-custom {
@@ -2312,18 +2317,22 @@
     <div class="wc-grid">
       <div class="wc-zone">
         <div class="wc-time" id="wc-london">--:--</div>
+        <div class="wc-date" id="wc-london-date">---</div>
         <div class="wc-city">London</div>
       </div>
       <div class="wc-zone">
         <div class="wc-time" id="wc-newyork">--:--</div>
+        <div class="wc-date" id="wc-newyork-date">---</div>
         <div class="wc-city">New York</div>
       </div>
       <div class="wc-zone">
         <div class="wc-time" id="wc-tokyo">--:--</div>
+        <div class="wc-date" id="wc-tokyo-date">---</div>
         <div class="wc-city">Tokyo</div>
       </div>
       <div class="wc-zone">
         <div class="wc-time" id="wc-sydney">--:--</div>
+        <div class="wc-date" id="wc-sydney-date">---</div>
         <div class="wc-city">Sydney</div>
       </div>
       <!-- Custom slot 1 -->
@@ -3480,6 +3489,12 @@
           el.textContent = now.toLocaleTimeString('en-GB', {
             timeZone: z.tz, hour: '2-digit', minute: '2-digit', hour12: false
           });
+          var dateEl = document.getElementById(z.id + '-date');
+          if (dateEl) {
+            dateEl.textContent = now.toLocaleDateString('en-GB', {
+              timeZone: z.tz, weekday: 'short', day: 'numeric', month: 'short'
+            });
+          }
         });
       }
       tick();
