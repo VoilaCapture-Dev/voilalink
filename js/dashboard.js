@@ -174,6 +174,12 @@ function renderLinks() {
     const scheduleBadge = (link.start_at || link.end_at)
       ? `<span style="font-size:10px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;border-radius:6px;padding:1px 6px;margin-left:6px;">⏰ Scheduled</span>`
       : '';
+    const abBadge = link.ab_label_b
+      ? `<span style="font-size:10px;background:rgba(129,140,248,0.15);color:var(--accent);border:1px solid rgba(129,140,248,0.3);border-radius:6px;padding:1px 6px;margin-left:6px;">🧪 A/B</span>`
+      : '';
+    const abStats = link.ab_label_b
+      ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;" id="ab-stats-${link.id}">A: — · B: —</div>`
+      : '';
     el.innerHTML = `
       <div class="drag-handle"><span></span><span></span><span></span></div>
       <div class="link-icon-box" style="background:rgba(129,140,248,0.12);">
@@ -181,8 +187,9 @@ function renderLinks() {
         <div class="edit-hint">✏️</div>
       </div>
       <div class="link-info">
-        <div class="link-title-text">${escHtml(link.title)}${scheduleBadge}</div>
+        <div class="link-title-text">${escHtml(link.title)}${scheduleBadge}${abBadge}</div>
         <div class="link-url-text">${escHtml(link.url)}</div>
+        ${abStats}
       </div>
       <div class="link-actions">
         <button class="link-toggle ${link.enabled ? '' : 'off'}"
@@ -212,6 +219,19 @@ function renderLinks() {
       }
     });
   }
+  // Load A/B stats for any links with tests active
+  allLinks.filter(l => l.ab_label_b).forEach(async link => {
+    try {
+      const stats = await getAbStats(link.id);
+      const el = document.getElementById('ab-stats-' + link.id);
+      if (!el) return;
+      const total = stats.a + stats.b;
+      const winner = total > 10
+        ? (stats.a > stats.b ? ' 🏆 A winning' : stats.b > stats.a ? ' 🏆 B winning' : ' tied')
+        : '';
+      el.textContent = `A: ${stats.a} clicks · B: ${stats.b} clicks${winner}`;
+    } catch(e) {}
+  });
 }
 
 function renderPreview() {
@@ -348,6 +368,18 @@ function openModal() {
   if (gateThumb2) gateThumb2.style.left = '2px';
   if (gateTypeEl2)  gateTypeEl2.value = '';
   if (gateUrlEl2)   gateUrlEl2.value  = '';
+
+  // Reset A/B fields
+  const abToggle2  = document.getElementById('link-ab-toggle');
+  const abFields2  = document.getElementById('ab-fields');
+  const abTrack2   = document.getElementById('ab-track');
+  const abThumb2   = document.getElementById('ab-thumb');
+  const abLabelEl2 = document.getElementById('link-ab-label-b');
+  if (abToggle2)  abToggle2.checked = false;
+  if (abFields2)  abFields2.style.display = 'none';
+  if (abTrack2)   abTrack2.style.background = '#cbd5e1';
+  if (abThumb2)   abThumb2.style.left = '2px';
+  if (abLabelEl2) abLabelEl2.value = '';
   // Reset schedule thumb too
   const schedTrack2 = document.getElementById('sched-track');
   const schedThumb2 = document.getElementById('sched-thumb');
@@ -419,6 +451,19 @@ function openEditModal(id) {
   if (schedTrack) schedTrack.style.background = hasSchedule ? '#6366f1' : '#cbd5e1';
   if (schedThumb) schedThumb.style.left = hasSchedule ? '22px' : '2px';
 
+  // A/B split test fields
+  const hasAb     = !!link.ab_label_b;
+  const abToggle  = document.getElementById('link-ab-toggle');
+  const abFields  = document.getElementById('ab-fields');
+  const abTrack   = document.getElementById('ab-track');
+  const abThumb   = document.getElementById('ab-thumb');
+  const abLabelEl = document.getElementById('link-ab-label-b');
+  if (abToggle)  abToggle.checked = hasAb;
+  if (abFields)  abFields.style.display = hasAb ? 'flex' : 'none';
+  if (abTrack)   abTrack.style.background = hasAb ? '#6366f1' : '#cbd5e1';
+  if (abThumb)   abThumb.style.left = hasAb ? '22px' : '2px';
+  if (abLabelEl) abLabelEl.value = link.ab_label_b || '';
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -438,6 +483,16 @@ function pickEmoji(el, emoji) {
   document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
   document.getElementById('input-emoji').value = emoji;
+}
+
+function toggleAbFields() {
+  const cb     = document.getElementById('link-ab-toggle');
+  const fields = document.getElementById('ab-fields');
+  const track  = document.getElementById('ab-track');
+  const thumb  = document.getElementById('ab-thumb');
+  if (fields) fields.style.display = cb.checked ? 'flex' : 'none';
+  if (track)  track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  if (thumb)  thumb.style.left = cb.checked ? '22px' : '2px';
 }
 
 function toggleScheduleFields() {
@@ -505,10 +560,14 @@ async function saveLink() {
   const gateType       = (gateEnabled && gateTypeVal && gateActionUrl) ? gateTypeVal : 'none';
   const gateUrl        = (gateEnabled && gateTypeVal && gateActionUrl) ? gateActionUrl : null;
 
+  // A/B Split Test
+  const abEnabled = document.getElementById('link-ab-toggle')?.checked;
+  const abLabelB  = abEnabled ? (document.getElementById('link-ab-label-b')?.value.trim() || null) : null;
+
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     if (editingId) {
-      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl, ios_url: iosUrl, android_url: androidUrl });
+      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl, ios_url: iosUrl, android_url: androidUrl, ab_label_b: abLabelB });
       const idx = allLinks.findIndex(l => l.id === editingId);
       if (idx !== -1) allLinks[idx] = updated;
       toast('Link updated ✓');
@@ -525,7 +584,8 @@ async function saveLink() {
         gate_type: gateType,
         gate_action_url: gateUrl,
         ios_url: iosUrl,
-        android_url: androidUrl
+        android_url: androidUrl,
+        ab_label_b: abLabelB
       });
       allLinks.push(newLink);
       toast('Link added ✓');

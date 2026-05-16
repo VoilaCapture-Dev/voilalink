@@ -125,11 +125,25 @@ async function deleteLink(id) {
   if (error) throw error;
 }
 
-async function trackClick(linkId, referrer) {
+async function trackClick(linkId, referrer, abVariant) {
   await db.from('link_clicks').insert({
     link_id: linkId,
-    referrer: referrer || null
+    referrer: referrer || null,
+    ab_variant: abVariant || null
   });
+}
+
+async function getAbStats(linkId) {
+  const { data } = await db
+    .from('link_clicks')
+    .select('ab_variant')
+    .eq('link_id', linkId)
+    .not('ab_variant', 'is', null);
+  if (!data) return { a: 0, b: 0 };
+  return {
+    a: data.filter(d => d.ab_variant === 'a').length,
+    b: data.filter(d => d.ab_variant === 'b').length
+  };
 }
 
 async function getLinkClicks(userId) {

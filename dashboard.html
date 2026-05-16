@@ -2627,6 +2627,28 @@
         </div>
       </div>
 
+      <!-- A/B Split Test -->
+      <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:600;color:#475569;">🧪 A/B Split Test</label>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="link-ab-toggle" style="opacity:0;position:absolute;width:0;height:0;" onchange="toggleAbFields()">
+            <span id="ab-track" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s;pointer-events:none;">
+              <span id="ab-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:.3s;pointer-events:none;"></span>
+            </span>
+          </label>
+        </div>
+        <div id="ab-fields" style="display:none;flex-direction:column;gap:10px;">
+          <div style="font-size:11px;color:#64748b;background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #e2e8f0;">
+            Half your visitors see <strong>Label A</strong> (your Title above), half see <strong>Label B</strong> below. Check Analytics to see which wins.
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Label B (alternative button text)</label>
+            <input type="text" id="link-ab-label-b" placeholder='e.g. "Join my community →"' style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;">
+          </div>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>

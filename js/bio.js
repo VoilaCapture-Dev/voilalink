@@ -163,18 +163,31 @@ function renderBio(profile, links) {
       const a = document.createElement('a');
       a.className = index === 0 ? 'link-card bio-link bio-link-featured' : 'link-card bio-link';
       a.href = '#';
-      a.onclick = (e) => { e.preventDefault(); handleClick(link); };
+      a.onclick = (e) => { e.preventDefault(); handleClick(link, a); };
 
       const ytId = getYouTubeId(link.url);
       const thumbHtml = ytId
         ? `<img class="vl-yt-thumb" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">`
         : '';
 
+      // A/B Split Test: pick variant per session per link
+      let abVariant = 'a';
+      let displayTitle = link.title;
+      if (link.ab_label_b) {
+        const key = 'ab_' + link.id;
+        abVariant = sessionStorage.getItem(key);
+        if (!abVariant) {
+          abVariant = Math.random() < 0.5 ? 'a' : 'b';
+          sessionStorage.setItem(key, abVariant);
+        }
+        if (abVariant === 'b') displayTitle = link.ab_label_b;
+      }
+      a.dataset.abVariant = abVariant;
       a.innerHTML = `${thumbHtml}
         <div class="link-icon" style="background:rgba(129,140,248,0.12);">${link.emoji || '🔗'}</div>
         <div class="link-text">
-          <div class="link-title">${escHtml(link.title)}</div>
-          ${link.description ? `<div class="link-desc">${escHtml(link.description)}</div>` : ''}
+          <div class="link-title">${escHtml(displayTitle)}</div>
+          ${link.description ? `<div class="link-desc">${escHtml(link.description)}<\/div>` : ''}
         </div>
         <div class="link-arrow">→</div>`;
       container.appendChild(a);
@@ -507,9 +520,11 @@ function getDeviceType() {
 }
 
 // ── Click tracking ───────────────────────────────────────────
-async function handleClick(link) {
+async function handleClick(link, el) {
+  // A/B variant from element data attribute
+  const abVariant = (el && el.dataset.abVariant) || null;
   // Track click in background — don't await so page feels instant
-  trackClick(link.id, window._pageReferrer).catch(() => {});
+  trackClick(link.id, window._pageReferrer, abVariant).catch(() => {});
   // Smart link routing
   let url = link.url;
   const device = getDeviceType();
