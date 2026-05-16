@@ -192,20 +192,19 @@
     .btn-sm.primary:hover { opacity: 0.88; }
 
     /* ── Content area ─────────────────────────────────────── */
-    /* Explicit calc height gives absolutely-positioned children  */
-    /* a definite box height → overflow-y:auto actually scrolls. */
     .content {
       position: relative;
       flex: 1; min-height: 0;
-      height: calc(100vh - 72px); /* 72px = topbar height */
-      overflow: hidden;
     }
 
     /* ── Panels container (left column, scrollable) ─────────── */
+    /* height set directly using viewport units — always definite, */
+    /* no parent propagation needed. overflow-y:auto will work.   */
     .panels-container {
       position: absolute;
-      top: 0; left: 0; bottom: 0;
+      top: 0; left: 0;
       right: 316px; /* 300px preview + 16px gap */
+      height: calc(100vh - 72px); /* 72px = topbar height */
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -468,8 +467,9 @@
     /* ── Preview panel (right column, absolute) ──────────── */
     .preview-panel {
       position: absolute;
-      top: 0; right: 0; bottom: 0;
+      top: 0; right: 0;
       width: 300px;
+      height: calc(100vh - 72px); /* same as panels-container */
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
