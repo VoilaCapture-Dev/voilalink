@@ -209,6 +209,7 @@
       bottom: 0;
       overflow-y: auto;
       overflow-x: hidden;
+      z-index: 5;   /* above preview-panel (z-index:4) so buttons receive clicks */
     }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
@@ -5186,12 +5187,12 @@
     var calendarList = [];
 
     async function loadCalendarEvents() {
-      if (!currentUser) return;
-      // Wire up panel buttons via addEventListener so onclick attr scope never matters
+      // Wire buttons first — before any early return — so they always work
       var calNewBtn   = document.getElementById('cal-new-btn');
       var calFirstBtn = document.getElementById('cal-first-btn');
       if (calNewBtn)   { calNewBtn.onclick   = function(){ openCalendarModal(); }; }
       if (calFirstBtn) { calFirstBtn.onclick = function(){ openCalendarModal(); }; }
+      if (!currentUser) return;
       var res = await db.from('calendar_events').select('*').eq('user_id', currentUser.id).order('event_date', { ascending: true });
       calendarList = res.data || [];
       renderCalendarEvents();
@@ -5234,20 +5235,24 @@
     }
 
     function openCalendarModal(ev) {
-      document.getElementById('calendar-modal-title').textContent = ev ? '✏ Edit Event' : '📅 New Event';
-      document.getElementById('cal-id').value          = ev ? ev.id : '';
-      document.getElementById('cal-title').value       = ev ? ev.title : '';
-      document.getElementById('cal-description').value = ev ? (ev.description || '') : '';
-      document.getElementById('cal-link').value        = ev ? (ev.link_url || '') : '';
-      document.getElementById('cal-enabled').checked   = ev ? ev.is_enabled : true;
-      if (ev && ev.event_date) {
-        var d = new Date(ev.event_date);
-        var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
-        document.getElementById('cal-date').value = local;
-      } else {
-        document.getElementById('cal-date').value = '';
+      try {
+        document.getElementById('calendar-modal-title').textContent = ev ? '✏ Edit Event' : '📅 New Event';
+        document.getElementById('cal-id').value          = ev ? ev.id : '';
+        document.getElementById('cal-title').value       = ev ? ev.title : '';
+        document.getElementById('cal-description').value = ev ? (ev.description || '') : '';
+        document.getElementById('cal-link').value        = ev ? (ev.link_url || '') : '';
+        document.getElementById('cal-enabled').checked   = ev ? ev.is_enabled : true;
+        if (ev && ev.event_date) {
+          var d = new Date(ev.event_date);
+          var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+          document.getElementById('cal-date').value = local;
+        } else {
+          document.getElementById('cal-date').value = '';
+        }
+        document.getElementById('calendar-modal').classList.add('open');
+      } catch(e) {
+        toast('Calendar error: ' + e.message);
       }
-      document.getElementById('calendar-modal').classList.add('open');
     }
 
     function closeCalendarModal() {
