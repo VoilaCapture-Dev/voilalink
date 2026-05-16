@@ -195,25 +195,28 @@
       display: flex;
       flex: 1;
       min-height: 0;
-      overflow: hidden;
+      position: relative;
     }
 
     /* ── Panels container (left column, scrollable) ───────── */
-    /* flex:1 + min-height:0 is the reliable cross-browser pattern
-       for a scrollable flex child — no absolute positioning needed */
     .panels-container {
-      flex: 1;
-      min-height: 0;
-      overflow-y: scroll;   /* always visible scrollbar */
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      right: 316px; /* 300px preview + 16px scrollbar gap */
+      overflow-y: scroll; /* always-visible scrollbar so Settings can scroll */
       overflow-x: hidden;
     }
 
-    /* ── Help panel (full-width when preview is hidden) ────── */
+    /* ── Help panel (full-width absolute overlay) ─────────── */
+    /* right:0 fills the full content width — preview is hidden  */
+    /* on this tab so there is no 316px gap needed on the right  */
     #panel-help {
-      flex: 1;
-      min-height: 0;
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      right: 0;
       overflow-y: auto;
       overflow-x: hidden;
+      background: var(--bg);
     }
 
     /* ── Links panel ──────────────────────────────────────── */
@@ -459,11 +462,11 @@
     .modal-footer { display: flex; gap: 10px; margin-top: 20px; }
     .modal-footer .btn-sm { flex: 1; padding: 11px; }
 
-    /* ── Preview panel (right column, flex item) ─────────── */
+    /* ── Preview panel (right column, absolute) ──────────── */
     .preview-panel {
-      flex-shrink: 0;
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
       width: 300px;
-      position: relative;          /* for the drag-resizer child */
       display: flex; flex-direction: column;
       overflow-y: auto;
       background: var(--surface);
@@ -917,13 +920,13 @@
         display: none !important;
       }
       .content {
-        overflow: visible;
-        min-height: 0;
+        position: relative;
+        overflow-y: auto;
       }
       .panels-container, #panel-help {
+        position: relative;
+        right: 0;
         overflow-y: visible;
-        overflow-x: visible;
-        min-height: auto;
       }
       .messages-panel {
         height: 100%;
@@ -6025,11 +6028,12 @@
       var preview = document.querySelector('.preview-panel');
       if (!resizer || !preview) return;
 
+      var panels = document.querySelector('.panels-container');
       function setPreviewWidth(w) {
-        /* With flex layout the preview is a flex item — just set width.
-           panels-container is flex:1 so it auto-fills the remaining space. */
         preview.style.width = w + 'px';
-        preview.style.flexShrink = '0'; // prevent flex from overriding
+        var r = (w + 16) + 'px';
+        if (panels) panels.style.right = r;
+        /* panel-help always stays right:0 (preview is hidden on that tab) */
       }
 
       // Restore saved width
