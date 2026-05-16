@@ -328,9 +328,17 @@ function openModal() {
   const gateUrlEl2   = document.getElementById('link-gate-action-url');
   if (gateToggle2)  gateToggle2.checked = false;
   if (gateFields2)  gateFields2.style.display = 'none';
-  if (gateSpan2)    gateSpan2.style.background = '#cbd5e1';
+  const gateTrack2 = document.getElementById('gate-track');
+  const gateThumb2 = document.getElementById('gate-thumb');
+  if (gateTrack2) gateTrack2.style.background = '#cbd5e1';
+  if (gateThumb2) gateThumb2.style.left = '2px';
   if (gateTypeEl2)  gateTypeEl2.value = '';
   if (gateUrlEl2)   gateUrlEl2.value  = '';
+  // Reset schedule thumb too
+  const schedTrack2 = document.getElementById('sched-track');
+  const schedThumb2 = document.getElementById('sched-thumb');
+  if (schedTrack2) schedTrack2.style.background = '#cbd5e1';
+  if (schedThumb2) schedThumb2.style.left = '2px';
 
   document.getElementById('modal').classList.add('open');
 }
@@ -370,9 +378,17 @@ function openEditModal(id) {
   const gateUrlEl   = document.getElementById('link-gate-action-url');
   if (gateToggle) gateToggle.checked = hasGate;
   if (gateFields) gateFields.style.display = hasGate ? 'flex' : 'none';
-  if (gateSpan)   gateSpan.style.background = hasGate ? '#6366f1' : '#cbd5e1';
-  if (gateTypeEl) gateTypeEl.value = link.gate_type || 'instagram_follow';
+  const gateTrack = document.getElementById('gate-track');
+  const gateThumb = document.getElementById('gate-thumb');
+  if (gateTrack) gateTrack.style.background = hasGate ? '#6366f1' : '#cbd5e1';
+  if (gateThumb) gateThumb.style.left = hasGate ? '22px' : '2px';
+  if (gateTypeEl) gateTypeEl.value = (hasGate && link.gate_type !== 'none') ? link.gate_type : '';
   if (gateUrlEl)  gateUrlEl.value  = link.gate_action_url || '';
+  // Sync schedule thumb
+  const schedTrack = document.getElementById('sched-track');
+  const schedThumb = document.getElementById('sched-thumb');
+  if (schedTrack) schedTrack.style.background = hasSchedule ? '#6366f1' : '#cbd5e1';
+  if (schedThumb) schedThumb.style.left = hasSchedule ? '22px' : '2px';
 
   document.getElementById('modal').classList.add('open');
 }
@@ -396,19 +412,23 @@ function pickEmoji(el, emoji) {
 }
 
 function toggleScheduleFields() {
-  const cb   = document.getElementById('link-schedule-toggle');
-  const wrap = document.getElementById('schedule-fields');
-  const span = cb && cb.nextElementSibling;
-  if (wrap) wrap.style.display = cb.checked ? 'grid' : 'none';
-  if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  const cb    = document.getElementById('link-schedule-toggle');
+  const wrap  = document.getElementById('schedule-fields');
+  const track = document.getElementById('sched-track');
+  const thumb = document.getElementById('sched-thumb');
+  if (wrap)  wrap.style.display  = cb.checked ? 'grid'  : 'none';
+  if (track) track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  if (thumb) thumb.style.left    = cb.checked ? '22px' : '2px';
 }
 
 function toggleGateFields() {
-  const cb   = document.getElementById('link-gate-toggle');
-  const wrap = document.getElementById('gate-fields');
-  const span = cb && cb.nextElementSibling;
-  if (wrap) wrap.style.display = cb.checked ? 'flex' : 'none';
-  if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  const cb    = document.getElementById('link-gate-toggle');
+  const wrap  = document.getElementById('gate-fields');
+  const track = document.getElementById('gate-track');
+  const thumb = document.getElementById('gate-thumb');
+  if (wrap)  wrap.style.display  = cb.checked ? 'flex'  : 'none';
+  if (track) track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  if (thumb) thumb.style.left    = cb.checked ? '22px' : '2px';
 }
 
 async function saveLink() {
