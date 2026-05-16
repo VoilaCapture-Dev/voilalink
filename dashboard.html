@@ -1086,6 +1086,9 @@
       <a class="nav-item" href="#" onclick="showTab('countdowns')" id="nav-countdowns">
         <span class="nav-item-icon">⏱</span>Countdowns
       </a>
+      <a class="nav-item" href="#" onclick="showTab('calendar')" id="nav-calendar">
+        <span class="nav-item-icon">📅</span>Calendar
+      </a>
       <a class="nav-item" href="#" onclick="showTab('polls')" id="nav-polls">
         <span class="nav-item-icon">📊</span>Polls & Q&A
       </a>
@@ -1965,6 +1968,24 @@
         </div>
       </div>
 
+      <!-- ── Calendar panel ───────────────────────────────────── -->
+      <div class="links-panel" id="panel-calendar" style="display:none;max-width:680px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">📅 Shared Calendar</div>
+            <div class="panel-sub">Show upcoming events, streams and office hours on your bio page</div>
+          </div>
+          <button class="btn-sm primary" onclick="openCalendarModal()">+ New event</button>
+        </div>
+        <div id="calendar-list"></div>
+        <div id="calendar-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-muted);">
+          <div style="font-size:52px;margin-bottom:16px;">📅</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--text-primary);margin-bottom:8px;">No events yet</div>
+          <div style="font-size:13px;margin-bottom:24px;max-width:300px;margin-left:auto;margin-right:auto;line-height:1.6;">Add your upcoming live streams, office hours, product launches or any event — visitors see them live on your bio page.</div>
+          <button class="btn-sm primary" onclick="openCalendarModal()" style="padding:12px 28px;font-size:14px;">+ Add first event →</button>
+        </div>
+      </div>
+
       <!-- vCard Panel -->
       <div class="links-panel" id="panel-vcard" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
@@ -2560,6 +2581,40 @@
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Calendar event modal ─────────────────────────────────── -->
+  <div class="modal-overlay" id="calendar-modal">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-title" id="calendar-modal-title">📅 New Event</div>
+      <div class="modal-sub">Appears on your public bio page</div>
+      <button class="modal-close" onclick="closeCalendarModal()">×</button>
+      <input type="hidden" id="cal-id" />
+      <div class="form-group">
+        <label class="form-label">Event title *</label>
+        <input class="form-input" id="cal-title" type="text" placeholder="e.g. Live stream, Office Hours, Product Launch" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date & time *</label>
+        <input class="form-input" id="cal-date" type="datetime-local" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description (optional)</label>
+        <input class="form-input" id="cal-description" type="text" placeholder="Short detail shown to visitors" maxlength="160" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link (optional — e.g. Zoom, YouTube, Eventbrite)</label>
+        <input class="form-input" id="cal-link" type="url" placeholder="https://..." />
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <input type="checkbox" id="cal-enabled" checked style="width:16px;height:16px;accent-color:#6366f1;" />
+        <label for="cal-enabled" style="font-size:13px;color:var(--text-muted);cursor:pointer;">Show on bio page</label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm ghost" onclick="closeCalendarModal()">Cancel</button>
+        <button class="btn-sm primary" onclick="saveCalendarEvent()">Save event →</button>
       </div>
     </div>
   </div>
@@ -3174,6 +3229,7 @@
       if (tab === 'invoices')  loadInvoices();
       if (tab === 'growth')      loadGrowth();
       if (tab === 'countdowns')  loadCountdowns();
+      if (tab === 'calendar')    loadCalendarEvents();
       if (tab === 'polls')       loadPolls();
       if (tab === 'vcard') { loadVCardSettings(); }
       if (tab === 'email') { loadEmailPanel(); }
@@ -5124,6 +5180,119 @@
     }
 
     document.getElementById('countdown-modal').addEventListener('click', function(e){ if (e.target === this) closeCountdownModal(); });
+
+    // ── Shared Calendar ────────────────────────────────────────
+    var calendarList = [];
+
+    async function loadCalendarEvents() {
+      if (!currentUser) return;
+      var res = await db.from('calendar_events').select('*').eq('user_id', currentUser.id).order('event_date', { ascending: true });
+      calendarList = res.data || [];
+      renderCalendarEvents();
+    }
+
+    function renderCalendarEvents() {
+      var list  = document.getElementById('calendar-list');
+      var empty = document.getElementById('calendar-empty');
+      if (!list) return;
+      if (calendarList.length === 0) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      var now = new Date();
+      list.innerHTML = calendarList.map(function(ev) {
+        var d       = new Date(ev.event_date);
+        var isPast  = d < now;
+        var dateStr = d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+        var timeStr = d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+        var statusDot = ev.is_enabled
+          ? '<span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:5px;"></span>'
+          : '<span style="width:7px;height:7px;border-radius:50%;background:var(--text-muted);display:inline-block;margin-right:5px;"></span>';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;' + (isPast ? 'opacity:0.55;' : '') + '">' +
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">' + escHtml(ev.title) + (isPast ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:400;">(past)</span>' : '') + '</div>' +
+              (ev.description ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + escHtml(ev.description) + '</div>' : '') +
+              '<div style="font-size:11px;color:var(--text-muted);font-family:\'DM Mono\',monospace;">' + statusDot + dateStr + ' · ' + timeStr + (ev.link_url ? ' · <a href="' + escHtml(ev.link_url) + '" target="_blank" style="color:var(--accent);">link ↗</a>' : '') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:6px;flex-shrink:0;">' +
+              '<button onclick="editCalendarEvent(\'' + ev.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">✏ Edit</button>' +
+              '<button onclick="toggleCalendarEvent(\'' + ev.id + '\',' + !ev.is_enabled + ')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;">' + (ev.is_enabled ? '⏸ Hide' : '▶ Show') + '</button>' +
+              '<button onclick="deleteCalendarEvent(\'' + ev.id + '\')" class="btn-sm ghost" style="font-size:11px;padding:4px 10px;color:var(--danger);">🗑</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    function openCalendarModal(ev) {
+      document.getElementById('calendar-modal-title').textContent = ev ? '✏ Edit Event' : '📅 New Event';
+      document.getElementById('cal-id').value          = ev ? ev.id : '';
+      document.getElementById('cal-title').value       = ev ? ev.title : '';
+      document.getElementById('cal-description').value = ev ? (ev.description || '') : '';
+      document.getElementById('cal-link').value        = ev ? (ev.link_url || '') : '';
+      document.getElementById('cal-enabled').checked   = ev ? ev.is_enabled : true;
+      if (ev && ev.event_date) {
+        var d = new Date(ev.event_date);
+        var local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+        document.getElementById('cal-date').value = local;
+      } else {
+        document.getElementById('cal-date').value = '';
+      }
+      document.getElementById('calendar-modal').classList.add('open');
+    }
+
+    function closeCalendarModal() {
+      document.getElementById('calendar-modal').classList.remove('open');
+    }
+
+    async function saveCalendarEvent() {
+      var title = document.getElementById('cal-title').value.trim();
+      var date  = document.getElementById('cal-date').value;
+      if (!title) { toast('Please enter a title'); return; }
+      if (!date)  { toast('Please select a date and time'); return; }
+      var id = document.getElementById('cal-id').value;
+      var payload = {
+        user_id:     currentUser.id,
+        title:       title,
+        description: document.getElementById('cal-description').value.trim() || null,
+        event_date:  new Date(date).toISOString(),
+        link_url:    document.getElementById('cal-link').value.trim() || null,
+        is_enabled:  document.getElementById('cal-enabled').checked
+      };
+      var res = id
+        ? await db.from('calendar_events').update(payload).eq('id', id)
+        : await db.from('calendar_events').insert(payload);
+      if (res.error) { toast('Error: ' + res.error.message); return; }
+      closeCalendarModal();
+      toast('Event saved ✓');
+      await loadCalendarEvents();
+    }
+
+    function editCalendarEvent(id) {
+      var ev = calendarList.find(function(e){ return e.id === id; });
+      if (ev) openCalendarModal(ev);
+    }
+
+    async function toggleCalendarEvent(id, enabled) {
+      await db.from('calendar_events').update({ is_enabled: enabled }).eq('id', id);
+      var ev = calendarList.find(function(e){ return e.id === id; });
+      if (ev) ev.is_enabled = enabled;
+      renderCalendarEvents();
+      toast(enabled ? 'Event now live ✓' : 'Event hidden');
+    }
+
+    async function deleteCalendarEvent(id) {
+      if (!confirm('Delete this event?')) return;
+      await db.from('calendar_events').delete().eq('id', id);
+      calendarList = calendarList.filter(function(e){ return e.id !== id; });
+      renderCalendarEvents();
+      toast('Event deleted');
+    }
+
+    document.getElementById('calendar-modal').addEventListener('click', function(e){ if (e.target === this) closeCalendarModal(); });
 
     // ── Polls & Q&A ────────────────────────────────────────────
     var pollList = [];

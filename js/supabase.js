@@ -269,6 +269,16 @@ async function saveEmailWidget(userId, settings) {
   if (error) throw error;
 }
 
+async function getPublicCalendarEvents(userId) {
+  const { data } = await db
+    .from('calendar_events')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_enabled', true)
+    .order('event_date', { ascending: true });
+  return data || [];
+}
+
 async function getReferrerStats(userId) {
   const { data, error } = await db
     .from('link_clicks')

@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tipJar     = await getPublicTipJar(profile.id);
     const countdowns = await getPublicCountdowns(profile.id);
     const polls      = await getPublicPolls(profile.id);
+    const calEvents  = await getPublicCalendarEvents(profile.id);
     renderBio(profile, links);
+    if (calEvents  && calEvents.length > 0)  renderCalendar(calEvents);
     if (countdowns && countdowns.length > 0) renderCountdowns(countdowns);
     if (polls && polls.length > 0) renderPolls(polls);
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
@@ -391,6 +393,82 @@ function renderTipJar(tj) {
     </div>`;
   container.style.display = 'flex';
   container.style.justifyContent = 'center';
+}
+
+// ── Shared Calendar ──────────────────────────────────────────
+function renderCalendar(events) {
+  const container = document.getElementById('bio-calendar');
+  if (!container) return;
+  const now = new Date();
+
+  // Split into upcoming and past
+  const upcoming = events.filter(e => new Date(e.event_date) >= now);
+  const past     = events.filter(e => new Date(e.event_date) <  now);
+  const toShow   = upcoming.length > 0 ? upcoming : past;
+  if (toShow.length === 0) return;
+
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.alignItems = 'center';
+  container.style.gap = '0';
+  container.style.width = '100%';
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:480px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.06);';
+  header.innerHTML = '<div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:monospace;">📅 ' + (upcoming.length > 0 ? 'Upcoming Events' : 'Past Events') + '</div>';
+  wrap.appendChild(header);
+
+  toShow.forEach((ev, i) => {
+    const d       = new Date(ev.event_date);
+    const isPast  = d < now;
+    const dayStr  = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:14px;padding:14px 20px;' +
+      (i < toShow.length - 1 ? 'border-bottom:1px solid rgba(255,255,255,0.04);' : '') +
+      (isPast ? 'opacity:0.5;' : '');
+
+    // Date badge
+    const badge = document.createElement('div');
+    badge.style.cssText = 'flex-shrink:0;width:44px;text-align:center;background:rgba(129,140,248,0.12);border-radius:10px;padding:6px 4px;';
+    badge.innerHTML =
+      '<div style="font-size:10px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em;">' +
+        d.toLocaleDateString('en-GB', { month: 'short' }) +
+      '</div>' +
+      '<div style="font-size:20px;font-weight:800;color:var(--text-primary);line-height:1.1;">' +
+        d.getDate() +
+      '</div>';
+
+    // Info
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+    info.innerHTML =
+      '<div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">' + escHtml(ev.title) + '</div>' +
+      '<div style="font-size:12px;color:var(--text-muted);">' + dayStr + ' · ' + timeStr + '</div>' +
+      (ev.description ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + escHtml(ev.description) + '</div>' : '');
+
+    row.appendChild(badge);
+    row.appendChild(info);
+
+    // Link button
+    if (ev.link_url && !isPast) {
+      const btn = document.createElement('a');
+      btn.href = ev.link_url;
+      btn.target = '_blank';
+      btn.rel = 'noopener noreferrer';
+      btn.style.cssText = 'flex-shrink:0;padding:7px 14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;';
+      btn.textContent = 'Join →';
+      row.appendChild(btn);
+    }
+
+    wrap.appendChild(row);
+  });
+
+  container.appendChild(wrap);
 }
 
 // ── Social pills ─────────────────────────────────────────────
