@@ -5186,17 +5186,23 @@
     // ── Shared Calendar ────────────────────────────────────────
     var calendarList = [];
 
-    // Diagnostic: capture-phase listener to reveal scroll/position mismatch
+    // Diagnostic: use elementFromPoint to find the REAL topmost element at click position
     var _calDiagListener = null;
     function _attachCalDiag() {
       if (_calDiagListener) document.removeEventListener('click', _calDiagListener, true);
       _calDiagListener = function(e) {
-        var t = e.target;
-        var info = (t.tagName||'?') + (t.id ? '#'+t.id : '') + (t.className ? '.'+String(t.className).split(' ')[0] : '');
-        var pc = document.querySelector('.panels-container');
-        var scrollTop = pc ? Math.round(pc.scrollTop) : '?';
-        var rect = document.getElementById('panel-calendar') ? document.getElementById('panel-calendar').getBoundingClientRect() : {top:'?',left:'?'};
-        toast('HIT:' + info + ' click@'+Math.round(e.clientX)+','+Math.round(e.clientY) + ' pcScroll:'+scrollTop + ' cal@'+Math.round(rect.left)+','+Math.round(rect.top));
+        var x = Math.round(e.clientX), y = Math.round(e.clientY);
+        // Check what element is actually at click position AND at button positions
+        var atClick  = document.elementFromPoint(x, y);
+        var btn1     = document.getElementById('cal-new-btn');
+        var btn2     = document.getElementById('cal-first-btn');
+        var r1       = btn1 ? btn1.getBoundingClientRect() : null;
+        var r2       = btn2 ? btn2.getBoundingClientRect() : null;
+        var atBtn1   = r1 ? document.elementFromPoint(Math.round(r1.left+r1.width/2), Math.round(r1.top+r1.height/2)) : null;
+        var atBtn2   = r2 ? document.elementFromPoint(Math.round(r2.left+r2.width/2), Math.round(r2.top+r2.height/2)) : null;
+        function elName(el) { return el ? (el.tagName+(el.id?'#'+el.id:'')+(el.className?'.'+String(el.className).split(' ')[0]:'')) : 'null'; }
+        var calPE = window.getComputedStyle(document.getElementById('panel-calendar')||document.body).pointerEvents;
+        toast('atClick:'+elName(atClick)+' btn1center:'+elName(atBtn1)+' btn2center:'+elName(atBtn2)+' calPE:'+calPE);
       };
       document.addEventListener('click', _calDiagListener, true);
     }
