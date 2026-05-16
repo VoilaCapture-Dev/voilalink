@@ -823,6 +823,7 @@
       padding: 10px 20px; border-radius: 10px; font-size: 12px;
       opacity: 0; transition: opacity 0.2s; pointer-events: none;
       font-family: 'DM Mono', monospace; color: var(--accent);
+      z-index: 400; /* above modals (300) and all other overlays */
     }
     .toast.show { opacity: 1; }
 
@@ -5265,16 +5266,18 @@
     }
 
     async function saveCalendarEvent() {
-      var title = document.getElementById('cal-title').value.trim();
-      var date  = document.getElementById('cal-date').value;
-      if (!title) { toast('Please enter a title'); return; }
-      if (!date)  { toast('Please select a date and time'); return; }
+      var title   = document.getElementById('cal-title').value.trim();
+      var dateRaw = document.getElementById('cal-date').value;
+      if (!title)   { toast('Please enter a title'); return; }
+      if (!dateRaw) { toast('Please select a date and time'); return; }
+      // Accept date-only (YYYY-MM-DD) by defaulting time to 09:00
+      var dateStr = dateRaw.length === 10 ? dateRaw + 'T09:00' : dateRaw;
       var id = document.getElementById('cal-id').value;
       var payload = {
         user_id:     currentUser.id,
         title:       title,
         description: document.getElementById('cal-description').value.trim() || null,
-        event_date:  new Date(date).toISOString(),
+        event_date:  new Date(dateStr).toISOString(),
         link_url:    document.getElementById('cal-link').value.trim() || null,
         is_enabled:  document.getElementById('cal-enabled').checked
       };
