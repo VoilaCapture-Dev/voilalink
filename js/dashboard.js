@@ -320,6 +320,20 @@ function openModal() {
   if (startEl2) startEl2.value = '';
   if (endEl2)   endEl2.value   = '';
 
+  // Reset smart routing fields
+  const smartToggle2 = document.getElementById('link-smart-toggle');
+  const smartFields2 = document.getElementById('smart-fields');
+  const smartTrack2  = document.getElementById('smart-track');
+  const smartThumb2  = document.getElementById('smart-thumb');
+  if (smartToggle2) smartToggle2.checked = false;
+  if (smartFields2) smartFields2.style.display = 'none';
+  if (smartTrack2)  smartTrack2.style.background = '#cbd5e1';
+  if (smartThumb2)  smartThumb2.style.left = '2px';
+  const iosEl2     = document.getElementById('link-ios-url');
+  const androidEl2 = document.getElementById('link-android-url');
+  if (iosEl2)     iosEl2.value     = '';
+  if (androidEl2) androidEl2.value = '';
+
   // Reset gate fields
   const gateToggle2  = document.getElementById('link-gate-toggle');
   const gateFields2  = document.getElementById('gate-fields');
@@ -368,6 +382,21 @@ function openEditModal(id) {
   const endEl   = document.getElementById('link-end-at');
   if (startEl) startEl.value = toLocal(link.start_at);
   if (endEl)   endEl.value   = toLocal(link.end_at);
+
+  // Smart routing fields
+  const hasSmart    = !!(link.ios_url || link.android_url);
+  const smartToggle = document.getElementById('link-smart-toggle');
+  const smartFields = document.getElementById('smart-fields');
+  const smartTrack  = document.getElementById('smart-track');
+  const smartThumb  = document.getElementById('smart-thumb');
+  const iosEl       = document.getElementById('link-ios-url');
+  const androidEl   = document.getElementById('link-android-url');
+  if (smartToggle) smartToggle.checked = hasSmart;
+  if (smartFields) smartFields.style.display = hasSmart ? 'flex' : 'none';
+  if (smartTrack)  smartTrack.style.background = hasSmart ? '#6366f1' : '#cbd5e1';
+  if (smartThumb)  smartThumb.style.left = hasSmart ? '22px' : '2px';
+  if (iosEl)       iosEl.value     = link.ios_url     || '';
+  if (androidEl)   androidEl.value = link.android_url || '';
 
   // Gate fields
   const hasGate     = !!(link.gate_type && link.gate_type !== 'none');
@@ -421,6 +450,16 @@ function toggleScheduleFields() {
   if (thumb) thumb.style.left    = cb.checked ? '22px' : '2px';
 }
 
+function toggleSmartFields() {
+  const cb    = document.getElementById('link-smart-toggle');
+  const wrap  = document.getElementById('smart-fields');
+  const track = document.getElementById('smart-track');
+  const thumb = document.getElementById('smart-thumb');
+  if (wrap)  wrap.style.display  = cb.checked ? 'flex'  : 'none';
+  if (track) track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  if (thumb) thumb.style.left    = cb.checked ? '22px' : '2px';
+}
+
 function toggleGateFields() {
   const cb    = document.getElementById('link-gate-toggle');
   const wrap  = document.getElementById('gate-fields');
@@ -454,6 +493,11 @@ async function saveLink() {
   // Convert datetime-local to UTC ISO string (or null)
   const toISO = val => (val && schedEnabled) ? new Date(val).toISOString() : null;
 
+  // Smart routing fields
+  const smartEnabled  = document.getElementById('link-smart-toggle')?.checked;
+  const iosUrl        = smartEnabled ? (document.getElementById('link-ios-url')?.value.trim()     || null) : null;
+  const androidUrl    = smartEnabled ? (document.getElementById('link-android-url')?.value.trim() || null) : null;
+
   // Gate fields
   const gateEnabled    = document.getElementById('link-gate-toggle')?.checked;
   const gateTypeVal    = document.getElementById('link-gate-type')?.value.trim() || '';
@@ -464,7 +508,7 @@ async function saveLink() {
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     if (editingId) {
-      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl });
+      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl, ios_url: iosUrl, android_url: androidUrl });
       const idx = allLinks.findIndex(l => l.id === editingId);
       if (idx !== -1) allLinks[idx] = updated;
       toast('Link updated ✓');
@@ -479,7 +523,9 @@ async function saveLink() {
         start_at: toISO(startVal),
         end_at: toISO(endVal),
         gate_type: gateType,
-        gate_action_url: gateUrl
+        gate_action_url: gateUrl,
+        ios_url: iosUrl,
+        android_url: androidUrl
       });
       allLinks.push(newLink);
       toast('Link added ✓');

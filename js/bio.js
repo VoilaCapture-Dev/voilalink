@@ -418,12 +418,24 @@ function renderSocials(profile) {
   });
 }
 
+// ── Device detection ─────────────────────────────────────────
+function getDeviceType() {
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'other';
+}
+
 // ── Click tracking ───────────────────────────────────────────
 async function handleClick(link) {
   // Track click in background — don't await so page feels instant
   trackClick(link.id, window._pageReferrer).catch(() => {});
-  // Open link
-  window.open(link.url, '_blank', 'noopener,noreferrer');
+  // Smart link routing
+  let url = link.url;
+  const device = getDeviceType();
+  if (device === 'ios'     && link.ios_url)     url = link.ios_url;
+  else if (device === 'android' && link.android_url) url = link.android_url;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 // ── Gate unlock ──────────────────────────────────────────────
