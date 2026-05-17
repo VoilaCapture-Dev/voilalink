@@ -1960,18 +1960,13 @@
         </div>
 
         <!-- Output -->
-        <div id="out-result" style="display:none;background:var(--card);border:1px solid var(--border-accent);border-radius:14px;padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <button onclick="document.getElementById('out-form-box').style.display='block';document.getElementById('out-result').style.display='none';" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">← Edit details</button>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span id="out-platform-label" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(129,140,248,0.15);color:var(--accent);border:1px solid rgba(129,140,248,0.3);"></span>
-              <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
-            </div>
-          </div>
-          <textarea id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;width:100%;background:transparent;border:1px dashed rgba(255,255,255,0.1);border-radius:8px;padding:8px;outline:none;resize:none;font-family:'Inter',sans-serif;min-height:200px;cursor:text;pointer-events:auto;user-select:text;box-sizing:border-box;"></textarea>
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;">
-            <button onclick="generateOutreach()" class="btn-sm ghost" style="font-size:11px;">↺ Regenerate</button>
-            <button onclick="logOutreach()" class="btn-sm primary" style="font-size:11px;">✓ Mark as sent</button>
+        <div id="out-result" style="display:none;text-align:center;padding:20px;background:var(--card);border:1px solid var(--border-accent);border-radius:14px;">
+          <div style="font-size:36px;margin-bottom:12px;">✅</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">Message ready!</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Review and edit it before sending.</div>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button onclick="document.getElementById('out-form-box').style.display='block';document.getElementById('out-result').style.display='none';" class="btn-sm ghost">← Edit details</button>
+            <button onclick="openOutreachModal()" class="btn-sm primary">📋 Review & Copy →</button>
           </div>
         </div>
 
@@ -2691,6 +2686,23 @@
 
   <!-- Global avatar file input -->
   <input id="avatar-input-global" type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+
+  <!-- ── Outreach message modal ──────────────────────────── -->
+  <div class="modal-overlay" id="outreach-modal" onclick="if(event.target===this)closeOutreachModal()">
+    <div class="modal" style="max-width:580px;width:90%;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="modal-title" style="margin:0;">✦ Your outreach message</div>
+        <span id="outreach-modal-platform" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(129,140,248,0.15);color:#818cf8;border:1px solid rgba(129,140,248,0.3);"></span>
+      </div>
+      <textarea id="outreach-modal-message" style="width:100%;height:360px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text-primary);font-size:13px;line-height:1.7;font-family:'Inter',sans-serif;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+      <div style="font-size:11px;color:var(--text-muted);margin:8px 0 16px;">Click anywhere to edit before copying.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-sm ghost" onclick="closeOutreachModal()">Close</button>
+        <button class="btn-sm ghost" onclick="generateOutreach()">↺ Regenerate</button>
+        <button class="btn-sm primary" onclick="copyOutreachModal()">⎘ Copy message</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── QR Code modal ────────────────────────────────────── -->
   <div class="modal-overlay" id="qr-modal">

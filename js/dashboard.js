@@ -1240,13 +1240,11 @@ async function generateOutreach() {
     if (!res.ok || data.error) { toast('Error: ' + (data.error || 'Unknown error')); return; }
 
     lastOutreachMessage = data.message;
-    const ta = document.getElementById('out-message');
-    ta.value = data.message;
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
-    document.getElementById('out-platform-label').textContent = platform;
+    document.getElementById('outreach-modal-message').value = data.message;
+    document.getElementById('outreach-modal-platform').textContent = platform;
     document.getElementById('out-form-box').style.display = 'none';
     document.getElementById('out-result').style.display = 'block';
+    openOutreachModal();
 
   } catch (e) {
     toast('Error: ' + e.message);
@@ -1255,11 +1253,18 @@ async function generateOutreach() {
   }
 }
 
-function copyOutreach() {
-  const msg = document.getElementById('out-message').value || lastOutreachMessage;
-  if (!msg) return;
-  navigator.clipboard.writeText(msg).then(() => toast('Message copied ✓'));
+function openOutreachModal() {
+  document.getElementById('outreach-modal').classList.add('open');
 }
+function closeOutreachModal() {
+  document.getElementById('outreach-modal').classList.remove('open');
+}
+function copyOutreachModal() {
+  const msg = document.getElementById('outreach-modal-message').value;
+  if (!msg) return;
+  navigator.clipboard.writeText(msg).then(() => { toast('Message copied ✓'); closeOutreachModal(); });
+}
+function copyOutreach() { openOutreachModal(); }
 
 function logOutreach() {
   const name     = document.getElementById('out-name').value.trim();
