@@ -178,6 +178,9 @@ function renderLinks() {
     const abBadge = link.ab_label_b
       ? `<span style="font-size:10px;background:rgba(129,140,248,0.15);color:var(--accent);border:1px solid rgba(129,140,248,0.3);border-radius:6px;padding:1px 6px;margin-left:6px;">🧪 A/B</span>`
       : '';
+    const secretBadge = link.secret_code
+      ? `<span style="font-size:10px;background:rgba(251,191,36,0.15);color:#f59e0b;border:1px solid rgba(251,191,36,0.3);border-radius:6px;padding:1px 6px;margin-left:6px;">🔒 Secret</span>`
+      : '';
     const abStats = link.ab_label_b
       ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;" id="ab-stats-${link.id}">A: — · B: —</div>`
       : '';
@@ -188,7 +191,7 @@ function renderLinks() {
         <div class="edit-hint">✏️</div>
       </div>
       <div class="link-info">
-        <div class="link-title-text">${escHtml(link.title)}${scheduleBadge}${abBadge}</div>
+        <div class="link-title-text">${escHtml(link.title)}${scheduleBadge}${abBadge}${secretBadge}</div>
         <div class="link-url-text">${escHtml(link.url)}</div>
         ${abStats}
       </div>
@@ -465,6 +468,19 @@ function openEditModal(id) {
   if (abThumb)   abThumb.style.left = hasAb ? '22px' : '2px';
   if (abLabelEl) abLabelEl.value = link.ab_label_b || '';
 
+  // Secret code fields
+  const hasSecret    = !!link.secret_code;
+  const secretToggle = document.getElementById('link-secret-toggle');
+  const secretFields = document.getElementById('secret-fields');
+  const secretTrack  = document.getElementById('secret-track');
+  const secretThumb  = document.getElementById('secret-thumb');
+  const secretCodeEl = document.getElementById('link-secret-code');
+  if (secretToggle) secretToggle.checked = hasSecret;
+  if (secretFields) secretFields.style.display = hasSecret ? 'flex' : 'none';
+  if (secretTrack)  secretTrack.style.background = hasSecret ? '#6366f1' : '#cbd5e1';
+  if (secretThumb)  secretThumb.style.left = hasSecret ? '22px' : '2px';
+  if (secretCodeEl) secretCodeEl.value = link.secret_code || '';
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -491,6 +507,16 @@ function toggleAbFields() {
   const fields = document.getElementById('ab-fields');
   const track  = document.getElementById('ab-track');
   const thumb  = document.getElementById('ab-thumb');
+  if (fields) fields.style.display = cb.checked ? 'flex' : 'none';
+  if (track)  track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+  if (thumb)  thumb.style.left = cb.checked ? '22px' : '2px';
+}
+
+function toggleSecretFields() {
+  const cb     = document.getElementById('link-secret-toggle');
+  const fields = document.getElementById('secret-fields');
+  const track  = document.getElementById('secret-track');
+  const thumb  = document.getElementById('secret-thumb');
   if (fields) fields.style.display = cb.checked ? 'flex' : 'none';
   if (track)  track.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
   if (thumb)  thumb.style.left = cb.checked ? '22px' : '2px';
@@ -565,10 +591,14 @@ async function saveLink() {
   const abEnabled = document.getElementById('link-ab-toggle')?.checked;
   const abLabelB  = abEnabled ? (document.getElementById('link-ab-label-b')?.value.trim() || null) : null;
 
+  // Secret Code
+  const secretEnabled = document.getElementById('link-secret-toggle')?.checked;
+  const secretCode    = secretEnabled ? (document.getElementById('link-secret-code')?.value.trim() || null) : null;
+
   btn.textContent = 'Saving…'; btn.disabled = true;
   try {
     if (editingId) {
-      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl, ios_url: iosUrl, android_url: androidUrl, ab_label_b: abLabelB });
+      const updated = await updateLink(editingId, { url, title, emoji, description: desc, start_at: toISO(startVal), end_at: toISO(endVal), gate_type: gateType, gate_action_url: gateUrl, ios_url: iosUrl, android_url: androidUrl, ab_label_b: abLabelB, secret_code: secretCode });
       const idx = allLinks.findIndex(l => l.id === editingId);
       if (idx !== -1) allLinks[idx] = updated;
       toast('Link updated ✓');
@@ -586,7 +616,8 @@ async function saveLink() {
         gate_action_url: gateUrl,
         ios_url: iosUrl,
         android_url: androidUrl,
-        ab_label_b: abLabelB
+        ab_label_b: abLabelB,
+        secret_code: secretCode
       });
       allLinks.push(newLink);
       toast('Link added ✓');

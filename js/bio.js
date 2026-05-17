@@ -167,6 +167,28 @@ function renderBio(profile, links) {
           </div>
         </div>`;
       container.appendChild(card);
+    } else if (link.secret_code && sessionStorage.getItem('sl_' + link.id) !== '1') {
+      // ── Secret (locked) card ───────────────────────────────
+      const card = document.createElement('div');
+      card.className = 'link-card bio-link';
+      card.id = 'secret-card-' + link.id;
+      card.style.cssText = 'cursor:default;';
+      card.innerHTML = `
+        <div class="link-icon" style="background:rgba(245,158,11,0.12);">🔒</div>
+        <div class="link-text" style="flex:1;">
+          <div class="link-title" style="color:var(--text-muted);">Secret Link</div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <input id="sl-input-${link.id}" type="text" placeholder="Enter code…" maxlength="32"
+              style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 10px;color:var(--text-primary);font-size:12px;font-family:monospace;outline:none;"
+              onkeydown="if(event.key==='Enter')slUnlock('${link.id}','${encodeURIComponent(link.secret_code)}','${encodeURIComponent(link.url)}','${encodeURIComponent(link.title)}','${encodeURIComponent(link.emoji||'🔗')}')">
+            <button onclick="slUnlock('${link.id}','${encodeURIComponent(link.secret_code)}','${encodeURIComponent(link.url)}','${encodeURIComponent(link.title)}','${encodeURIComponent(link.emoji||'🔗')}')"
+              style="padding:6px 12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">
+              Unlock
+            </button>
+          </div>
+          <div id="sl-err-${link.id}" style="font-size:11px;color:#ef4444;margin-top:4px;min-height:14px;"></div>
+        </div>`;
+      container.appendChild(card);
     } else {
       // ── Normal (or already unlocked) card ─────────────────
       const a = document.createElement('a');
@@ -379,6 +401,43 @@ async function submitQA(pollId) {
   } else {
     if (btn) btn.disabled = false;
   }
+}
+
+// ── Secret Link unlock ───────────────────────────────────────
+function slUnlock(linkId, encodedCode, encodedUrl, encodedTitle, encodedEmoji) {
+  const input  = document.getElementById('sl-input-' + linkId);
+  const errEl  = document.getElementById('sl-err-'   + linkId);
+  const card   = document.getElementById('secret-card-' + linkId);
+  const entered = (input?.value || '').trim().toLowerCase();
+  const correct = decodeURIComponent(encodedCode).toLowerCase();
+
+  if (entered !== correct) {
+    if (errEl) errEl.textContent = '✗ Incorrect code — try again';
+    if (input) {
+      input.style.borderColor = '#ef4444';
+      input.style.animation = 'none';
+      setTimeout(() => { input.style.animation = 'sl-shake 0.4s ease'; }, 10);
+    }
+    return;
+  }
+
+  // Correct — remember in session and replace card with real link
+  sessionStorage.setItem('sl_' + linkId, '1');
+  const url   = decodeURIComponent(encodedUrl);
+  const title = decodeURIComponent(encodedTitle);
+  const emoji = decodeURIComponent(encodedEmoji);
+
+  const a = document.createElement('a');
+  a.className = 'link-card bio-link';
+  a.href = '#';
+  a.onclick = (e) => { e.preventDefault(); window.open(url, '_blank', 'noopener,noreferrer'); };
+  a.innerHTML = `
+    <div class="link-icon" style="background:rgba(129,140,248,0.12);">${emoji}</div>
+    <div class="link-text">
+      <div class="link-title">${escHtml(title)}</div>
+    </div>
+    <div class="link-arrow">→</div>`;
+  card?.replaceWith(a);
 }
 
 // ── Guestbook ────────────────────────────────────────────────

@@ -2719,6 +2719,29 @@
         </div>
       </div>
 
+      <!-- Secret Code -->
+      <div style="border-top:1px solid #f1f5f9;padding-top:16px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:600;color:#475569;">🔒 Secret Link</label>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+            <input type="checkbox" id="link-secret-toggle" style="opacity:0;position:absolute;width:0;height:0;" onchange="toggleSecretFields()">
+            <span id="secret-track" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s;pointer-events:none;">
+              <span id="secret-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:.3s;pointer-events:none;"></span>
+            </span>
+          </label>
+        </div>
+        <div id="secret-fields" style="display:none;flex-direction:column;gap:10px;">
+          <div style="font-size:11px;color:#64748b;background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #e2e8f0;">
+            This link is hidden on your bio page. Visitors must enter the correct code to reveal it. Share the code privately with your community.
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">Secret Code</label>
+            <input type="text" id="link-secret-code" placeholder='e.g. "vip2024" or "innerCircle"' maxlength="32"
+              style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;box-sizing:border-box;outline:none;color:#334155;font-family:monospace;">
+          </div>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="btn-sm ghost" onclick="closeModal()">Cancel</button>
         <button class="btn-sm primary" id="modal-submit" onclick="saveLink()">Add link →</button>

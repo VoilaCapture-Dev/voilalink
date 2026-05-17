@@ -312,6 +312,15 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
     }
 
+    /* Secret link shake on wrong code */
+    @keyframes sl-shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-6px); }
+      40%     { transform: translateX(6px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
+    }
+
     /* Pulse animation for first/featured link */
     @keyframes vl-pulse {
       0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.7), 0 0 0 0 rgba(167,139,250,0.4); }
