@@ -1054,17 +1054,21 @@ async function downloadVCard() {
   // Embed photo as base64 (works on Windows, Mac, iOS, Android)
   if (v.avatar_url) {
     try {
-      const resp = await fetch(v.avatar_url);
-      const blob = await resp.blob();
-      const b64  = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload  = () => res(r.result.split(',')[1]);
-        r.onerror = rej;
-        r.readAsDataURL(blob);
-      });
-      const type = blob.type.includes('png') ? 'PNG' : 'JPEG';
-      lines.push(`PHOTO;ENCODING=b;TYPE=${type}:${b64}`);
-    } catch(_) { /* skip photo if fetch fails */ }
+      // Strip cache-busting timestamp before fetching
+      const cleanUrl = v.avatar_url.split('?')[0];
+      const resp = await fetch(cleanUrl, { mode: 'cors', cache: 'force-cache' });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const b64  = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload  = () => res(r.result.split(',')[1]);
+          r.onerror = rej;
+          r.readAsDataURL(blob);
+        });
+        const type = blob.type.includes('png') ? 'PNG' : 'JPEG';
+        lines.push(`PHOTO;ENCODING=b;TYPE=${type}:${b64}`);
+      }
+    } catch(e) { console.warn('vCard photo fetch failed:', e); }
   }
 
   lines.push('END:VCARD');
