@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tipJar && tipJar.is_enabled) renderTipJar(tipJar);
     // vCard
     const vcard = await getPublicVCard(profile.id);
-    if (vcard) renderVCard(vcard);
+    if (vcard) renderVCard({ ...vcard, avatar_url: profile.avatar_url || '' });
 
     // Email signup widget
     const emailWidget = await getPublicEmailWidget(profile.id);
@@ -1050,6 +1050,7 @@ function downloadVCard() {
   if (v.company)      lines.push(`ORG:${v.company}`);
   if (v.job_title)    lines.push(`TITLE:${v.job_title}`);
   if (v.website)      lines.push(`URL:${v.website}`);
+  if (v.avatar_url)   lines.push(`PHOTO;VALUE=URL:${v.avatar_url}`);
   lines.push('END:VCARD');
   const blob = new Blob([lines.join('\r\n')], { type: 'text/vcard' });
   const a = document.createElement('a');
