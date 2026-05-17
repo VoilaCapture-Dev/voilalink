@@ -216,9 +216,14 @@
     .panels-inner {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      overflow-y: auto;
+      overflow-y: scroll;
       overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: #818cf8 rgba(255,255,255,0.08);
     }
+    .panels-inner::-webkit-scrollbar { width: 6px; }
+    .panels-inner::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .panels-inner::-webkit-scrollbar-thumb { background: #818cf8; border-radius: 3px; }
 
     /* ── Help panel (full-width absolute overlay) ─────────── */
     /* right:0 fills the full content width — preview is hidden  */
@@ -242,7 +247,7 @@
       box-sizing: border-box;
     }
     /* Settings panel: self-contained scroll so it never relies on panels-inner */
-    #panel-settings, #panel-outreach {
+    #panel-settings {
       max-height: calc(100vh - 72px);
       overflow-y: scroll;
       overflow-x: hidden;
