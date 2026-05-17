@@ -2247,7 +2247,10 @@
               </div>
             </div>
           </div>
-          <p id="ew-status" style="margin:10px 0 0;font-size:13px;color:#10b981;display:none;">✓ Saved</p>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+            <button onclick="saveEmailWidgetNow()" style="padding:10px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Save</button>
+            <p id="ew-status" style="margin:0;font-size:13px;color:#10b981;display:none;">✓ Saved successfully</p>
+          </div>
         </div>
 
         <!-- Subscribers list -->
@@ -6273,27 +6276,29 @@
       if (knob)  knob.style.transform   = cb.checked ? 'translateX(20px)' : 'translateX(0)';
     }
 
-    async function saveEmailWidgetSettings() {
+    function saveEmailWidgetSettings() {
       updateEwToggleUI('ew-enabled');
       updateEwToggleUI('ew-show-counter');
-      clearTimeout(_ewSaveTimer);
-      _ewSaveTimer = setTimeout(async () => {
-        const user = await getUser();
-        if (!user) return;
-        const settings = {
-          is_enabled:   document.getElementById('ew-enabled').checked,
-          title:        document.getElementById('ew-title').value.trim(),
-          description:  document.getElementById('ew-desc').value.trim(),
-          button_text:  document.getElementById('ew-btn').value.trim(),
-          show_counter: document.getElementById('ew-show-counter').checked,
-        };
-        try {
-          await saveEmailWidget(user.id, settings);
-          const st = document.getElementById('ew-status');
-          st.style.display = 'block';
-          setTimeout(() => { st.style.display = 'none'; }, 2000);
-        } catch(e) { console.error('Email widget save error', e); }
-      }, 600);
+    }
+
+    async function saveEmailWidgetNow() {
+      updateEwToggleUI('ew-enabled');
+      updateEwToggleUI('ew-show-counter');
+      const user = await getUser();
+      if (!user) return;
+      const settings = {
+        is_enabled:   document.getElementById('ew-enabled').checked,
+        title:        document.getElementById('ew-title').value.trim(),
+        description:  document.getElementById('ew-desc').value.trim(),
+        button_text:  document.getElementById('ew-btn').value.trim(),
+        show_counter: document.getElementById('ew-show-counter').checked,
+      };
+      try {
+        await saveEmailWidget(user.id, settings);
+        const st = document.getElementById('ew-status');
+        st.style.display = 'block';
+        setTimeout(() => { st.style.display = 'none'; }, 4000);
+      } catch(e) { console.error('Email widget save error', e); }
     }
 
     async function loadEmailSubscribers(userId) {
