@@ -1229,9 +1229,8 @@ async function generateOutreach() {
 
     lastOutreachMessage = data.message;
     document.getElementById('out-message').textContent = data.message;
+    document.getElementById('out-form-box').style.display = 'none';
     document.getElementById('out-result').style.display = 'block';
-    const pi = document.querySelector('.panels-inner');
-    if (pi) pi.scrollTop = pi.scrollHeight;
 
   } catch (e) {
     toast('Error: ' + e.message);

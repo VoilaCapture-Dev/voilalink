@@ -1907,7 +1907,7 @@
         </div>
 
         <!-- Input form -->
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+        <div id="out-form-box" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
           <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;">Creator details</div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
@@ -1950,7 +1950,7 @@
         <!-- Output -->
         <div id="out-result" style="display:none;background:var(--card);border:1px solid var(--border-accent);border-radius:14px;padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="font-size:12px;font-weight:600;color:var(--accent);">✦ Generated message</div>
+            <button onclick="document.getElementById('out-form-box').style.display='block';document.getElementById('out-result').style.display='none';" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">← Edit details</button>
             <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
           </div>
           <div id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;"></div>
