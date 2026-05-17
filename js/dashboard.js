@@ -1240,7 +1240,10 @@ async function generateOutreach() {
     if (!res.ok || data.error) { toast('Error: ' + (data.error || 'Unknown error')); return; }
 
     lastOutreachMessage = data.message;
-    document.getElementById('out-message').value = data.message;
+    const ta = document.getElementById('out-message');
+    ta.value = data.message;
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
     document.getElementById('out-platform-label').textContent = platform;
     document.getElementById('out-form-box').style.display = 'none';
     document.getElementById('out-result').style.display = 'block';
