@@ -1040,7 +1040,7 @@ function renderVCard(v) {
   window._bioVCard = v;
 }
 
-function downloadVCard() {
+async function downloadVCard() {
   const v = window._bioVCard;
   if (!v) return;
   const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
@@ -1050,7 +1050,23 @@ function downloadVCard() {
   if (v.company)      lines.push(`ORG:${v.company}`);
   if (v.job_title)    lines.push(`TITLE:${v.job_title}`);
   if (v.website)      lines.push(`URL:${v.website}`);
-  if (v.avatar_url)   lines.push(`PHOTO;VALUE=URL:${v.avatar_url}`);
+
+  // Embed photo as base64 (works on Windows, Mac, iOS, Android)
+  if (v.avatar_url) {
+    try {
+      const resp = await fetch(v.avatar_url);
+      const blob = await resp.blob();
+      const b64  = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload  = () => res(r.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(blob);
+      });
+      const type = blob.type.includes('png') ? 'PNG' : 'JPEG';
+      lines.push(`PHOTO;ENCODING=b;TYPE=${type}:${b64}`);
+    } catch(_) { /* skip photo if fetch fails */ }
+  }
+
   lines.push('END:VCARD');
   const blob = new Blob([lines.join('\r\n')], { type: 'text/vcard' });
   const a = document.createElement('a');
