@@ -1240,7 +1240,7 @@ async function generateOutreach() {
     if (!res.ok || data.error) { toast('Error: ' + (data.error || 'Unknown error')); return; }
 
     lastOutreachMessage = data.message;
-    document.getElementById('out-message').textContent = data.message;
+    document.getElementById('out-message').value = data.message;
     document.getElementById('out-platform-label').textContent = platform;
     document.getElementById('out-form-box').style.display = 'none';
     document.getElementById('out-result').style.display = 'block';
@@ -1253,8 +1253,9 @@ async function generateOutreach() {
 }
 
 function copyOutreach() {
-  if (!lastOutreachMessage) return;
-  navigator.clipboard.writeText(lastOutreachMessage).then(() => toast('Message copied ✓'));
+  const msg = document.getElementById('out-message').value || lastOutreachMessage;
+  if (!msg) return;
+  navigator.clipboard.writeText(msg).then(() => toast('Message copied ✓'));
 }
 
 function logOutreach() {
