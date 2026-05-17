@@ -389,7 +389,7 @@ const GB_EMOJIS = [
   '🎯','🏆','💎','🎸','🌈','🦋','🍀','🌸','🎨','⚡',
   '🐉','🦄','🍕','☕','🎵','📸','💡','🌍','🤝','💬'
 ];
-const GB_DAILY_LIMIT = 5;
+const GB_DAILY_LIMIT = 10;
 let _gbProfileId = null;
 let _gbSelectedEmoji = '👋';
 
