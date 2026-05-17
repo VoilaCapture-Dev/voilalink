@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/bio-render.js": {
+      "includeFiles": "bio.html"
+    }
+  },
   "rewrites": [
     { "source": "/dashboard.html", "destination": "/dashboard.html" },
     { "source": "/login.html",     "destination": "/login.html" },
