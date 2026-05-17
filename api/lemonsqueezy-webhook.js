@@ -5,12 +5,6 @@
 
 const crypto = require('crypto');
 
-// Disable Vercel's default body parser so we get the raw bytes
-// (required for HMAC signature verification)
-module.exports.config = {
-  api: { bodyParser: false }
-};
-
 async function getRawBody(req) {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -20,7 +14,7 @@ async function getRawBody(req) {
   });
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const secret      = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
@@ -32,12 +26,12 @@ module.exports = async function handler(req, res) {
   }
 
   // Read raw body for signature verification
-  const rawBody  = await getRawBody(req);
+  const rawBody   = await getRawBody(req);
   const signature = req.headers['x-signature'];
   const hmac      = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
   if (signature !== hmac) {
-    console.error('Webhook signature mismatch');
+    console.error('Webhook signature mismatch. Got:', signature, 'Expected:', hmac);
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
@@ -46,7 +40,6 @@ module.exports = async function handler(req, res) {
 
   console.log('Webhook event received:', eventName);
 
-  // Handle successful orders and subscription events
   const handledEvents = ['order_created', 'subscription_created', 'subscription_updated'];
   if (!handledEvents.includes(eventName)) {
     return res.status(200).json({ received: true });
@@ -56,7 +49,7 @@ module.exports = async function handler(req, res) {
   if (!customerEmail) return res.status(200).json({ received: true });
 
   try {
-    // Find user by email using Supabase Auth Admin API
+    // Find user by email
     const userRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?email=${encodeURIComponent(customerEmail)}`, {
       headers: {
         'apikey': supabaseKey,
@@ -71,7 +64,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ received: true });
     }
 
-    // Set is_pro = true on their profile
+    // Set is_pro = true
     const updateRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}`, {
       method: 'PATCH',
       headers: {
@@ -95,4 +88,9 @@ module.exports = async function handler(req, res) {
     console.error('Webhook error:', err);
     return res.status(500).json({ error: err.message });
   }
-};
+}
+
+// IMPORTANT: config must be set on the named function BEFORE exporting
+handler.config = { api: { bodyParser: false } };
+
+module.exports = handler;
