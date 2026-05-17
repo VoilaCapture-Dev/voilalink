@@ -1134,8 +1134,9 @@
     <a class="nav-item-full" href="#" onclick="showTab('settings')">
       <span>⚙️</span> Settings
     </a>
-    <a class="nav-item-full" href="#" onclick="showTab('feedback')">
+    <a class="nav-item-full" href="#" onclick="showTab('feedback')" id="nav-feedback">
       <span>💡</span> Suggest a feature
+      <span id="feedback-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;display:none;align-items:center;justify-content:center;line-height:18px;flex-shrink:0;"></span>
     </a>
     <a class="nav-item-full" href="#" onclick="showTab('upgrade')">
       <span>⭐</span> Upgrade to Pro
@@ -1714,10 +1715,15 @@
             <div class="panel-sub">We read every suggestion — help us build what you need</div>
           </div>
         </div>
+
+        <!-- Inbox: messages from users -->
+        <div id="feedback-inbox" style="margin-bottom:16px;"></div>
+
+        <!-- Submit form -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">✏️ Send a suggestion</div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Your suggestion</label>
-            <textarea id="feedback-text" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text-primary);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:120px;box-sizing:border-box;" placeholder="I'd love to see..."></textarea>
+            <textarea id="feedback-text" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text-primary);font-size:13px;font-family:'Inter',sans-serif;resize:vertical;min-height:100px;box-sizing:border-box;" placeholder="I'd love to see..."></textarea>
           </div>
           <button class="btn-sm primary" onclick="submitFeedback()">Send suggestion →</button>
           <div id="feedback-thanks" style="display:none;margin-top:12px;color:#4ade80;font-size:12px;">✓ Thanks! We'll review your suggestion.</div>
@@ -3425,6 +3431,7 @@
       sp('panel-healthguard',tab === 'healthguard'? 'block' : 'none');
       if (tab === 'guestbook')   loadGuestbookDash();
       if (tab === 'healthguard') loadHealthGuardPanel();
+      if (tab === 'feedback')    loadFeedbackPanel();
       // Always scroll back to top of panel when switching tabs
       var pi = document.querySelector('.panels-inner');
       if (pi) pi.scrollTop = 0;
@@ -4218,11 +4225,12 @@
       const text = document.getElementById('feedback-text').value.trim();
       if (!text) { toast('Please write your suggestion first'); return; }
       try {
-        await db.from('feedback').insert({ user_id: currentUser.id, message: text });
+        await db.from('feedback').insert({ user_id: currentUser.id, message: text, read: true });
         document.getElementById('feedback-text').value = '';
-        document.getElementById('feedback-thanks').style.display = 'block';
+        const thanks = document.getElementById('feedback-thanks');
+        if (thanks) { thanks.style.display = 'block'; setTimeout(() => { thanks.style.display = 'none'; }, 3000); }
+        loadFeedbackPanel(); // refresh inbox
       } catch (e) {
-        // Even if table doesn't exist yet, show thank you
         document.getElementById('feedback-text').value = '';
         document.getElementById('feedback-thanks').style.display = 'block';
       }

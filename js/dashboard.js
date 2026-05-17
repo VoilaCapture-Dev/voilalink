@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderHeader();
   await loadLinks();
   initThemesPanel();
+  loadFeedbackBadge();
   // Trigger daily auto-backup (non-blocking, 4s delay to let page settle)
   setTimeout(() => { if (typeof autoBackup === 'function') autoBackup(); }, 4000);
 });
@@ -1570,3 +1571,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === this) closeModal();
   });
 });
+
+// ── Feedback badge & inbox ────────────────────────────────────
+async function loadFeedbackBadge() {
+  try {
+    const count = await getUnreadFeedbackCount();
+    const badge = document.getElementById('feedback-badge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) { /* silently ignore */ }
+}
+
+async function loadFeedbackPanel() {
+  const inbox = document.getElementById('feedback-inbox');
+  if (!inbox) return;
+  try {
+    const rows = await getAllFeedback();
+    if (rows.length === 0) {
+      inbox.innerHTML = '';
+      return;
+    }
+    inbox.innerHTML =
+      '<div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">📬 Submitted suggestions (' + rows.length + ')</div>' +
+      rows.map(function(r) {
+        var d = new Date(r.created_at);
+        var dateStr = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+        var unreadDot = !r.read
+          ? '<span style="width:7px;height:7px;background:#ef4444;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;"></span>'
+          : '';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;">' +
+          '<div style="display:flex;align-items:center;margin-bottom:6px;">' +
+            unreadDot +
+            '<span style="font-size:11px;color:var(--text-muted);">' + dateStr + '</span>' +
+          '</div>' +
+          '<div style="font-size:13px;color:var(--text-primary);line-height:1.5;">' + escHtml(r.message) + '</div>' +
+        '</div>';
+      }).join('');
+    // Mark all as read
+    await markFeedbackRead();
+    // Hide badge
+    var badge = document.getElementById('feedback-badge');
+    if (badge) badge.style.display = 'none';
+  } catch (e) {
+    inbox.innerHTML = '<div style="font-size:12px;color:var(--text-muted);">Could not load suggestions.</div>';
+  }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}

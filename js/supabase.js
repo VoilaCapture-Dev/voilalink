@@ -374,3 +374,25 @@ async function toggleGuestbookEnabled(userId, enabled) {
     .eq('id', userId);
   if (error) throw error;
 }
+
+// ── Feedback helpers ─────────────────────────────────────────
+async function getAllFeedback() {
+  const { data, error } = await db
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function markFeedbackRead() {
+  await db.from('feedback').update({ read: true }).eq('read', false);
+}
+
+async function getUnreadFeedbackCount() {
+  const { count } = await db
+    .from('feedback')
+    .select('*', { count: 'exact', head: true })
+    .eq('read', false);
+  return count || 0;
+}
