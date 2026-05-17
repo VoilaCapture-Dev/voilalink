@@ -41,8 +41,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderEmailWidget(emailWidget, profile.id, signupCount);
     }
 
-    applyTheme(profile.theme || 'midnight');
-    initThemeToggle(profile.theme || 'midnight');
+    const effectiveTheme = profile.dynamic_theme
+      ? getDynamicThemeName()
+      : (profile.theme || 'midnight');
+    applyTheme(effectiveTheme);
+    initThemeToggle(effectiveTheme);
     initChat(profile);
   } catch (e) {
     console.error('Bio page error:', e);
@@ -562,9 +565,14 @@ const themes = {
   midnight: { bg: '#08080f', surface: '#13131a', card: '#1a1a24', accent: '#818cf8', accent2: '#a78bfa' },
   ocean:    { bg: '#0a1628', surface: '#0f2040', card: '#132850', accent: '#38bdf8', accent2: '#818cf8' },
   lime:     { bg: '#0a0f0a', surface: '#0d140d', card: '#111a11', accent: '#c8f135', accent2: '#4ade80' },
-  light:    { bg: '#f8f8fc', surface: '#ffffff', card: '#f0f0f8', accent: '#6366f1', accent2: '#a78bfa' },
+  light:    { bg: '#f8f8fc', surface: '#ffffff', card: '#f0f0f8', accent: '#6366f1', accent2: '#a78bfa', isLight: true },
   galaxy:   { bg: '#0d0520', surface: '#160a30', card: '#1e1040', accent: '#d946ef', accent2: '#a78bfa' },
   sunset:   { bg: '#0f0a05', surface: '#1a1005', card: '#221508', accent: '#f59e0b', accent2: '#ef4444' },
+  // ── Dynamic time-of-day themes ───────────────────────────
+  dawn:     { bg: '#0f0a05', surface: '#1a1008', card: '#22150a', accent: '#fb923c', accent2: '#f59e0b' },
+  day:      { bg: '#f5f3ff', surface: '#ffffff', card: '#ede9fe', accent: '#4f46e5', accent2: '#7c3aed', isLight: true },
+  dusk:     { bg: '#0f0a18', surface: '#180f28', card: '#201438', accent: '#f472b6', accent2: '#c084fc' },
+  night:    { bg: '#08080f', surface: '#13131a', card: '#1a1a24', accent: '#818cf8', accent2: '#a78bfa' },
 };
 
 function applyTheme(name) {
@@ -575,11 +583,24 @@ function applyTheme(name) {
   root.style.setProperty('--card',     t.card);
   root.style.setProperty('--accent',   t.accent);
   root.style.setProperty('--accent-2', t.accent2);
-  if (name === 'light') {
+  if (t.isLight) {
     root.style.setProperty('--text-primary', '#111118');
-    root.style.setProperty('--text-muted',   '#66668a');
+    root.style.setProperty('--text-muted',   '#55558a');
     root.style.setProperty('--border',       'rgba(0,0,0,0.08)');
+  } else {
+    root.style.setProperty('--text-primary', '#f0f0f5');
+    root.style.setProperty('--text-muted',   '#7878a0');
+    root.style.setProperty('--border',       'rgba(255,255,255,0.06)');
   }
+}
+
+// Returns the time-of-day theme name based on the visitor's local hour
+function getDynamicThemeName() {
+  const h = new Date().getHours();
+  if (h >= 5  && h < 9)  return 'dawn';   // 5am – 9am  🌅
+  if (h >= 9  && h < 17) return 'day';    // 9am – 5pm  ☀️
+  if (h >= 17 && h < 21) return 'dusk';   // 5pm – 9pm  🌆
+  return 'night';                          // 9pm – 5am  🌙
 }
 
 // ── Error ────────────────────────────────────────────────────

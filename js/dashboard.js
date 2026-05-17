@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderHeader();
   await loadLinks();
+  initThemesPanel();
   // Trigger daily auto-backup (non-blocking, 4s delay to let page settle)
   setTimeout(() => { if (typeof autoBackup === 'function') autoBackup(); }, 4000);
 });
@@ -653,6 +654,10 @@ async function uploadAvatar(input) {
 
 // ── Themes ───────────────────────────────────────────────────
 async function selectTheme(card) {
+  // If dynamic theme is on, turn it off first when a manual theme is picked
+  if (currentProfile && currentProfile.dynamic_theme) {
+    await toggleDynamicTheme(false);
+  }
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   card.classList.add('selected');
   const theme = card.dataset.theme;
@@ -661,6 +666,42 @@ async function selectTheme(card) {
   if (currentProfile) currentProfile.theme = theme;
   toast('Theme saved ✓');
   window.open('/' + currentProfile.username, 'voilalink_preview');
+}
+
+async function toggleDynamicTheme(enabled) {
+  const { error } = await db.from('profiles')
+    .update({ dynamic_theme: enabled })
+    .eq('id', currentUser.id);
+  if (error) { toast('Error saving'); return; }
+  if (currentProfile) currentProfile.dynamic_theme = enabled;
+  _applyDynamicThemeUI(enabled);
+  toast(enabled ? '🕐 Dynamic theme on ✓' : 'Dynamic theme off ✓');
+  if (enabled) window.open('/' + currentProfile.username, 'voilalink_preview');
+}
+
+function _applyDynamicThemeUI(enabled) {
+  // Update pill
+  const pill  = document.getElementById('dyn-theme-pill');
+  const knob  = document.getElementById('dyn-theme-knob');
+  const prev  = document.getElementById('dyn-theme-preview');
+  if (pill) pill.style.background = enabled ? 'var(--accent)' : 'var(--card-hover,#2a2a3a)';
+  if (knob) knob.style.transform  = enabled ? 'translateX(18px)' : 'none';
+  if (prev) prev.style.display    = enabled ? 'block' : 'none';
+  // Dim / restore theme cards
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.style.opacity       = enabled ? '0.35' : '1';
+    c.style.pointerEvents = enabled ? 'none'  : 'auto';
+  });
+}
+
+function initThemesPanel() {
+  // Highlight the active theme card
+  const saved = currentProfile?.theme || 'midnight';
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.theme === saved);
+  });
+  // Apply dynamic theme toggle state
+  _applyDynamicThemeUI(!!currentProfile?.dynamic_theme);
 }
 
 // ── Font picker ───────────────────────────────────────────────

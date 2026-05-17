@@ -1299,6 +1299,41 @@
           </div>
         </div>
 
+        <!-- ── Dynamic Theme Toggle ──────────────────────────── -->
+        <div style="margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:600;color:var(--text-primary);">🕐 Dynamic Theme</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Auto-switches by visitor's local time of day</div>
+            </div>
+            <div id="dyn-theme-pill" onclick="toggleDynamicTheme(!currentProfile?.dynamic_theme)"
+                 style="width:42px;height:24px;border-radius:12px;background:#2a2a3a;border:1px solid var(--border);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;margin-left:16px;">
+              <div id="dyn-theme-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+            </div>
+          </div>
+          <div id="dyn-theme-preview" style="display:none;margin-top:14px;">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:10px;color:var(--text-muted);">
+              <div>
+                <div style="height:28px;border-radius:8px;background:linear-gradient(135deg,#fb923c,#f59e0b);margin-bottom:5px;"></div>
+                <div style="font-weight:600;">Dawn</div><div>5–9am</div>
+              </div>
+              <div>
+                <div style="height:28px;border-radius:8px;background:linear-gradient(135deg,#4f46e5,#7c3aed);margin-bottom:5px;"></div>
+                <div style="font-weight:600;">Day</div><div>9am–5pm</div>
+              </div>
+              <div>
+                <div style="height:28px;border-radius:8px;background:linear-gradient(135deg,#f472b6,#c084fc);margin-bottom:5px;"></div>
+                <div style="font-weight:600;">Dusk</div><div>5–9pm</div>
+              </div>
+              <div>
+                <div style="height:28px;border-radius:8px;background:linear-gradient(135deg,#818cf8,#a78bfa);margin-bottom:5px;"></div>
+                <div style="font-weight:600;">Night</div><div>9pm–5am</div>
+              </div>
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:var(--text-muted);text-align:center;opacity:0.7;">Theme cards below are paused while Dynamic is on</div>
+          </div>
+        </div>
+
         <div class="themes-grid">
           <div class="theme-card selected" data-theme="midnight" style="background:#08080f;color:#f0f0f5;" onclick="selectTheme(this)">
             <div class="theme-selected-tick">✓</div>
