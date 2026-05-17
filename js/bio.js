@@ -405,7 +405,7 @@ function renderGuestbook(entries, profileId) {
           </div>
         </div>`;
       }).join('')
-    : `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">No messages yet — be the first! 👋</div>`;
+    : `<div id="gb-no-msg" style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">No messages yet — be the first! 👋</div>`;
 
   container.innerHTML = `
     <div style="width:100%;max-width:480px;margin:0 auto;">
@@ -417,9 +417,12 @@ function renderGuestbook(entries, profileId) {
           <input id="gb-name" type="text" maxlength="40" placeholder="Your name"
             style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;margin-bottom:10px;box-sizing:border-box;outline:none;font-family:inherit;" />
           <!-- Emoji picker -->
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-            ${GB_EMOJIS.map(em => `<span onclick="gbSelectEmoji(this,'${em}')" data-emoji="${em}"
-              style="font-size:18px;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.15s;${em==='👋'?'background:rgba(255,255,255,0.12);':''}">${em}</span>`).join('')}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div id="gb-emoji-preview" style="font-size:26px;flex-shrink:0;width:36px;text-align:center;">👋</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;">
+              ${GB_EMOJIS.map(em => `<span onclick="gbSelectEmoji(this,'${em}')" data-emoji="${em}"
+                style="font-size:18px;cursor:pointer;padding:4px 5px;border-radius:8px;border:2px solid ${em==='👋'?'var(--accent)':'transparent'};transition:border-color 0.15s;">${em}</span>`).join('')}
+            </div>
           </div>
           <textarea id="gb-msg" maxlength="140" rows="2" placeholder="Leave a message… (140 chars)"
             style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;" oninput="document.getElementById('gb-chars').textContent=140-this.value.length"></textarea>
@@ -427,11 +430,11 @@ function renderGuestbook(entries, profileId) {
             <span id="gb-chars" style="font-size:11px;color:var(--text-muted);">140</span>
             <button onclick="gbSubmit()" id="gb-submit-btn"
               style="padding:9px 22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
-              Sign ✍️
+              Post 📮
             </button>
           </div>
           <div id="gb-error" style="color:#ef4444;font-size:12px;margin-top:6px;min-height:16px;"></div>
-          <div id="gb-thanks" style="display:none;text-align:center;padding:10px 0;color:var(--accent);font-size:13px;font-weight:600;">Thanks for signing! 🎉</div>
+          <div id="gb-thanks" style="display:none;text-align:center;padding:10px 0;color:var(--accent);font-size:13px;font-weight:600;">Message posted! 🎉</div>
         </div>
       </div>
     </div>`;
@@ -440,8 +443,10 @@ function renderGuestbook(entries, profileId) {
 
 function gbSelectEmoji(el, emoji) {
   _gbSelectedEmoji = emoji;
-  document.querySelectorAll('[data-emoji]').forEach(e => e.style.background = '');
-  el.style.background = 'rgba(255,255,255,0.12)';
+  document.querySelectorAll('[data-emoji]').forEach(e => e.style.borderColor = 'transparent');
+  el.style.borderColor = 'var(--accent)';
+  const preview = document.getElementById('gb-emoji-preview');
+  if (preview) preview.textContent = emoji;
 }
 
 async function gbSubmit() {
@@ -470,7 +475,7 @@ async function gbSubmit() {
   if (ok) {
     // Prepend entry to list without reload
     const wrap = document.getElementById('gb-entries');
-    const noMsg = wrap?.querySelector('div[style*="No messages"]');
+    const noMsg = document.getElementById('gb-no-msg');
     if (noMsg) noMsg.remove();
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);';
