@@ -2166,38 +2166,42 @@
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;max-width:560px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
             <span style="font-weight:600;color:#1e293b">Show Save Contact button on my bio page</span>
-            <label style="position:relative;display:inline-block;width:44px;height:24px">
-              <input type="checkbox" id="vcard-enabled" style="opacity:0;width:0;height:0" onchange="saveVCardSettings()">
-              <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s"></span>
+            <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+              <input type="checkbox" id="vcard-enabled" style="opacity:0;width:0;height:0" onchange="updateVCardToggleUI()">
+              <span id="vcard-toggle-track" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:28px;transition:.25s;"></span>
+              <span id="vcard-toggle-thumb" style="position:absolute;cursor:pointer;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,0.2);pointer-events:none;"></span>
             </label>
           </div>
           <div style="display:grid;gap:14px">
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Display Name</label>
-              <input id="vcard-name" type="text" placeholder="e.g. Jane Smith" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-name" type="text" placeholder="e.g. Jane Smith" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Email</label>
-              <input id="vcard-email" type="email" placeholder="e.g. jane@example.com" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-email" type="email" placeholder="e.g. jane@example.com" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Phone</label>
-              <input id="vcard-phone" type="tel" placeholder="e.g. +44 7700 900000" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-phone" type="tel" placeholder="e.g. +44 7700 900000" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Company / Organisation</label>
-              <input id="vcard-company" type="text" placeholder="e.g. Acme Ltd" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-company" type="text" placeholder="e.g. Acme Ltd" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Job Title</label>
-              <input id="vcard-title" type="text" placeholder="e.g. Content Creator" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-title" type="text" placeholder="e.g. Content Creator" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
             <div>
               <label style="font-size:13px;font-weight:600;color:#475569;display:block;margin-bottom:6px">Website</label>
-              <input id="vcard-website" type="url" placeholder="e.g. https://voilalink.com/yourname" oninput="saveVCardSettings()" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
+              <input id="vcard-website" type="url" placeholder="e.g. https://voilalink.com/yourname" style="width:100%;padding:10px 14px;border:1px solid #e2e8f0;border-radius:10px;font-size:14px;box-sizing:border-box;outline:none">
             </div>
           </div>
-          <p id="vcard-status" style="margin:14px 0 0;font-size:13px;color:#10b981;display:none">✓ Saved</p>
+          <div style="margin-top:20px;display:flex;align-items:center;gap:12px;">
+            <button onclick="saveVCardSettings()" style="padding:10px 24px;background:linear-gradient(135deg,#818cf8,#a78bfa);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Save Contact Card</button>
+            <p id="vcard-status" style="margin:0;font-size:13px;color:#10b981;display:none;">✓ Saved successfully</p>
+          </div>
         </div>
       </div>
 
@@ -6195,9 +6199,11 @@
     }
 
     function updateVCardToggleUI() {
-      const cb = document.getElementById('vcard-enabled');
-      const span = cb && cb.nextElementSibling;
-      if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+      const cb    = document.getElementById('vcard-enabled');
+      const track = document.getElementById('vcard-toggle-track');
+      const thumb = document.getElementById('vcard-toggle-thumb');
+      if (track) track.style.background = cb && cb.checked ? '#6366f1' : '#cbd5e1';
+      if (thumb) thumb.style.transform  = cb && cb.checked ? 'translateX(24px)' : 'translateX(0)';
     }
 
     async function saveVCardSettings() {
