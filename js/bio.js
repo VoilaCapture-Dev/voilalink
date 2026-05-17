@@ -1086,7 +1086,7 @@ function renderEmailWidget(widget, userId, count) {
 
   const counterHtml = widget.show_counter && count > 0
     ? `<div style="text-align:center;margin-bottom:12px;font-size:13px;color:var(--text-muted);">
-        <span style="color:var(--accent);font-weight:700;">${count.toLocaleString()}</span> people joined
+        <span style="color:var(--accent);font-weight:700;">${count.toLocaleString()}</span> ${count === 1 ? 'person' : 'people'} joined
        </div>`
     : '';
 
