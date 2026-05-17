@@ -1063,6 +1063,11 @@
 </head>
 <body>
 
+  <!-- Custom always-visible scrollbar for Settings panel (position:fixed, body-level) -->
+  <div id="settings-sb-track" style="display:none;position:fixed;top:80px;bottom:8px;right:320px;width:6px;background:rgba(255,255,255,0.15);border-radius:3px;z-index:9999;">
+    <div id="settings-sb-thumb" style="position:absolute;top:0;left:0;width:6px;height:40px;background:#818cf8;border-radius:3px;cursor:grab;"></div>
+  </div>
+
   <!-- ── Sidebar ──────────────────────────────────────────── -->
   <aside class="sidebar">
     <a class="sidebar-brand" href="index.html">
@@ -2366,12 +2371,6 @@
       </div>
 
       </div><!-- /panels-inner -->
-
-      <!-- Custom always-visible scrollbar for settings panel -->
-      <div id="settings-sb-track" style="display:none;position:absolute;right:4px;top:8px;bottom:8px;width:6px;background:rgba(255,255,255,0.15);border-radius:3px;z-index:20;pointer-events:none;">
-        <div id="settings-sb-thumb" style="position:absolute;left:0;right:0;width:6px;background:#818cf8;border-radius:3px;min-height:40px;"></div>
-      </div>
-
       </div><!-- /panels-container -->
 
       <!-- ── Help & About panel (absolute, overlays content area) ── -->
@@ -3468,10 +3467,9 @@
       sp('panel-themes',     tab === 'themes'     ? 'block' : 'none');
       sp('panel-analytics',  tab === 'analytics'  ? 'block' : 'none');
       sp('panel-settings',   tab === 'settings'   ? 'block' : 'none');
-      // Custom settings scrollbar visibility
-      var sbTrack = document.getElementById('settings-sb-track');
-      if (sbTrack) { sbTrack.style.display = tab === 'settings' ? 'block' : 'none'; }
-      if (tab === 'settings') { setTimeout(function(){ if(window._updateSettingsSB) window._updateSettingsSB(); }, 50); }
+      // Custom settings scrollbar
+      if (tab === 'settings') { setTimeout(function(){ if(window._updateSettingsSB) window._updateSettingsSB(); }, 80); }
+      else { if(window._hideSettingsSB) window._hideSettingsSB(); }
       sp('panel-feedback',   tab === 'feedback'   ? 'block' : 'none');
       sp('panel-upgrade',    tab === 'upgrade'    ? 'block' : 'none');
       sp('panel-messages',   tab === 'messages'   ? 'flex'  : 'none');
@@ -6907,22 +6905,33 @@
   <!-- Custom always-visible scrollbar for Settings panel -->
   <script>
   (function() {
-    var panel, track, thumb, dragging = false, dragStartY = 0, dragStartTop = 0;
+    var panel, track, thumb, dragging = false, dragStartY = 0, dragStartScrollTop = 0;
 
     function update() {
       if (!panel || !track || !thumb) return;
       var sh = panel.scrollHeight, ch = panel.clientHeight, st = panel.scrollTop;
-      if (sh <= ch) { track.style.display = 'none'; return; }
       var trackH = track.offsetHeight;
+      if (trackH === 0 || sh <= 0) return;
       var thumbH = Math.max(40, Math.round((ch / sh) * trackH));
-      var maxScrollTop = sh - ch;
+      var maxScrollable = sh - ch;
       var maxThumbTop = trackH - thumbH;
-      var thumbTop = maxScrollTop > 0 ? Math.round((st / maxScrollTop) * maxThumbTop) : 0;
+      var thumbTop = maxScrollable > 0 ? Math.round((st / maxScrollable) * maxThumbTop) : 0;
       thumb.style.height = thumbH + 'px';
       thumb.style.top = thumbTop + 'px';
     }
 
-    window._updateSettingsSB = update;
+    window._updateSettingsSB = function() {
+      // Re-grab elements each call in case DOM wasn't ready at init time
+      panel = document.getElementById('panel-settings');
+      track = document.getElementById('settings-sb-track');
+      thumb = document.getElementById('settings-sb-thumb');
+      track.style.display = 'block';
+      requestAnimationFrame(function() { requestAnimationFrame(update); });
+    };
+    window._hideSettingsSB = function() {
+      var t = document.getElementById('settings-sb-track');
+      if (t) t.style.display = 'none';
+    };
 
     function init() {
       panel = document.getElementById('panel-settings');
@@ -6931,15 +6940,15 @@
       if (!panel || !track || !thumb) return;
 
       panel.addEventListener('scroll', update, { passive: true });
-      window.addEventListener('resize', update);
+      window.addEventListener('resize', function() {
+        if (track.style.display !== 'none') update();
+      });
 
-      // Drag thumb to scroll
-      thumb.style.pointerEvents = 'auto';
-      thumb.style.cursor = 'grab';
+      // Drag thumb
       thumb.addEventListener('mousedown', function(e) {
         dragging = true;
         dragStartY = e.clientY;
-        dragStartTop = parseInt(thumb.style.top) || 0;
+        dragStartScrollTop = panel.scrollTop;
         thumb.style.cursor = 'grabbing';
         e.preventDefault();
       });
@@ -6948,24 +6957,22 @@
         var trackH = track.offsetHeight;
         var thumbH = thumb.offsetHeight;
         var maxThumbTop = trackH - thumbH;
-        var newTop = Math.max(0, Math.min(maxThumbTop, dragStartTop + (e.clientY - dragStartY)));
         var sh = panel.scrollHeight, ch = panel.clientHeight;
-        panel.scrollTop = (newTop / maxThumbTop) * (sh - ch);
+        var delta = e.clientY - dragStartY;
+        var scrollDelta = maxThumbTop > 0 ? (delta / maxThumbTop) * (sh - ch) : 0;
+        panel.scrollTop = Math.max(0, dragStartScrollTop + scrollDelta);
       });
       document.addEventListener('mouseup', function() {
         if (dragging) { dragging = false; thumb.style.cursor = 'grab'; }
       });
 
-      // Click on track to jump
-      track.style.pointerEvents = 'auto';
-      track.style.cursor = 'pointer';
+      // Click track to jump
       track.addEventListener('click', function(e) {
         if (e.target === thumb) return;
         var rect = track.getBoundingClientRect();
         var clickY = e.clientY - rect.top;
-        var trackH = track.offsetHeight;
         var sh = panel.scrollHeight, ch = panel.clientHeight;
-        panel.scrollTop = (clickY / trackH) * (sh - ch);
+        panel.scrollTop = (clickY / track.offsetHeight) * (sh - ch);
       });
     }
 
