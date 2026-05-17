@@ -1563,7 +1563,7 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  toast._t = setTimeout(() => t.classList.remove('show'), 4000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
