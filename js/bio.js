@@ -430,6 +430,7 @@ function renderGuestbook(entries, profileId) {
               Sign ✍️
             </button>
           </div>
+          <div id="gb-error" style="color:#ef4444;font-size:12px;margin-top:6px;min-height:16px;"></div>
           <div id="gb-thanks" style="display:none;text-align:center;padding:10px 0;color:var(--accent);font-size:13px;font-weight:600;">Thanks for signing! 🎉</div>
         </div>
       </div>
@@ -448,8 +449,22 @@ async function gbSubmit() {
   const msg  = (document.getElementById('gb-msg')?.value  || '').trim();
   const btn  = document.getElementById('gb-submit-btn');
   const thanks = document.getElementById('gb-thanks');
-  if (!name) { alert('Please enter your name'); return; }
-  if (!msg)  { alert('Please write a message');  return; }
+  const errEl = document.getElementById('gb-error');
+  if (errEl) errEl.textContent = '';
+  const nameEl = document.getElementById('gb-name');
+  const msgEl  = document.getElementById('gb-msg');
+  if (!name) {
+    if (nameEl) { nameEl.style.borderColor = '#ef4444'; nameEl.focus(); }
+    if (errEl)  errEl.textContent = '⚠ Please enter your name';
+    return;
+  }
+  if (!msg) {
+    if (msgEl)  { msgEl.style.borderColor = '#ef4444'; msgEl.focus(); }
+    if (errEl)  errEl.textContent = '⚠ Please write a message';
+    return;
+  }
+  if (nameEl) nameEl.style.borderColor = '';
+  if (msgEl)  msgEl.style.borderColor  = '';
   if (btn) btn.disabled = true;
   const ok = await addGuestbookEntry(_gbProfileId, name, _gbSelectedEmoji, msg);
   if (ok) {
