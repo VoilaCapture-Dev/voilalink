@@ -176,10 +176,10 @@ function renderBio(profile, links) {
       card.innerHTML = `
         <div class="link-icon" style="background:rgba(245,158,11,0.12);">🔒</div>
         <div class="link-text" style="flex:1;">
-          <div class="link-title" style="color:var(--text-muted);">Secret Link</div>
+          <div class="link-title" style="color:#a0a0c0;font-size:13px;">🔐 Enter code to unlock</div>
           <div style="display:flex;gap:6px;margin-top:6px;">
             <input id="sl-input-${link.id}" type="text" placeholder="Enter code…" maxlength="32"
-              style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 10px;color:var(--text-primary);font-size:12px;font-family:monospace;outline:none;"
+              style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 10px;color:#f0f0f5;font-size:13px;font-family:monospace;outline:none;caret-color:#f0f0f5;"
               onkeydown="if(event.key==='Enter')slUnlock('${link.id}','${encodeURIComponent(link.secret_code)}','${encodeURIComponent(link.url)}','${encodeURIComponent(link.title)}','${encodeURIComponent(link.emoji||'🔗')}')">
             <button onclick="slUnlock('${link.id}','${encodeURIComponent(link.secret_code)}','${encodeURIComponent(link.url)}','${encodeURIComponent(link.title)}','${encodeURIComponent(link.emoji||'🔗')}')"
               style="padding:6px 12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">
