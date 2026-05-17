@@ -261,6 +261,17 @@
       scrollbar-width: none;
     }
     #panel-settings::-webkit-scrollbar { display: none; }
+    /* Outreach panel: self-contained scroll with visible scrollbar */
+    #panel-outreach {
+      max-height: calc(100vh - 72px);
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: #818cf8 rgba(255,255,255,0.08);
+    }
+    #panel-outreach::-webkit-scrollbar { width: 6px; }
+    #panel-outreach::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    #panel-outreach::-webkit-scrollbar-thumb { background: #818cf8; border-radius: 3px; }
     .panel-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 20px;
@@ -1957,7 +1968,7 @@
               <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
             </div>
           </div>
-          <textarea id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;width:100%;background:transparent;border:none;outline:none;resize:none;font-family:'Inter',sans-serif;min-height:300px;"></textarea>
+          <textarea id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;width:100%;background:transparent;border:1px dashed rgba(255,255,255,0.1);border-radius:8px;padding:8px;outline:none;resize:none;font-family:'Inter',sans-serif;min-height:200px;cursor:text;pointer-events:auto;user-select:text;box-sizing:border-box;"></textarea>
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;">
             <button onclick="generateOutreach()" class="btn-sm ghost" style="font-size:11px;">↺ Regenerate</button>
             <button onclick="logOutreach()" class="btn-sm primary" style="font-size:11px;">✓ Mark as sent</button>
