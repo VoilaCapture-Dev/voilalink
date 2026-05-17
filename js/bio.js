@@ -89,6 +89,13 @@ function renderBio(profile, links) {
   setMeta('og-url',           window.location.href);
   setMeta('twitter-title',       seoTitle);
   setMeta('twitter-description', seoDesc);
+  if (profile.og_image_url) {
+    setMeta('og-image',      profile.og_image_url);
+    setMeta('twitter-image', profile.og_image_url);
+    // Use large image card for better social previews
+    const tcEl = document.getElementById('twitter-card');
+    if (tcEl) tcEl.setAttribute('content', 'summary_large_image');
+  }
 
   // Apply custom font
   if (profile.font && profile.font !== 'inter') {

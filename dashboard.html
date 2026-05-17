@@ -1627,6 +1627,22 @@
               💡 <strong style="color:var(--text-primary);">Preview:</strong> <span id="seo-preview-title" style="color:#818cf8;font-weight:600;"></span><br/>
               <span id="seo-preview-desc" style="font-size:11px;margin-top:2px;display:inline-block;"></span>
             </div>
+
+            <!-- OG Image -->
+            <div style="margin-bottom:14px;">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:8px;">🖼 Social Share Image</label>
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <img id="og-image-preview" style="width:120px;height:63px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none;flex-shrink:0;" />
+                <div>
+                  <button onclick="document.getElementById('og-image-input').click()"
+                    style="padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer;">
+                    📤 Upload Image
+                  </button>
+                  <input type="file" id="og-image-input" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadOgImage(this.files[0])">
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5;">Recommended: <strong>1200×630px</strong><br>Shown when your link is shared on WhatsApp, Twitter, iMessage, LinkedIn.</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
@@ -3476,6 +3492,13 @@
       const seoDescEl = document.getElementById('settings-seo-desc');
       if (seoDescEl) { seoDescEl.value = currentProfile.seo_description || ''; updateSeoDescCount(); }
 
+      // Load OG image preview
+      const ogPreview = document.getElementById('og-image-preview');
+      if (ogPreview && currentProfile.og_image_url) {
+        ogPreview.src = currentProfile.og_image_url;
+        ogPreview.style.display = 'block';
+      }
+
       // Load auto-reply settings
       const autoReplyEnabled = currentProfile.auto_reply_enabled || false;
       updateAllAutoReplyUI(autoReplyEnabled);
@@ -3493,6 +3516,21 @@
           updateNotifUI('default');
         }
       }
+    }
+
+    async function uploadOgImage(file) {
+      if (!file) return;
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = currentUser.id + '/og.' + ext;
+      toast('Uploading…');
+      const { error } = await db.storage.from('og-images').upload(path, file, { upsert: true, contentType: file.type });
+      if (error) { toast('Upload failed: ' + error.message); return; }
+      const { data: { publicUrl } } = db.storage.from('og-images').getPublicUrl(path);
+      await db.from('profiles').update({ og_image_url: publicUrl }).eq('id', currentUser.id);
+      if (currentProfile) currentProfile.og_image_url = publicUrl;
+      const preview = document.getElementById('og-image-preview');
+      if (preview) { preview.src = publicUrl + '?t=' + Date.now(); preview.style.display = 'block'; }
+      toast('Social share image saved ✓');
     }
 
     async function saveSettings() {
