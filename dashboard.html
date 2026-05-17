@@ -1952,7 +1952,10 @@
         <div id="out-result" style="display:none;background:var(--card);border:1px solid var(--border-accent);border-radius:14px;padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <button onclick="document.getElementById('out-form-box').style.display='block';document.getElementById('out-result').style.display='none';" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">← Edit details</button>
-            <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="out-platform-label" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(129,140,248,0.15);color:var(--accent);border:1px solid rgba(129,140,248,0.3);"></span>
+              <button onclick="copyOutreach()" class="btn-sm ghost" style="font-size:11px;padding:5px 12px;">⎘ Copy</button>
+            </div>
           </div>
           <div id="out-message" style="font-size:13px;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;"></div>
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;">

@@ -1241,6 +1241,7 @@ async function generateOutreach() {
 
     lastOutreachMessage = data.message;
     document.getElementById('out-message').textContent = data.message;
+    document.getElementById('out-platform-label').textContent = platform;
     document.getElementById('out-form-box').style.display = 'none';
     document.getElementById('out-result').style.display = 'block';
 
