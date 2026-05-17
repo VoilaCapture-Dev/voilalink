@@ -1108,6 +1108,9 @@
       <a class="nav-item" href="#" onclick="showTab('email')">
         <span class="nav-item-icon">📧</span>Email List
       </a>
+      <a class="nav-item" href="#" onclick="showTab('guestbook')" id="nav-guestbook">
+        <span class="nav-item-icon">✍️</span>Guestbook
+      </a>
         <a class="nav-item" onclick="showTab('pixels')">
           <span>📡</span><span>Pixels</span>
         </a>
@@ -2163,6 +2166,38 @@
           </div>
           <div id="ew-list">
             <p style="color:#94a3b8;font-size:14px;text-align:center;padding:24px 0;">No subscribers yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Guestbook panel ──────────────────────────────── -->
+      <div class="links-panel" id="panel-guestbook" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">✍️ Guestbook</div>
+            <div class="panel-sub">Let visitors leave a public message on your bio page</div>
+          </div>
+        </div>
+
+        <!-- Toggle -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Show Guestbook on my bio page</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Visitors can leave a name, emoji and 140-char message</div>
+          </div>
+          <div id="gb-dash-pill" onclick="gbDashToggle()"
+               style="width:42px;height:24px;border-radius:12px;background:#2a2a3a;border:1px solid var(--border);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;margin-left:16px;">
+            <div id="gb-dash-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+          </div>
+        </div>
+
+        <!-- Entries list -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Messages <span id="gb-count" style="color:var(--text-muted);font-weight:400;"></span></div>
+          </div>
+          <div id="gb-dash-list">
+            <div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">No messages yet</div>
           </div>
         </div>
       </div>
@@ -3299,6 +3334,8 @@
       sp('panel-vcard',      tab === 'vcard'      ? 'block' : 'none');
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
       sp('panel-pixels',     tab === 'pixels'     ? 'block' : 'none');
+      sp('panel-guestbook',  tab === 'guestbook'  ? 'block' : 'none');
+      if (tab === 'guestbook') loadGuestbookDash();
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');

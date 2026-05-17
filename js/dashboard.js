@@ -704,6 +704,78 @@ function initThemesPanel() {
   _applyDynamicThemeUI(!!currentProfile?.dynamic_theme);
 }
 
+// ── Guestbook (dashboard) ────────────────────────────────────
+async function gbDashToggle() {
+  const enabled = !currentProfile?.guestbook_enabled;
+  try {
+    await toggleGuestbookEnabled(currentUser.id, enabled);
+    if (currentProfile) currentProfile.guestbook_enabled = enabled;
+    const pill = document.getElementById('gb-dash-pill');
+    const knob = document.getElementById('gb-dash-knob');
+    if (pill) pill.style.background = enabled ? 'var(--accent)' : '#2a2a3a';
+    if (knob) knob.style.transform  = enabled ? 'translateX(18px)' : 'none';
+    toast(enabled ? 'Guestbook enabled ✓' : 'Guestbook disabled ✓');
+    if (enabled) window.open('/' + currentProfile.username, 'voilalink_preview');
+  } catch { toast('Error saving'); }
+}
+
+async function loadGuestbookDash() {
+  // Sync toggle state
+  const enabled = !!currentProfile?.guestbook_enabled;
+  const pill = document.getElementById('gb-dash-pill');
+  const knob = document.getElementById('gb-dash-knob');
+  if (pill) pill.style.background = enabled ? 'var(--accent)' : '#2a2a3a';
+  if (knob) knob.style.transform  = enabled ? 'translateX(18px)' : 'none';
+
+  // Load entries
+  const list = document.getElementById('gb-dash-list');
+  const countEl = document.getElementById('gb-count');
+  if (!list) return;
+  try {
+    const entries = await getGuestbookEntries(currentUser.id);
+    if (countEl) countEl.textContent = entries.length ? `(${entries.length})` : '';
+    if (!entries.length) {
+      list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">No messages yet</div>';
+      return;
+    }
+    list.innerHTML = entries.map(e => `
+      <div id="gb-row-${e.id}" style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div style="font-size:22px;flex-shrink:0;">${e.emoji}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text-primary);">${escDash(e.visitor_name)}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${new Date(e.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</span>
+            ${e.is_hidden ? '<span style="font-size:10px;background:rgba(239,68,68,0.15);color:#ef4444;padding:2px 6px;border-radius:4px;">Hidden</span>' : ''}
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);line-height:1.5;word-break:break-word;">${escDash(e.message)}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="gbHide('${e.id}')" title="Hide" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--text-muted);cursor:pointer;font-size:14px;">🙈</button>
+          <button onclick="gbDelete('${e.id}')" title="Delete" style="width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:#ef4444;cursor:pointer;font-size:14px;">🗑</button>
+        </div>
+      </div>`).join('');
+  } catch { list.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:16px;">Could not load messages</div>'; }
+}
+
+function escDash(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function gbHide(id) {
+  await hideGuestbookEntry(id);
+  const row = document.getElementById('gb-row-' + id);
+  if (row) row.style.opacity = '0.4';
+  toast('Message hidden ✓');
+}
+
+async function gbDelete(id) {
+  if (!confirm('Delete this message permanently?')) return;
+  await deleteGuestbookEntry(id);
+  const row = document.getElementById('gb-row-' + id);
+  if (row) row.remove();
+  toast('Message deleted ✓');
+}
+
 // ── Font picker ───────────────────────────────────────────────
 async function selectFont(font) {
   // Update UI

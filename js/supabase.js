@@ -326,3 +326,51 @@ async function getPublicPixelSettings(userId) {
     .single();
   return data || null;
 }
+
+// ── Guestbook helpers ────────────────────────────────────────
+
+async function getPublicGuestbook(profileId) {
+  const { data } = await db
+    .from('guestbook')
+    .select('*')
+    .eq('profile_id', profileId)
+    .eq('is_hidden', false)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  return data || [];
+}
+
+async function addGuestbookEntry(profileId, visitorName, emoji, message) {
+  const { error } = await db.from('guestbook').insert({
+    profile_id: profileId,
+    visitor_name: visitorName,
+    emoji: emoji || '👋',
+    message
+  });
+  return !error;
+}
+
+async function getGuestbookEntries(profileId) {
+  const { data, error } = await db
+    .from('guestbook')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+async function hideGuestbookEntry(id) {
+  await db.from('guestbook').update({ is_hidden: true }).eq('id', id);
+}
+
+async function deleteGuestbookEntry(id) {
+  await db.from('guestbook').delete().eq('id', id);
+}
+
+async function toggleGuestbookEnabled(userId, enabled) {
+  const { error } = await db.from('profiles')
+    .update({ guestbook_enabled: enabled })
+    .eq('id', userId);
+  if (error) throw error;
+}

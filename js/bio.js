@@ -41,6 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderEmailWidget(emailWidget, profile.id, signupCount);
     }
 
+    // Guestbook
+    if (profile.guestbook_enabled) {
+      const gbEntries = await getPublicGuestbook(profile.id);
+      renderGuestbook(gbEntries, profile.id);
+    }
+
     const effectiveTheme = profile.dynamic_theme
       ? getDynamicThemeName()
       : (profile.theme || 'midnight');
@@ -373,6 +379,110 @@ async function submitQA(pollId) {
   } else {
     if (btn) btn.disabled = false;
   }
+}
+
+// ── Guestbook ────────────────────────────────────────────────
+const GB_EMOJIS = ['👋','❤️','🔥','⭐','🎉','👏','😍','🙌','💯','🚀','😊','💪','🤩','✨','👍','🎊','💫','🌟','😎','🙏'];
+let _gbProfileId = null;
+let _gbSelectedEmoji = '👋';
+
+function renderGuestbook(entries, profileId) {
+  const container = document.getElementById('bio-guestbook');
+  if (!container) return;
+  _gbProfileId = profileId;
+
+  const entriesHtml = entries.length > 0
+    ? entries.map(e => {
+        const ago = _gbTimeAgo(new Date(e.created_at));
+        return `<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="font-size:24px;flex-shrink:0;width:36px;text-align:center;">${e.emoji}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px;">
+              <span style="font-size:13px;font-weight:700;color:var(--text-primary);">${escHtml(e.visitor_name)}</span>
+              <span style="font-size:11px;color:var(--text-muted);">${ago}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);line-height:1.5;word-break:break-word;">${escHtml(e.message)}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px;">No messages yet — be the first! 👋</div>`;
+
+  container.innerHTML = `
+    <div style="width:100%;max-width:480px;margin:0 auto;">
+      <div style="background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:20px 22px;">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.12em;font-family:monospace;margin-bottom:14px;">✍️ Guestbook</div>
+        <div id="gb-entries" style="max-height:320px;overflow-y:auto;">${entriesHtml}</div>
+        <!-- Leave a message form -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+          <input id="gb-name" type="text" maxlength="40" placeholder="Your name"
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;margin-bottom:10px;box-sizing:border-box;outline:none;font-family:inherit;" />
+          <!-- Emoji picker -->
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+            ${GB_EMOJIS.map(em => `<span onclick="gbSelectEmoji(this,'${em}')" data-emoji="${em}"
+              style="font-size:18px;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.15s;${em==='👋'?'background:rgba(255,255,255,0.12);':''}">${em}</span>`).join('')}
+          </div>
+          <textarea id="gb-msg" maxlength="140" rows="2" placeholder="Leave a message… (140 chars)"
+            style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;" oninput="document.getElementById('gb-chars').textContent=140-this.value.length"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+            <span id="gb-chars" style="font-size:11px;color:var(--text-muted);">140</span>
+            <button onclick="gbSubmit()" id="gb-submit-btn"
+              style="padding:9px 22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+              Sign ✍️
+            </button>
+          </div>
+          <div id="gb-thanks" style="display:none;text-align:center;padding:10px 0;color:var(--accent);font-size:13px;font-weight:600;">Thanks for signing! 🎉</div>
+        </div>
+      </div>
+    </div>`;
+  container.style.display = 'block';
+}
+
+function gbSelectEmoji(el, emoji) {
+  _gbSelectedEmoji = emoji;
+  document.querySelectorAll('[data-emoji]').forEach(e => e.style.background = '');
+  el.style.background = 'rgba(255,255,255,0.12)';
+}
+
+async function gbSubmit() {
+  const name = (document.getElementById('gb-name')?.value || '').trim();
+  const msg  = (document.getElementById('gb-msg')?.value  || '').trim();
+  const btn  = document.getElementById('gb-submit-btn');
+  const thanks = document.getElementById('gb-thanks');
+  if (!name) { alert('Please enter your name'); return; }
+  if (!msg)  { alert('Please write a message');  return; }
+  if (btn) btn.disabled = true;
+  const ok = await addGuestbookEntry(_gbProfileId, name, _gbSelectedEmoji, msg);
+  if (ok) {
+    // Prepend entry to list without reload
+    const wrap = document.getElementById('gb-entries');
+    const noMsg = wrap?.querySelector('div[style*="No messages"]');
+    if (noMsg) noMsg.remove();
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);';
+    row.innerHTML = `<div style="font-size:24px;flex-shrink:0;width:36px;text-align:center;">${_gbSelectedEmoji}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:3px;">
+          <span style="font-size:13px;font-weight:700;color:var(--text-primary);">${escHtml(name)}</span>
+          <span style="font-size:11px;color:var(--text-muted);">just now</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);line-height:1.5;">${escHtml(msg)}</div>
+      </div>`;
+    wrap?.insertBefore(row, wrap.firstChild);
+    document.getElementById('gb-name').value = '';
+    document.getElementById('gb-msg').value  = '';
+    document.getElementById('gb-chars').textContent = '140';
+    if (thanks) thanks.style.display = 'block';
+    setTimeout(() => { if (thanks) thanks.style.display = 'none'; }, 3000);
+  }
+  if (btn) btn.disabled = false;
+}
+
+function _gbTimeAgo(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60)   return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400)return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
 }
 
 // ── Tip Jar ──────────────────────────────────────────────────
