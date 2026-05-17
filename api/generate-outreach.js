@@ -48,7 +48,7 @@ Just sign up at voilalink.com and reply to this message with your username — I
 
 Your page would be live in minutes at voilalink.com/[their first name in lowercase] — and there's more on the table down the line if it's a good fit.
 
-[Sender name]
+Rio
 ---
 
 Rules:
