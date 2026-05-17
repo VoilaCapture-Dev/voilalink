@@ -100,6 +100,8 @@ function renderHeader() {
   const url = 'voilalink.com/' + currentProfile.username;
   document.getElementById('topbar-url-text').textContent = url;
   document.querySelector('.user-name').textContent = currentProfile.full_name || currentProfile.username;
+  const planEl = document.querySelector('.user-plan');
+  if (planEl) planEl.textContent = currentProfile.is_pro ? '⭐ Pro' : 'Free plan';
   const avatarEl = document.querySelector('.user-avatar');
   if (currentProfile.avatar_url) {
     avatarEl.textContent = '';
