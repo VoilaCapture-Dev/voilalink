@@ -1556,12 +1556,10 @@
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Profile</div>
           <!-- Avatar upload -->
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);">
-            <div id="settings-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">?</div>
+            <div id="settings-avatar" onclick="document.getElementById('avatar-input').click()" title="Change photo" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;cursor:pointer;">?</div>
             <div>
               <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Profile photo</div>
-              <label for="avatar-input" style="cursor:pointer;">
-                <span class="btn-sm ghost" style="cursor:pointer;pointer-events:none;">Upload photo</span>
-              </label>
+              <button onclick="document.getElementById('avatar-input').click()" class="btn-sm ghost">Upload photo</button>
               <input id="avatar-input" type="file" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
               <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">JPG or PNG · Max 2MB</div>
             </div>
