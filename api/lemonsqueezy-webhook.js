@@ -1,10 +1,24 @@
 // ============================================================
 //  VoilaLink — LemonSqueezy Webhook (Vercel Serverless)
 //  Listens for successful payments and upgrades user to Pro
-//  Uses fetch only — no npm dependencies needed
 // ============================================================
 
 const crypto = require('crypto');
+
+// Disable Vercel's default body parser so we get the raw bytes
+// (required for HMAC signature verification)
+module.exports.config = {
+  api: { bodyParser: false }
+};
+
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -17,20 +31,24 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Server not configured' });
   }
 
-  // Verify webhook signature
+  // Read raw body for signature verification
+  const rawBody  = await getRawBody(req);
   const signature = req.headers['x-signature'];
-  const rawBody   = JSON.stringify(req.body);
   const hmac      = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
   if (signature !== hmac) {
+    console.error('Webhook signature mismatch');
     return res.status(401).json({ error: 'Invalid signature' });
   }
 
-  const event     = req.body;
+  const event     = JSON.parse(rawBody);
   const eventName = event?.meta?.event_name;
 
-  // Only handle successful orders/subscriptions
-  if (!['order_created', 'subscription_created'].includes(eventName)) {
+  console.log('Webhook event received:', eventName);
+
+  // Handle successful orders and subscription events
+  const handledEvents = ['order_created', 'subscription_created', 'subscription_updated'];
+  if (!handledEvents.includes(eventName)) {
     return res.status(200).json({ received: true });
   }
 
@@ -59,7 +77,8 @@ module.exports = async function handler(req, res) {
       headers: {
         'Content-Type': 'application/json',
         'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ is_pro: true })
     });
