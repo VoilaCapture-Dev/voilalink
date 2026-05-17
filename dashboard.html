@@ -1064,8 +1064,8 @@
 <body>
 
   <!-- Custom always-visible scrollbar for Settings panel (position:fixed, body-level) -->
-  <div id="settings-sb-track" style="display:none;position:fixed;top:80px;bottom:8px;right:320px;width:6px;background:rgba(255,255,255,0.15);border-radius:3px;z-index:9999;">
-    <div id="settings-sb-thumb" style="position:absolute;top:0;left:0;width:6px;height:40px;background:#818cf8;border-radius:3px;cursor:grab;"></div>
+  <div id="settings-sb-track" style="display:none;position:fixed;top:80px;bottom:8px;right:320px;width:8px;background:rgba(255,255,255,0.18);border-radius:4px;z-index:9999;">
+    <div id="settings-sb-thumb" style="position:absolute;top:0;left:0;width:8px;height:60px;background:#818cf8;border-radius:4px;cursor:grab;box-shadow:0 0 6px rgba(129,140,248,0.8);"></div>
   </div>
 
   <!-- ── Sidebar ──────────────────────────────────────────── -->
@@ -6905,62 +6905,88 @@
   <!-- Custom always-visible scrollbar for Settings panel -->
   <script>
   (function() {
-    var panel, track, thumb, dragging = false, dragStartY = 0, dragStartScrollTop = 0;
+    var scroller, track, thumb, dragging = false, dragStartY = 0, dragStartScrollTop = 0;
+
+    // Find whichever element is actually scrolling (panel-settings or panels-inner)
+    function getScroller() {
+      var ps = document.getElementById('panel-settings');
+      var pi = document.querySelector('.panels-inner');
+      if (ps && ps.scrollHeight > ps.clientHeight + 2) return ps;
+      if (pi && pi.scrollHeight > pi.clientHeight + 2) return pi;
+      return ps || pi;
+    }
 
     function update() {
-      if (!panel || !track || !thumb) return;
-      var sh = panel.scrollHeight, ch = panel.clientHeight, st = panel.scrollTop;
+      track = track || document.getElementById('settings-sb-track');
+      thumb = thumb || document.getElementById('settings-sb-thumb');
+      if (!track || !thumb) return;
+      var s = scroller || getScroller();
+      if (!s) return;
+      var sh = s.scrollHeight, ch = s.clientHeight, st = s.scrollTop;
       var trackH = track.offsetHeight;
-      if (trackH === 0 || sh <= 0) return;
-      var thumbH = Math.max(40, Math.round((ch / sh) * trackH));
+      if (trackH < 10) return;
+      var thumbH = Math.max(48, Math.round((ch / Math.max(sh, 1)) * trackH));
       var maxScrollable = sh - ch;
       var maxThumbTop = trackH - thumbH;
-      var thumbTop = maxScrollable > 0 ? Math.round((st / maxScrollable) * maxThumbTop) : 0;
+      var thumbTop = maxScrollable > 1 ? Math.round((st / maxScrollable) * maxThumbTop) : 0;
       thumb.style.height = thumbH + 'px';
       thumb.style.top = thumbTop + 'px';
     }
 
     window._updateSettingsSB = function() {
-      // Re-grab elements each call in case DOM wasn't ready at init time
-      panel = document.getElementById('panel-settings');
       track = document.getElementById('settings-sb-track');
       thumb = document.getElementById('settings-sb-thumb');
+      if (!track) return;
       track.style.display = 'block';
-      requestAnimationFrame(function() { requestAnimationFrame(update); });
+      // Re-bind scroll listener to whichever element is scrolling
+      scroller = null;
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          scroller = getScroller();
+          update();
+        });
+      });
     };
+
     window._hideSettingsSB = function() {
       var t = document.getElementById('settings-sb-track');
       if (t) t.style.display = 'none';
     };
 
     function init() {
-      panel = document.getElementById('panel-settings');
       track = document.getElementById('settings-sb-track');
       thumb = document.getElementById('settings-sb-thumb');
-      if (!panel || !track || !thumb) return;
+      if (!track || !thumb) return;
 
-      panel.addEventListener('scroll', update, { passive: true });
-      window.addEventListener('resize', function() {
-        if (track.style.display !== 'none') update();
+      // Listen to both possible scrollers
+      ['panel-settings', null].forEach(function(id) {
+        var el = id ? document.getElementById(id) : document.querySelector('.panels-inner');
+        if (el) el.addEventListener('scroll', update, { passive: true });
       });
 
-      // Drag thumb
+      window.addEventListener('resize', function() {
+        if (track && track.style.display !== 'none') update();
+      });
+
+      // Drag thumb to scroll
       thumb.addEventListener('mousedown', function(e) {
         dragging = true;
         dragStartY = e.clientY;
-        dragStartScrollTop = panel.scrollTop;
+        var s = scroller || getScroller();
+        dragStartScrollTop = s ? s.scrollTop : 0;
         thumb.style.cursor = 'grabbing';
         e.preventDefault();
       });
       document.addEventListener('mousemove', function(e) {
         if (!dragging) return;
+        var s = scroller || getScroller();
+        if (!s) return;
         var trackH = track.offsetHeight;
         var thumbH = thumb.offsetHeight;
         var maxThumbTop = trackH - thumbH;
-        var sh = panel.scrollHeight, ch = panel.clientHeight;
         var delta = e.clientY - dragStartY;
-        var scrollDelta = maxThumbTop > 0 ? (delta / maxThumbTop) * (sh - ch) : 0;
-        panel.scrollTop = Math.max(0, dragStartScrollTop + scrollDelta);
+        var scrollDelta = maxThumbTop > 0 ? (delta / maxThumbTop) * (s.scrollHeight - s.clientHeight) : 0;
+        s.scrollTop = Math.max(0, dragStartScrollTop + scrollDelta);
       });
       document.addEventListener('mouseup', function() {
         if (dragging) { dragging = false; thumb.style.cursor = 'grab'; }
@@ -6969,10 +6995,11 @@
       // Click track to jump
       track.addEventListener('click', function(e) {
         if (e.target === thumb) return;
+        var s = scroller || getScroller();
+        if (!s) return;
         var rect = track.getBoundingClientRect();
-        var clickY = e.clientY - rect.top;
-        var sh = panel.scrollHeight, ch = panel.clientHeight;
-        panel.scrollTop = (clickY / track.offsetHeight) * (sh - ch);
+        var frac = (e.clientY - rect.top) / track.offsetHeight;
+        s.scrollTop = frac * (s.scrollHeight - s.clientHeight);
       });
     }
 
