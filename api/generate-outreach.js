@@ -24,9 +24,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const prompt = `Write a short, genuine outreach DM to a social media creator for a partnership with VoilaLink.
-
-VoilaLink is a free link-in-bio tool (like Linktree but better designed) at voilalink.com. It lets creators share all their links on one beautiful page.
+  const prompt = `Write a short, genuine outreach DM to a social media creator for VoilaLink using the exact template below. Personalise ONLY the first two sentences based on the creator's details — keep everything else exactly as written.
 
 Creator details:
 - Name: ${creatorName}
@@ -35,16 +33,30 @@ Creator details:
 - Profile URL: ${profileUrl || 'not provided'}
 - Extra notes: ${notes || 'none'}
 
-Write a DM that:
-- Feels personal and genuine, not copy-paste or corporate
-- Is 3-5 sentences max — short enough to read in 10 seconds
-- Mentions something specific about their niche/content
-- Explains VoilaLink in one simple sentence
-- Offers them a free Pro account in exchange for an honest post or story
-- Ends with a simple yes/no question to make replying easy
-- Sounds like it comes from a real founder, not a marketing team
+Template to follow:
+---
+Hey [Name],
 
-Write ONLY the message. No subject line. No "Here is the message:" intro. Just the message itself.`;
+I've been following your content and really like what you do. [Add one genuine sentence about their specific niche or content style.]
+
+I'm the founder of VoilaLink — one link that holds everything: your socials, content, bookings, newsletter and more. I'd love to give you a free Pro account to try it out, completely free, no catch.
+
+👉 See it in action: voilalink.com/riorivera
+👉 Learn more: voilalink.com
+
+Just sign up at voilalink.com and reply to this message with your username — I'll upgrade your account to Pro straight away.
+
+Your page would be live in minutes at voilalink.com/[their first name in lowercase] — and there's more on the table down the line if it's a good fit.
+
+[Sender name]
+---
+
+Rules:
+- Only personalise the opening two sentences
+- Keep all links exactly as written
+- Do not add "Interested?" or any closing question
+- Do not change the tone or add extra sentences
+- Write ONLY the message. No intro. No explanation.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
