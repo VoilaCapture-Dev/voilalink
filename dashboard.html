@@ -2221,10 +2221,10 @@
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:24px;max-width:560px;margin-bottom:24px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
             <span style="font-weight:600;color:#1e293b">Show signup widget on my bio page</span>
-            <label style="position:relative;display:inline-block;width:44px;height:24px">
-              <input type="checkbox" id="ew-enabled" style="opacity:0;width:0;height:0" onchange="saveEmailWidgetSettings()">
-              <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s"></span>
-            </label>
+            <div id="ew-enabled-track" onclick="document.getElementById('ew-enabled').click()" style="width:44px;height:24px;border-radius:12px;background:#2a2a3a;border:1px solid rgba(255,255,255,0.1);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;">
+              <input type="checkbox" id="ew-enabled" style="display:none" onchange="saveEmailWidgetSettings()">
+              <div id="ew-enabled-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+            </div>
           </div>
           <div style="display:grid;gap:14px;">
             <div>
@@ -2241,10 +2241,10 @@
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
               <span style="font-size:14px;color:#475569;">Show subscriber count on bio page</span>
-              <label style="position:relative;display:inline-block;width:44px;height:24px">
-                <input type="checkbox" id="ew-show-counter" style="opacity:0;width:0;height:0" onchange="saveEmailWidgetSettings()">
-                <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s"></span>
-              </label>
+              <div id="ew-show-counter-track" onclick="document.getElementById('ew-show-counter').click()" style="width:44px;height:24px;border-radius:12px;background:#2a2a3a;border:1px solid rgba(255,255,255,0.1);position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;">
+                <input type="checkbox" id="ew-show-counter" style="display:none" onchange="saveEmailWidgetSettings()">
+                <div id="ew-show-counter-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+              </div>
             </div>
           </div>
           <p id="ew-status" style="margin:10px 0 0;font-size:13px;color:#10b981;display:none;">✓ Saved</p>
@@ -6266,9 +6266,11 @@
     }
 
     function updateEwToggleUI(id) {
-      const cb   = document.getElementById(id);
-      const span = cb && cb.nextElementSibling;
-      if (span) span.style.background = cb.checked ? '#6366f1' : '#cbd5e1';
+      const cb    = document.getElementById(id);
+      const track = document.getElementById(id + '-track');
+      const knob  = document.getElementById(id + '-knob');
+      if (track) track.style.background = cb.checked ? '#6366f1' : '#2a2a3a';
+      if (knob)  knob.style.transform   = cb.checked ? 'translateX(20px)' : 'translateX(0)';
     }
 
     async function saveEmailWidgetSettings() {
