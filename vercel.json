@@ -5,12 +5,13 @@
     }
   },
   "rewrites": [
-    { "source": "/dashboard.html", "destination": "/dashboard.html" },
-    { "source": "/login.html",     "destination": "/login.html" },
-    { "source": "/bio.html",       "destination": "/bio.html" },
-    { "source": "/index.html",     "destination": "/index.html" },
-    { "source": "/js/:path*",      "destination": "/js/:path*" },
-    { "source": "/:username",      "destination": "/api/bio-render?username=:username" }
+    { "source": "/dashboard.html",      "destination": "/dashboard.html" },
+    { "source": "/login.html",          "destination": "/login.html" },
+    { "source": "/bio.html",            "destination": "/bio.html" },
+    { "source": "/index.html",          "destination": "/index.html" },
+    { "source": "/js/:path*",           "destination": "/js/:path*" },
+    { "source": "/:username/mediakit",  "destination": "/api/mediakit-render?username=:username" },
+    { "source": "/:username",           "destination": "/api/bio-render?username=:username" }
   ],
   "headers": [
     {

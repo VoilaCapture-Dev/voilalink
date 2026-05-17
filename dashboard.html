@@ -1660,6 +1660,51 @@
           <button class="btn-sm primary" onclick="saveSettings()">Save changes</button>
         </div>
 
+        <!-- Media Kit -->
+        <div style="background:linear-gradient(135deg,rgba(129,140,248,0.08),rgba(167,139,250,0.06));border:1px solid rgba(129,140,248,0.2);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">📊 Your Media Kit</div>
+              <div style="font-size:13px;color:var(--text-muted);line-height:1.5;">A shareable public page with your profile, links, and stats.<br>Perfect for brand deals and collaborations.</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="copyMediaKitLink()" style="padding:9px 16px;background:rgba(129,140,248,0.12);border:1px solid rgba(129,140,248,0.3);border-radius:10px;color:#818cf8;font-size:12px;font-weight:700;cursor:pointer;">📋 Copy Link</button>
+              <a id="mediakit-open-btn" href="#" target="_blank" style="padding:9px 16px;background:linear-gradient(135deg,#818cf8,#a78bfa);border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;">🚀 Open Media Kit</a>
+            </div>
+          </div>
+          <div id="mediakit-copy-toast" style="font-size:12px;color:#818cf8;margin-top:8px;display:none;">✓ Link copied to clipboard!</div>
+        </div>
+
+        <!-- Linktree Import -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">🌿 Import from Linktree</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Paste your Linktree URL and we'll import all your links automatically.</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <input id="linktree-url-input" type="url" placeholder="https://linktr.ee/yourname"
+              style="flex:1;min-width:200px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;outline:none;" />
+            <button onclick="importFromLinktree()"
+              style="padding:10px 20px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">
+              Import Links
+            </button>
+          </div>
+          <div id="linktree-status" style="display:none;font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:10px;"></div>
+          <!-- Preview -->
+          <div id="linktree-preview" style="display:none;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Links found — confirm to add:</div>
+            <div id="linktree-preview-list" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--bg);margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="confirmLinktreeImport()"
+                style="flex:1;padding:10px;background:linear-gradient(135deg,#818cf8,#a78bfa);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+                ✓ Add These Links
+              </button>
+              <button onclick="cancelLinktreeImport()"
+                style="padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- AI Auto-Reply -->
         <div id="auto-reply-section" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -3539,6 +3584,117 @@
           updateNotifUI('default');
         }
       }
+
+      // Wire up Media Kit button URLs
+      const mkUsername = currentProfile.username || '';
+      const mkUrl      = 'https://voilalink.com/' + mkUsername + '/mediakit';
+      const mkOpenBtn  = document.getElementById('mediakit-open-btn');
+      if (mkOpenBtn) mkOpenBtn.href = mkUrl;
+    }
+
+    function copyMediaKitLink() {
+      if (!currentProfile) return;
+      const url = 'https://voilalink.com/' + currentProfile.username + '/mediakit';
+      navigator.clipboard.writeText(url).then(() => {
+        const t = document.getElementById('mediakit-copy-toast');
+        if (t) { t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
+      });
+    }
+
+    // ── Linktree Import ────────────────────────────────────
+    let _linktreeLinks = [];
+
+    async function importFromLinktree() {
+      const input  = document.getElementById('linktree-url-input');
+      const status = document.getElementById('linktree-status');
+      const preview= document.getElementById('linktree-preview');
+      const url    = (input?.value || '').trim();
+      if (!url) { showLinktreeStatus('Please paste your Linktree URL first.', 'error'); return; }
+
+      showLinktreeStatus('🔄 Fetching your Linktree…', 'info');
+      if (preview) preview.style.display = 'none';
+      _linktreeLinks = [];
+
+      try {
+        const r = await fetch('/api/import-linktree', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        const data = await r.json();
+        if (!r.ok) { showLinktreeStatus('❌ ' + (data.error || 'Import failed'), 'error'); return; }
+
+        _linktreeLinks = data.links || [];
+        if (!_linktreeLinks.length) { showLinktreeStatus('❌ No links found.', 'error'); return; }
+
+        // Show preview
+        showLinktreeStatus(`✅ Found ${_linktreeLinks.length} link${_linktreeLinks.length > 1 ? 's' : ''}. Review below and confirm.`, 'success');
+        const list = document.getElementById('linktree-preview-list');
+        if (list) {
+          list.innerHTML = _linktreeLinks.map((l, i) =>
+            `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;${i < _linktreeLinks.length-1 ? 'border-bottom:1px solid rgba(255,255,255,0.05);' : ''}">
+              <span style="font-size:18px;width:24px;text-align:center;">${escHtml(l.emoji)}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:#f0f0f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(l.title)}</div>
+                <div style="font-size:11px;color:#7878a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(l.url)}</div>
+              </div>
+            </div>`
+          ).join('');
+        }
+        if (preview) preview.style.display = 'block';
+      } catch (e) {
+        showLinktreeStatus('❌ Could not reach the import service. Try again.', 'error');
+      }
+    }
+
+    async function confirmLinktreeImport() {
+      if (!_linktreeLinks.length || !currentUser) return;
+      const btn = document.querySelector('[onclick="confirmLinktreeImport()"]');
+      if (btn) { btn.textContent = 'Adding links…'; btn.disabled = true; }
+
+      let added = 0;
+      const maxPos = allLinks.length ? Math.max(...allLinks.map(l => l.position || 0)) + 1 : 0;
+
+      for (let i = 0; i < _linktreeLinks.length; i++) {
+        const l = _linktreeLinks[i];
+        try {
+          await addLink({
+            user_id:  currentUser.id,
+            title:    l.title,
+            url:      l.url,
+            emoji:    l.emoji,
+            enabled:  true,
+            position: maxPos + i,
+          });
+          added++;
+        } catch (_) {}
+      }
+
+      _linktreeLinks = [];
+      document.getElementById('linktree-preview').style.display  = 'none';
+      document.getElementById('linktree-url-input').value        = '';
+      showLinktreeStatus(`🎉 ${added} link${added !== 1 ? 's' : ''} added to your page!`, 'success');
+      if (btn) { btn.textContent = '✓ Add These Links'; btn.disabled = false; }
+
+      await loadLinks();
+      toast(`${added} links imported from Linktree ✓`);
+    }
+
+    function cancelLinktreeImport() {
+      _linktreeLinks = [];
+      document.getElementById('linktree-preview').style.display = 'none';
+      document.getElementById('linktree-status').style.display  = 'none';
+      document.getElementById('linktree-url-input').value       = '';
+    }
+
+    function showLinktreeStatus(msg, type) {
+      const el = document.getElementById('linktree-status');
+      if (!el) return;
+      const colors = { error: 'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171',
+                       success:'rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);color:#4ade80',
+                       info:   'rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.2);color:#818cf8' };
+      el.style.cssText = `display:block;font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:10px;background:${colors[type] || colors.info}`;
+      el.textContent = msg;
     }
 
     async function uploadOgImage(file) {
