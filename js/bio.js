@@ -389,7 +389,7 @@ const GB_EMOJIS = [
   '🎯','🏆','💎','🎸','🌈','🦋','🍀','🌸','🎨','⚡',
   '🐉','🦄','🍕','☕','🎵','📸','💡','🌍','🤝','💬'
 ];
-const GB_DAILY_LIMIT = 3;
+const GB_DAILY_LIMIT = 5;
 let _gbProfileId = null;
 let _gbSelectedEmoji = '👋';
 
@@ -447,7 +447,10 @@ function renderGuestbook(entries, profileId) {
           <textarea id="gb-msg" maxlength="140" rows="2" placeholder="Leave a message… (140 chars)"
             style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;color:var(--text-primary);font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;" oninput="document.getElementById('gb-chars').textContent=140-this.value.length"></textarea>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-            <span id="gb-chars" style="font-size:11px;color:var(--text-muted);">140</span>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span id="gb-chars" style="font-size:11px;color:var(--text-muted);">140</span>
+              <span id="gb-remaining" style="font-size:11px;color:var(--text-muted);"></span>
+            </div>
             <button onclick="gbSubmit()" id="gb-submit-btn"
               style="padding:9px 22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
               Post 📮
@@ -459,6 +462,16 @@ function renderGuestbook(entries, profileId) {
       </div>
     </div>`;
   container.style.display = 'block';
+  _gbUpdateRemaining();
+}
+
+function _gbUpdateRemaining() {
+  const el = document.getElementById('gb-remaining');
+  if (!el) return;
+  const used = parseInt(localStorage.getItem(_gbGetTodayKey()) || '0', 10);
+  const left = GB_DAILY_LIMIT - used;
+  el.textContent = left > 0 ? `${left} of ${GB_DAILY_LIMIT} posts left today` : 'Daily limit reached';
+  el.style.color = left <= 1 ? '#f59e0b' : 'var(--text-muted)';
 }
 
 function gbSelectEmoji(el, emoji) {
@@ -513,6 +526,7 @@ async function gbSubmit() {
       </div>`;
     wrap?.insertBefore(row, wrap.firstChild);
     _gbIncrementCount();
+    _gbUpdateRemaining();
     document.getElementById('gb-name').value = '';
     document.getElementById('gb-msg').value  = '';
     document.getElementById('gb-chars').textContent = '140';
