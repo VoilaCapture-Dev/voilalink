@@ -382,9 +382,29 @@ async function submitQA(pollId) {
 }
 
 // ── Guestbook ────────────────────────────────────────────────
-const GB_EMOJIS = ['👋','❤️','🔥','⭐','🎉','👏','😍','🙌','💯','🚀','😊','💪','🤩','✨','👍','🎊','💫','🌟','😎','🙏'];
+const GB_EMOJIS = [
+  '👋','❤️','🔥','⭐','🎉','👏','😍','🙌','💯','🚀',
+  '😊','💪','🤩','✨','👍','🎊','💫','🌟','😎','🙏',
+  '😂','🥰','😭','🤣','😆','🥳','😜','🤯','😇','🫶',
+  '🎯','🏆','💎','🎸','🌈','🦋','🍀','🌸','🎨','⚡',
+  '🐉','🦄','🍕','☕','🎵','📸','💡','🌍','🤝','💬'
+];
+const GB_DAILY_LIMIT = 3;
 let _gbProfileId = null;
 let _gbSelectedEmoji = '👋';
+
+function _gbGetTodayKey() {
+  return 'vl_gb_' + new Date().toISOString().slice(0, 10);
+}
+function _gbCanPost() {
+  const count = parseInt(localStorage.getItem(_gbGetTodayKey()) || '0', 10);
+  return count < GB_DAILY_LIMIT;
+}
+function _gbIncrementCount() {
+  const key = _gbGetTodayKey();
+  const count = parseInt(localStorage.getItem(key) || '0', 10);
+  localStorage.setItem(key, count + 1);
+}
 
 function renderGuestbook(entries, profileId) {
   const container = document.getElementById('bio-guestbook');
@@ -456,6 +476,10 @@ async function gbSubmit() {
   const thanks = document.getElementById('gb-thanks');
   const errEl = document.getElementById('gb-error');
   if (errEl) errEl.textContent = '';
+  if (!_gbCanPost()) {
+    if (errEl) errEl.textContent = '⚠ You\'ve reached the limit of 3 messages today — come back tomorrow!';
+    return;
+  }
   const nameEl = document.getElementById('gb-name');
   const msgEl  = document.getElementById('gb-msg');
   if (!name) {
@@ -488,6 +512,7 @@ async function gbSubmit() {
         <div style="font-size:13px;color:var(--text-muted);line-height:1.5;">${escHtml(msg)}</div>
       </div>`;
     wrap?.insertBefore(row, wrap.firstChild);
+    _gbIncrementCount();
     document.getElementById('gb-name').value = '';
     document.getElementById('gb-msg').value  = '';
     document.getElementById('gb-chars').textContent = '140';
