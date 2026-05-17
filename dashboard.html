@@ -1691,6 +1691,8 @@
           <div style="font-size:12px;font-weight:600;margin-bottom:16px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Account</div>
           <button class="btn-sm" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);" onclick="signOut()">Sign out</button>
         </div>
+        <!-- bottom spacer so last card clears the viewport edge -->
+        <div style="height:40px;"></div>
       </div>
 
       <!-- ── Feedback panel ────────────────────────────────── -->
@@ -3412,6 +3414,9 @@
       sp('panel-healthguard',tab === 'healthguard'? 'block' : 'none');
       if (tab === 'guestbook')   loadGuestbookDash();
       if (tab === 'healthguard') loadHealthGuardPanel();
+      // Always scroll back to top of panel when switching tabs
+      var pi = document.querySelector('.panels-inner');
+      if (pi) pi.scrollTop = 0;
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
