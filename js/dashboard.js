@@ -1199,6 +1199,18 @@ function useCreatorForOutreach(name, platform, niche, profileUrl, notes) {
 // ── AI Outreach ───────────────────────────────────────────────
 let lastOutreachMessage = '';
 
+function selectPlatform(btn, value) {
+  document.getElementById('out-platform').value = value;
+  document.querySelectorAll('.plt-btn').forEach(b => {
+    b.style.border = '1px solid rgba(255,255,255,0.07)';
+    b.style.background = 'transparent';
+    b.style.color = '#7878a0';
+  });
+  btn.style.border = '1px solid #818cf8';
+  btn.style.background = 'rgba(129,140,248,0.15)';
+  btn.style.color = '#818cf8';
+}
+
 async function generateOutreach() {
   // Pro gate — AI API call
   if (typeof getProAccess === 'function') {

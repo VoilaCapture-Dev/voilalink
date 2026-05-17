@@ -1917,13 +1917,14 @@
             </div>
             <div>
               <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Platform</label>
-              <select id="out-platform" style="width:100%;padding:10px 14px;background:#1a1a24;border:1px solid rgba(255,255,255,0.07);border-radius:10px;color:#f0f0f5;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;appearance:auto;-webkit-appearance:auto;">
-                <option value="TikTok">TikTok</option>
-                <option value="Instagram">Instagram</option>
-                <option value="YouTube">YouTube</option>
-                <option value="Twitter / X">Twitter / X</option>
-                <option value="LinkedIn">LinkedIn</option>
-              </select>
+              <input type="hidden" id="out-platform" value="TikTok" />
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <button type="button" class="plt-btn selected" onclick="selectPlatform(this,'TikTok')" style="padding:6px 10px;border-radius:8px;border:1px solid var(--accent);background:rgba(129,140,248,0.15);color:var(--accent);font-size:11px;cursor:pointer;">TikTok</button>
+                <button type="button" class="plt-btn" onclick="selectPlatform(this,'Instagram')" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">Instagram</button>
+                <button type="button" class="plt-btn" onclick="selectPlatform(this,'YouTube')" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">YouTube</button>
+                <button type="button" class="plt-btn" onclick="selectPlatform(this,'Twitter / X')" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">Twitter/X</button>
+                <button type="button" class="plt-btn" onclick="selectPlatform(this,'LinkedIn')" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:11px;cursor:pointer;">LinkedIn</button>
+              </div>
             </div>
           </div>
 
