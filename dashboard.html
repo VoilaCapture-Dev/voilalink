@@ -6219,8 +6219,9 @@
           await saveVCardSettings_db(user.id, settings);
           const st = document.getElementById('vcard-status');
           st.style.display = 'block';
-          setTimeout(() => { st.style.display = 'none'; }, 2000);
-        } catch(e) { console.error('vCard save error', e); }
+          toast('vCard saved ✓');
+          setTimeout(() => { st.style.display = 'none'; }, 5000);
+        } catch(e) { console.error('vCard save error', e); toast('Save failed — please try again'); }
       }, 600);
     }
 
