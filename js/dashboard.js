@@ -735,6 +735,80 @@ function initThemesPanel() {
   _applyDynamicThemeUI(!!currentProfile?.dynamic_theme);
 }
 
+// ── Health Guard ─────────────────────────────────────────────
+const HG_STATUS_MAP = {
+  ok:      { icon: '✅', label: 'OK',              color: '#4ade80' },
+  broken:  { icon: '❌', label: 'Broken / Dead',   color: '#ef4444' },
+  unknown: { icon: '⚠️', label: 'Bot-protected',   color: '#f59e0b' },
+  slow:    { icon: '🐢', label: 'Slow / Timeout',  color: '#f59e0b' },
+};
+
+function loadHealthGuardPanel() {
+  // Show saved results if any links have health_status
+  const checked = allLinks.filter(l => l.health_status);
+  if (!checked.length) return; // Leave the "Click Check Now" message
+  renderHealthResults(allLinks);
+}
+
+async function runHealthGuard() {
+  const btn = document.getElementById('hg-run-btn');
+  const resultsEl = document.getElementById('hg-results');
+  if (!allLinks.length) { toast('No links to check'); return; }
+
+  btn.textContent = '⏳ Checking…';
+  btn.disabled = true;
+  resultsEl.innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:32px 0;">Scanning links…</div>';
+
+  try {
+    const payload = allLinks.map(l => ({ id: l.id, url: l.url }));
+    const res = await fetch('/api/check-links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ links: payload })
+    });
+    const { results } = await res.json();
+
+    // Save results to Supabase and update allLinks
+    const now = new Date().toISOString();
+    await Promise.all(results.map(async r => {
+      await db.from('links').update({ health_status: r.status, health_checked_at: now }).eq('id', r.id);
+      const link = allLinks.find(l => l.id === r.id);
+      if (link) { link.health_status = r.status; link.health_checked_at = now; }
+    }));
+
+    renderHealthResults(allLinks);
+    document.getElementById('hg-last-checked').textContent = 'Last checked: ' + new Date().toLocaleTimeString();
+
+    const broken = results.filter(r => r.status === 'broken').length;
+    if (broken > 0) {
+      toast(`⚠️ ${broken} broken link${broken > 1 ? 's' : ''} found!`);
+    } else {
+      toast('✅ All links look good!');
+    }
+  } catch(e) {
+    toast('Check failed — try again');
+  } finally {
+    btn.textContent = '🔍 Check Now';
+    btn.disabled = false;
+  }
+}
+
+function renderHealthResults(links) {
+  const el = document.getElementById('hg-results');
+  if (!el) return;
+  el.innerHTML = links.map(l => {
+    const s = HG_STATUS_MAP[l.health_status] || { icon: '⬜', label: 'Not checked', color: 'var(--text-muted)' };
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;">
+      <div style="font-size:20px;flex-shrink:0;">${s.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(l.title)}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(l.url)}</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:${s.color};flex-shrink:0;">${s.label}</div>
+    </div>`;
+  }).join('');
+}
+
 // ── Guestbook (dashboard) ────────────────────────────────────
 async function gbDashToggle() {
   const enabled = !currentProfile?.guestbook_enabled;

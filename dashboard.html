@@ -1111,6 +1111,9 @@
       <a class="nav-item" href="#" onclick="showTab('guestbook')" id="nav-guestbook">
         <span class="nav-item-icon">✍️</span>Guestbook
       </a>
+      <a class="nav-item" href="#" onclick="showTab('healthguard')" id="nav-healthguard">
+        <span class="nav-item-icon">🛡️</span>Health Guard
+      </a>
         <a class="nav-item" onclick="showTab('pixels')">
           <span>📡</span><span>Pixels</span>
         </a>
@@ -2166,6 +2169,38 @@
           </div>
           <div id="ew-list">
             <p style="color:#94a3b8;font-size:14px;text-align:center;padding:24px 0;">No subscribers yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Health Guard panel ───────────────────────────── -->
+      <div class="links-panel" id="panel-healthguard" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🛡️ Health Guard</div>
+            <div class="panel-sub">Check all your links for broken or dead URLs</div>
+          </div>
+          <button onclick="runHealthGuard()" id="hg-run-btn"
+            style="padding:9px 18px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">
+            🔍 Check Now
+          </button>
+        </div>
+
+        <!-- Legend -->
+        <div style="display:flex;gap:16px;margin-bottom:18px;font-size:12px;color:var(--text-muted);">
+          <span>✅ OK</span>
+          <span>❌ Broken / 404</span>
+          <span>⚠️ Bot-protected (likely fine)</span>
+          <span>🐢 Slow / timeout</span>
+        </div>
+
+        <!-- Last checked -->
+        <div id="hg-last-checked" style="font-size:11px;color:var(--text-muted);margin-bottom:16px;"></div>
+
+        <!-- Results list -->
+        <div id="hg-results" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="color:var(--text-muted);font-size:13px;text-align:center;padding:32px 0;">
+            Click "Check Now" to scan all your links
           </div>
         </div>
       </div>
@@ -3358,7 +3393,9 @@
       sp('panel-email',      tab === 'email'      ? 'block' : 'none');
       sp('panel-pixels',     tab === 'pixels'     ? 'block' : 'none');
       sp('panel-guestbook',  tab === 'guestbook'  ? 'block' : 'none');
-      if (tab === 'guestbook') loadGuestbookDash();
+      sp('panel-healthguard',tab === 'healthguard'? 'block' : 'none');
+      if (tab === 'guestbook')   loadGuestbookDash();
+      if (tab === 'healthguard') loadHealthGuardPanel();
       // Show/hide preview panel for full-width tabs
       const fullWidth = ['messages','outreach','research','planner'];
       var pp = document.querySelector('.preview-panel');
